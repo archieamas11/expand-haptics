@@ -14,10 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.haptics.HapticPattern
 
-/**
- * Horizontally scrollable row of selectable pattern chips. Only one pattern can be selected
- * at a time - selecting a different chip emits [onPatternSelected].
- */
 @Composable
 fun PatternChipRow(
     selected: HapticPattern,

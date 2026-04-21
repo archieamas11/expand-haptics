@@ -36,10 +36,6 @@ android {
         }
     }
 
-    androidResources {
-        generateLocaleConfig = true
-    }
-
     dependenciesInfo {
         // Strip signed dependency metadata from APKs so the package is smaller when
         // sideloaded. Play Store builds keep it via the bundle.

@@ -43,7 +43,6 @@ class HapticsPreferences(context: Context) {
         .map { prefs ->
             HapticsSettings(
                 tapEnabled = prefs[Keys.TAP_ENABLED] ?: HapticsSettings.Default.tapEnabled,
-                scrollEnabled = prefs[Keys.SCROLL_ENABLED] ?: HapticsSettings.Default.scrollEnabled,
                 intensity = (prefs[Keys.INTENSITY] ?: HapticsSettings.Default.intensity)
                     .coerceIn(0f, 1f),
                 pattern = HapticPattern.fromStorageKey(prefs[Keys.PATTERN]),
@@ -51,7 +50,6 @@ class HapticsPreferences(context: Context) {
         }
 
     suspend fun setTapEnabled(enabled: Boolean) = edit { it[Keys.TAP_ENABLED] = enabled }
-    suspend fun setScrollEnabled(enabled: Boolean) = edit { it[Keys.SCROLL_ENABLED] = enabled }
     suspend fun setIntensity(intensity: Float) = edit {
         it[Keys.INTENSITY] = intensity.coerceIn(0f, 1f)
     }
@@ -67,7 +65,6 @@ class HapticsPreferences(context: Context) {
 
     private object Keys {
         val TAP_ENABLED = booleanPreferencesKey("tap_enabled")
-        val SCROLL_ENABLED = booleanPreferencesKey("scroll_enabled")
         val INTENSITY = floatPreferencesKey("intensity")
         val PATTERN = stringPreferencesKey("pattern")
     }

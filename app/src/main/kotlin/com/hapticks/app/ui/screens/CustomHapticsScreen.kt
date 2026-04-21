@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -53,7 +51,6 @@ fun CustomHapticsScreen(
     settings: HapticsSettings,
     isServiceEnabled: Boolean,
     onTapEnabledChange: (Boolean) -> Unit,
-    onScrollEnabledChange: (Boolean) -> Unit,
     onIntensityCommit: (Float) -> Unit,
     onPatternSelected: (HapticPattern) -> Unit,
     onTestHaptic: () -> Unit,
@@ -92,7 +89,6 @@ fun CustomHapticsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
@@ -103,7 +99,6 @@ fun CustomHapticsScreen(
             HapticFeedbackSection(
                 settings = settings,
                 onTapEnabledChange = onTapEnabledChange,
-                onScrollEnabledChange = onScrollEnabledChange,
                 onIntensityCommit = onIntensityCommit,
             )
 
@@ -122,7 +117,6 @@ fun CustomHapticsScreen(
 private fun HapticFeedbackSection(
     settings: HapticsSettings,
     onTapEnabledChange: (Boolean) -> Unit,
-    onScrollEnabledChange: (Boolean) -> Unit,
     onIntensityCommit: (Float) -> Unit,
 ) {
     SectionCard(
@@ -134,17 +128,6 @@ private fun HapticFeedbackSection(
             subtitle = stringResource(id = R.string.toggle_tap_subtitle),
             checked = settings.tapEnabled,
             onCheckedChange = onTapEnabledChange,
-        )
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant,
-            thickness = 0.5.dp,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        HapticToggleRow(
-            title = stringResource(id = R.string.toggle_scroll_title),
-            subtitle = stringResource(id = R.string.toggle_scroll_subtitle),
-            checked = settings.scrollEnabled,
-            onCheckedChange = onScrollEnabledChange,
         )
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,

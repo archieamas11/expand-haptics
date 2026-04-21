@@ -10,7 +10,6 @@ import com.hapticks.app.haptics.HapticPattern
  */
 data class HapticsSettings(
     val tapEnabled: Boolean = true,
-    val scrollEnabled: Boolean = false,
     val intensity: Float = 1.0f,
     val pattern: HapticPattern = HapticPattern.Default,
 ) {

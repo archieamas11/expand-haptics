@@ -59,10 +59,6 @@ class CustomHapticsViewModel(
         viewModelScope.launch { preferences.setTapEnabled(enabled) }
     }
 
-    fun setScrollEnabled(enabled: Boolean) {
-        viewModelScope.launch { preferences.setScrollEnabled(enabled) }
-    }
-
     /** Persist the final intensity value and fire a preview so the user can feel the level. */
     fun commitIntensity(intensity: Float) {
         viewModelScope.launch { preferences.setIntensity(intensity) }

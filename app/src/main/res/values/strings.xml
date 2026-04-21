@@ -3,8 +3,8 @@
     <string name="app_name">Hapticks</string>
 
     <string name="accessibility_service_label">Hapticks</string>
-    <string name="accessibility_service_summary">Adds haptic feedback to taps and scrolls system-wide.</string>
-    <string name="accessibility_service_description">Hapticks listens for tap and scroll accessibility events so it can trigger the device vibrator. It does not read, store, or transmit any on-screen content. You can turn it off at any time from Settings > Accessibility.</string>
+    <string name="accessibility_service_summary">Adds haptic feedback to taps system-wide.</string>
+    <string name="accessibility_service_description">Hapticks listens for tap accessibility events so it can trigger the device vibrator. It does not read, store, or transmit any on-screen content. You can turn it off at any time from Settings > Accessibility.</string>
 
     <string name="screen_title">Custom Haptics</string>
     <string name="section_haptic_feedback">Haptic Feedback</string>
@@ -12,8 +12,6 @@
 
     <string name="toggle_tap_title">Custom Tap Haptics</string>
     <string name="toggle_tap_subtitle">Haptic feedback on every tap</string>
-    <string name="toggle_scroll_title">Haptics While Scrolling</string>
-    <string name="toggle_scroll_subtitle">Gentle ticks while scrolling</string>
 
     <string name="intensity_label">Intensity: %1$d%%</string>
     <string name="test_haptic">Test Haptic</string>
@@ -24,7 +22,7 @@
     <string name="pattern_double_click">Double Click</string>
 
     <string name="enable_service_title">Turn on Hapticks accessibility service</string>
-    <string name="enable_service_body">Hapticks needs the accessibility service to fire haptic feedback when you tap or scroll in any app. Your content is never read or stored.</string>
+    <string name="enable_service_body">Hapticks needs the accessibility service to fire haptic feedback when you tap in any app. Your content is never read or stored.</string>
     <string name="enable_service_cta">Open Accessibility settings</string>
     <string name="back">Back</string>
 </resources>

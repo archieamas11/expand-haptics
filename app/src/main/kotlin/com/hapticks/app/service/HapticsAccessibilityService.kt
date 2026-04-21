@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.onEach
  * Reads [com.hapticks.app.data.HapticsPreferences] once and caches the result into a volatile
  * snapshot so [onAccessibilityEvent] stays non-suspending and allocation-free on the hot path.
  *
- * When both tap and scroll haptics are disabled the service reconfigures its
+ * When tap haptics are disabled the service reconfigures its
  * [AccessibilityServiceInfo.eventTypes] mask to `0`, so the OS stops dispatching any events to
  * this process. This is the single biggest battery / CPU optimization: an "off" Hapticks costs
  * nothing beyond the bound service itself.
@@ -36,7 +36,6 @@ class HapticsAccessibilityService : AccessibilityService() {
 
     // Cached pieces of `current` so the event handler avoids field indirection per call.
     @Volatile private var tapEnabled: Boolean = current.tapEnabled
-    @Volatile private var scrollEnabled: Boolean = current.scrollEnabled
 
     private lateinit var engine: HapticEngine
 
@@ -50,7 +49,6 @@ class HapticsAccessibilityService : AccessibilityService() {
             .onEach { snapshot ->
                 current = snapshot
                 tapEnabled = snapshot.tapEnabled
-                scrollEnabled = snapshot.scrollEnabled
                 applyEventMask(snapshot)
             }
             .launchIn(scope)
@@ -65,11 +63,6 @@ class HapticsAccessibilityService : AccessibilityService() {
             if (!tapEnabled) return
             val s = current
             engine.play(s.pattern, s.intensity)
-            return
-        }
-        if (type == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-            if (!scrollEnabled) return
-            engine.playScrollTick(current.intensity)
             return
         }
     }
@@ -88,9 +81,7 @@ class HapticsAccessibilityService : AccessibilityService() {
      */
     private fun applyEventMask(settings: HapticsSettings) {
         val info = serviceInfo ?: return
-        var mask = 0
-        if (settings.tapEnabled) mask = mask or AccessibilityEvent.TYPE_VIEW_CLICKED
-        if (settings.scrollEnabled) mask = mask or AccessibilityEvent.TYPE_VIEW_SCROLLED
+        val mask = if (settings.tapEnabled) AccessibilityEvent.TYPE_VIEW_CLICKED else 0
         if (info.eventTypes == mask) return
         info.eventTypes = mask
         serviceInfo = info

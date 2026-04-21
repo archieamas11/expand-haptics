@@ -31,7 +31,6 @@ class MainActivity : ComponentActivity() {
                     settings = settings,
                     isServiceEnabled = isServiceEnabled,
                     onTapEnabledChange = viewModel::setTapEnabled,
-                    onScrollEnabledChange = viewModel::setScrollEnabled,
                     onIntensityCommit = viewModel::commitIntensity,
                     onPatternSelected = viewModel::setPattern,
                     onTestHaptic = viewModel::testHaptic,

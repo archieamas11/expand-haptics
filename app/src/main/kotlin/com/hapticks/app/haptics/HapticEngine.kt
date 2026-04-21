@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
  *  - Binder-call minimization: capability probes (`hasVibrator`, `hasAmplitudeControl`,
  *    `areAllPrimitivesSupported`) run once at construction.
  *  - Monotonic throttling: uses [SystemClock.uptimeMillis] so wall-clock adjustments cannot
- *    disable or spam scroll ticks.
+ *    disable or spam subsequent calls.
  */
 class HapticEngine(context: Context) {
 
@@ -76,10 +76,6 @@ class HapticEngine(context: Context) {
         return true
     }
 
-    /** Dedicated helper for scroll ticks: a light TICK, throttled, slightly attenuated. */
-    fun playScrollTick(intensity: Float): Boolean =
-        play(HapticPattern.TICK, intensity * SCROLL_ATTENUATION, throttleMs = SCROLL_THROTTLE_MS)
-
     private fun effectFor(pattern: HapticPattern, intensity: Float): VibrationEffect? {
         val bucket = ((intensity * (INTENSITY_BUCKETS - 1)) + 0.5f).toInt()
             .coerceIn(0, INTENSITY_BUCKETS - 1)
@@ -133,8 +129,6 @@ class HapticEngine(context: Context) {
 
     private companion object {
         const val MIN_AUDIBLE_INTENSITY = 0.01f
-        const val SCROLL_ATTENUATION = 0.6f
-        const val SCROLL_THROTTLE_MS = 40L
         const val DOUBLE_CLICK_GAP_MS = 80
         const val ONE_SHOT_DURATION_MS = 20L
         const val AMPLITUDE_FALLBACK_THRESHOLD = 0.9f
