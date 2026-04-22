@@ -1,6 +1,6 @@
 # Hapticks
 
-Android app that adds customizable haptic feedback to taps across every installed app, built on top of the Android Accessibility API.
+Android app that adds responsive touch feedback across apps and system UI for a more refined, premium feel. Pixel haptics are highly effective and should be utilized more extensively, as several apps and UI interactive elements have yet to incorporate haptic feedback. So i made one
 
 ## Privacy & Play Store policy
 
