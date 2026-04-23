@@ -8,10 +8,6 @@ import androidx.compose.ui.unit.sp
 
 private val Display = FontFamily.Default
 
-/**
- * Typography tuned for a Material 3 Expressive feel: wider weight contrast, generous display
- * sizes, tighter display tracking, and relaxed body leading for dark-on-near-black reading.
- */
 internal val HapticksTypography = Typography(
     displayLarge = TextStyle(
         fontFamily = Display,

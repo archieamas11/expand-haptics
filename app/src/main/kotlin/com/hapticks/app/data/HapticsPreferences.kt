@@ -9,11 +9,13 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.floatPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.hapticks.app.haptics.HapticPattern
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.IOException
 
@@ -46,6 +48,18 @@ class HapticsPreferences(context: Context) {
                 intensity = (prefs[Keys.INTENSITY] ?: HapticsSettings.Default.intensity)
                     .coerceIn(0f, 1f),
                 pattern = HapticPattern.fromStorageKey(prefs[Keys.PATTERN]),
+                edgeEnabled = prefs[Keys.EDGE_ENABLED] ?: HapticsSettings.Default.edgeEnabled,
+                edgePattern = HapticPattern.fromStorageKey(prefs[Keys.EDGE_PATTERN])
+                    .takeIf { prefs.contains(Keys.EDGE_PATTERN) } ?: HapticsSettings.Default.edgePattern,
+                edgeIntensity = (prefs[Keys.EDGE_INTENSITY] ?: HapticsSettings.Default.edgeIntensity)
+                    .coerceIn(0f, 1f),
+                useDynamicColors = prefs[Keys.USE_DYNAMIC_COLORS] ?: HapticsSettings.Default.useDynamicColors,
+                themeMode = try {
+                    ThemeMode.valueOf(prefs[Keys.THEME_MODE] ?: HapticsSettings.Default.themeMode.name)
+                } catch (_: Exception) {
+                    ThemeMode.SYSTEM
+                },
+                seedColor = prefs[Keys.SEED_COLOR] ?: HapticsSettings.Default.seedColor,
             )
         }
 
@@ -54,6 +68,27 @@ class HapticsPreferences(context: Context) {
         it[Keys.INTENSITY] = intensity.coerceIn(0f, 1f)
     }
     suspend fun setPattern(pattern: HapticPattern) = edit { it[Keys.PATTERN] = pattern.name }
+    suspend fun setEdgeEnabled(enabled: Boolean) = edit { it[Keys.EDGE_ENABLED] = enabled }
+    suspend fun setEdgePattern(pattern: HapticPattern) = edit { it[Keys.EDGE_PATTERN] = pattern.name }
+    suspend fun setEdgeIntensity(intensity: Float) = edit {
+        it[Keys.EDGE_INTENSITY] = intensity.coerceIn(0f, 1f)
+    }
+
+    suspend fun setUseDynamicColors(enabled: Boolean) = edit { it[Keys.USE_DYNAMIC_COLORS] = enabled }
+    suspend fun setThemeMode(mode: ThemeMode) = edit { it[Keys.THEME_MODE] = mode.name }
+    suspend fun setSeedColor(color: Int) = edit { it[Keys.SEED_COLOR] = color }
+
+    /**
+     * Single-shot read of the edge-enabled flag. Used by [com.hapticks.app.edge.EdgeHapticReceiver]
+     * which must decide synchronously whether a broadcast should trigger vibration.
+     */
+    suspend fun isEdgeEnabledOnce(): Boolean = settings.first().edgeEnabled
+
+    /**
+     * Single-shot read of the edge settings. Used by [com.hapticks.app.edge.EdgeHapticReceiver].
+     */
+    suspend fun getEdgeSettingsOnce(): Triple<Boolean, HapticPattern, Float> = 
+        settings.first().let { Triple(it.edgeEnabled, it.edgePattern, it.edgeIntensity) }
 
     private suspend inline fun edit(crossinline block: (MutablePreferences) -> Unit) {
         try {
@@ -67,6 +102,12 @@ class HapticsPreferences(context: Context) {
         val TAP_ENABLED = booleanPreferencesKey("tap_enabled")
         val INTENSITY = floatPreferencesKey("intensity")
         val PATTERN = stringPreferencesKey("pattern")
+        val EDGE_ENABLED = booleanPreferencesKey("edge_enabled")
+        val EDGE_PATTERN = stringPreferencesKey("edge_pattern")
+        val EDGE_INTENSITY = floatPreferencesKey("edge_intensity")
+        val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
+        val SEED_COLOR = intPreferencesKey("seed_color")
     }
 
     private companion object {

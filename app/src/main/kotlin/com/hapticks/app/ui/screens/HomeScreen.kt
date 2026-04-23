@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.SwipeVertical
 import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,14 +34,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
 
-/**
- * App home screen. Presents the available feature categories as large, tappable cards in
- * the Android 16 Material 3 Expressive idiom: big display-scale greeting, icon-led cards
- * with a tonal leading badge, and a chevron pill on the trailing edge.
- */
 @Composable
 fun HomeScreen(
     onOpenFeelEveryTap: () -> Unit,
+    onOpenEdgeHaptics: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -53,7 +50,7 @@ fun HomeScreen(
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
-                .padding(top = 24.dp, bottom = 24.dp),
+                .padding(top = 24.dp),
         ) {
             HomeHeader()
             Spacer(modifier = Modifier.height(28.dp))
@@ -70,6 +67,16 @@ fun HomeScreen(
                     onClick = onOpenFeelEveryTap,
                 )
                 FeatureCard(
+                    title = stringResource(id = R.string.home_edge_haptics_title),
+                    subtitle = stringResource(id = R.string.home_edge_haptics_subtitle),
+                    icon = Icons.Rounded.SwipeVertical,
+                    accent = MaterialTheme.colorScheme.secondaryContainer,
+                    onAccent = MaterialTheme.colorScheme.onSecondaryContainer,
+                    iconBg = MaterialTheme.colorScheme.secondary,
+                    iconTint = MaterialTheme.colorScheme.onSecondary,
+                    onClick = onOpenEdgeHaptics,
+                )
+                FeatureCard(
                     title = stringResource(id = R.string.home_coming_soon_title),
                     subtitle = stringResource(id = R.string.home_coming_soon_subtitle),
                     icon = Icons.Rounded.AutoAwesome,
@@ -77,11 +84,11 @@ fun HomeScreen(
                     onAccent = MaterialTheme.colorScheme.onSurface,
                     iconBg = MaterialTheme.colorScheme.surfaceContainerHighest,
                     iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    badge = stringResource(id = R.string.home_coming_soon_badge),
                     enabled = false,
                     onClick = {},
                 )
-            }
+            }            
+            Spacer(modifier = Modifier.height(120.dp))
         }
     }
 }
@@ -119,7 +126,6 @@ private fun FeatureCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    badge: String? = null,
 ) {
     val alpha = if (enabled) 1f else 0.65f
     Surface(
@@ -155,16 +161,13 @@ private fun FeatureCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleLarge,
                         color = onAccent.copy(alpha = alpha),
                     )
-                    if (badge != null) {
-                        BadgePill(text = badge)
-                    }
                 }
                 Text(
                     text = subtitle,
@@ -176,21 +179,6 @@ private fun FeatureCard(
                 ChevronPill()
             }
         }
-    }
-}
-
-@Composable
-private fun BadgePill(text: String) {
-    Surface(
-        color = MaterialTheme.colorScheme.tertiaryContainer,
-        shape = CircleShape,
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onTertiaryContainer,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-        )
     }
 }
 

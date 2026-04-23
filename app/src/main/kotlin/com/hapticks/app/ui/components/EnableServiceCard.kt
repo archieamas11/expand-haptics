@@ -39,7 +39,7 @@ fun EnableServiceCard(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        color = MaterialTheme.colorScheme.tertiaryContainer,
+        color = MaterialTheme.colorScheme.errorContainer,
         shape = RoundedCornerShape(28.dp),
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -55,7 +55,7 @@ fun EnableServiceCard(
                     modifier = Modifier
                         .size(44.dp)
                         .background(
-                            color = MaterialTheme.colorScheme.tertiary,
+                            color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.12f),
                             shape = RoundedCornerShape(16.dp),
                         ),
                     contentAlignment = Alignment.Center,
@@ -63,21 +63,21 @@ fun EnableServiceCard(
                     Icon(
                         imageVector = Icons.Rounded.AccessibilityNew,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onTertiary,
+                        tint = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.size(24.dp),
                     )
                 }
                 Text(
                     text = stringResource(id = R.string.enable_service_title),
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.weight(1f),
                 )
             }
             Text(
                 text = stringResource(id = R.string.enable_service_body),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.86f),
             )
             Spacer(modifier = Modifier.height(2.dp))
             Button(
@@ -85,8 +85,8 @@ fun EnableServiceCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                    containerColor = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.14f),
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
                 ),
                 contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
             ) {

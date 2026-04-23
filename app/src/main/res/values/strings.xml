@@ -30,6 +30,12 @@
     <string name="pattern_heavy_click_desc">Strong, punchy feedback</string>
     <string name="pattern_double_click">Double</string>
     <string name="pattern_double_click_desc">Two rapid taps in sequence</string>
+    <string name="pattern_soft_bump">Soft Bump</string>
+    <string name="pattern_soft_bump_desc">Gentle tap like hitting a soft wall</string>
+    <string name="pattern_double_tick">Double Tick</string>
+    <string name="pattern_double_tick_desc">Firm bump-bump boundary feel</string>
+    <string name="pattern_tension_release">Tension &amp; Release</string>
+    <string name="pattern_tension_release_desc">Premium pull-and-snap sensation</string>
     <string name="pattern_selected">Selected</string>
 
     <string name="enable_service_title">Turn on accessibility service</string>
@@ -39,7 +45,29 @@
 
     <string name="home_feel_every_tap_title">Feel Every Tap</string>
     <string name="home_feel_every_tap_subtitle">Adds responsive touch feedback across apps and system UI for a more refined, premium feel</string>
+    <string name="home_edge_haptics_title">Edge Haptics</string>
+    <string name="home_edge_haptics_subtitle">Feel a firm pulse the instant a scroll hits the absolute top or bottom in any app</string>
     <string name="home_coming_soon_title">Coming Soon</string>
     <string name="home_coming_soon_subtitle">More haptic experiences are on the way. Stay tuned.</string>
-    <string name="home_coming_soon_badge">In the works</string>
+
+    <!-- Edge Haptics screen -->
+    <string name="edge_screen_title">Edge Haptics</string>
+    <string name="edge_section_title">Scroll-edge feedback</string>
+    <string name="edge_section_subtitle">Hooks RecyclerView, ScrollView, NestedScrollView, and WebView so you feel exactly when a list cannot scroll any further.</string>
+    <string name="edge_toggle_title">Enable Edge Haptics</string>
+    <string name="edge_toggle_subtitle">Fires a distinct pulse the instant you hit the top or bottom of any scrollable surface</string>
+    <string name="edge_test_button">Test edge haptic</string>
+    <string name="edge_status_ready_title">LSPosed module active</string>
+    <string name="edge_status_ready_body">The hook is live in this process. Scope the module to more apps from LSPosed Manager to extend coverage.</string>
+    <string name="edge_status_root_missing_title">Rooted device required</string>
+    <string name="edge_status_root_missing_body">Edge Haptics relies on LSPosed to hook into other apps\' scroll containers. Install a Magisk-based root and LSPosed to enable this feature.</string>
+    <string name="edge_status_lsposed_inactive_title">LSPosed not active</string>
+    <string name="edge_status_lsposed_inactive_body">Root is present but LSPosed has not injected this app. Open LSPosed Manager, enable the \u201cHapticks\u201d module, add Hapticks to its scope, then restart.</string>
+    <string name="edge_test_fired">Edge haptic fired</string>
+    <string name="edge_test_no_vibrator">Device has no vibrator</string>
+    <string name="edge_test_unavailable">Feature unavailable: %1$s</string>
+    <string name="edge_note_scope">Tip: add other apps to the Hapticks module scope in LSPosed Manager to feel edge haptics inside them.</string>
+
+    <!-- LSPosed module metadata -->
+    <string name="xposed_description">Hapticks Edge Haptics: pixel-perfect top/bottom scroll feedback for RecyclerView, ScrollView, NestedScrollView, and WebView.</string>
 </resources>

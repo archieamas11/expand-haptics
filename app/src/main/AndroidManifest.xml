@@ -8,6 +8,11 @@
         android:name="android.hardware.vibrator"
         android:required="false" />
 
+    <queries>
+        <package android:name="org.lsposed.manager" />
+        <package android:name="io.github.lsposed.manager" />
+    </queries>
+
     <application
         android:name=".HapticksApp"
         android:hardwareAccelerated="true"
@@ -20,6 +25,21 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Hapticks"
         tools:targetApi="33">
+
+        <!-- LSPosed module metadata. Consumed by LSPosed Manager when the APK is installed on
+             a rooted device that hosts LSPosed; ignored on every other device. -->
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="@string/xposed_description" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="93" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@array/xposed_scope" />
 
         <activity
             android:name=".MainActivity"
@@ -44,6 +64,22 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+
+        <!--
+            Receives the broadcast fallback from EdgeScrollHooks when the hooked process
+            lacks VIBRATE permission. Exported so LSPosed-injected code running under the
+            target app's UID can reach it; the intent is explicit (ComponentName-targeted)
+            and the receiver only fires a cached VibrationEffect, so spoofing a broadcast
+            would cost the attacker nothing but their own vibration.
+        -->
+        <receiver
+            android:name=".edge.EdgeHapticReceiver"
+            android:exported="true"
+            android:directBootAware="false">
+            <intent-filter>
+                <action android:name="com.hapticks.app.edge.ACTION_EDGE_HAPTIC" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

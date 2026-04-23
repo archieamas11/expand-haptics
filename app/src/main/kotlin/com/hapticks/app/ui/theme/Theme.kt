@@ -1,14 +1,21 @@
 package com.hapticks.app.ui.theme
 
 import android.app.Activity
+import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.hapticks.app.data.ThemeMode
 
 private val HapticksDarkColorScheme = darkColorScheme(
     primary = HapticksSage,
@@ -38,8 +45,62 @@ private val HapticksDarkColorScheme = darkColorScheme(
     outlineVariant = HapticksOutlineVariant,
 )
 
+private val HapticksLightColorScheme = lightColorScheme(
+    primary = HapticksOlive,
+    onPrimary = Color.White,
+    primaryContainer = HapticksSage,
+    onPrimaryContainer = HapticksOliveDim,
+    secondary = HapticksOliveDim,
+    onSecondary = Color.White,
+    secondaryContainer = HapticksSageDim,
+    onSecondaryContainer = HapticksOlive,
+    tertiary = HapticksCopper,
+    onTertiary = Color.White,
+    tertiaryContainer = HapticksOnCopperContainer,
+    onTertiaryContainer = HapticksCopperContainer,
+    background = Color(0xFFFDFCFF),
+    onBackground = HapticksBlack,
+    surface = Color(0xFFFDFCFF),
+    onSurface = HapticksBlack,
+    surfaceVariant = Color(0xFFE1E2EC),
+    onSurfaceVariant = Color(0xFF44474F),
+    outline = Color(0xFF74777F),
+)
+
 @Composable
-fun HapticksTheme(content: @Composable () -> Unit) {
+fun HapticksTheme(
+    themeMode: ThemeMode = ThemeMode.SYSTEM,
+    useDynamicColors: Boolean = true,
+    seedColor: Int? = null,
+    content: @Composable () -> Unit
+) {
+    val darkTheme = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
+
+    val context = LocalContext.current
+    val colorScheme = when {
+        useDynamicColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        }
+        darkTheme -> {
+            if (seedColor != null) {
+                HapticksDarkColorScheme.copy(primary = Color(seedColor))
+            } else {
+                HapticksDarkColorScheme
+            }
+        }
+        else -> {
+            if (seedColor != null) {
+                HapticksLightColorScheme.copy(primary = Color(seedColor))
+            } else {
+                HapticksLightColorScheme
+            }
+        }
+    }
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -47,13 +108,13 @@ fun HapticksTheme(content: @Composable () -> Unit) {
             window.statusBarColor = Color.Transparent.toArgb()
             window.navigationBarColor = Color.Transparent.toArgb()
             val insetsController = WindowCompat.getInsetsController(window, view)
-            insetsController.isAppearanceLightStatusBars = false
-            insetsController.isAppearanceLightNavigationBars = false
+            insetsController.isAppearanceLightStatusBars = !darkTheme
+            insetsController.isAppearanceLightNavigationBars = !darkTheme
         }
     }
 
     MaterialTheme(
-        colorScheme = HapticksDarkColorScheme,
+        colorScheme = colorScheme,
         typography = HapticksTypography,
         shapes = HapticksShapes,
         content = content,

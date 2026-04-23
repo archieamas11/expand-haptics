@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import com.hapticks.app.HapticksApp
 import com.hapticks.app.data.HapticsPreferences
 import com.hapticks.app.data.HapticsSettings
+import com.hapticks.app.data.ThemeMode
 import com.hapticks.app.haptics.HapticEngine
 import com.hapticks.app.haptics.HapticPattern
 import com.hapticks.app.service.HapticsAccessibilityService
@@ -76,6 +77,18 @@ class CustomHapticsViewModel(
     fun testHaptic() {
         val s = settings.value
         engine.play(s.pattern, s.intensity)
+    }
+
+    fun setUseDynamicColors(enabled: Boolean) {
+        viewModelScope.launch { preferences.setUseDynamicColors(enabled) }
+    }
+
+    fun setThemeMode(mode: ThemeMode) {
+        viewModelScope.launch { preferences.setThemeMode(mode) }
+    }
+
+    fun setSeedColor(color: Int) {
+        viewModelScope.launch { preferences.setSeedColor(color) }
     }
 
     companion object {

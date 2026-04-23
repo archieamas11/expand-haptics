@@ -54,13 +54,6 @@ import com.hapticks.app.ui.components.PatternSelector
 import com.hapticks.app.ui.components.SectionCard
 import kotlin.math.roundToInt
 
-/**
- * Top-level screen rendered by [com.hapticks.app.MainActivity]. Android 16 Material 3
- * Expressive styling: rounded-back chip in the top bar, section headers with tonal icon
- * badges, an intensity block with numeric readout pill, an illustrated 2-column pattern
- * grid, and a large filled Test Haptic button. When the accessibility service isn't
- * enabled, a tertiary-container onboarding card is pinned above the content.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomHapticsScreen(
@@ -126,24 +119,15 @@ fun CustomHapticsScreen(
 
 @Composable
 private fun BackPill(onBack: () -> Unit) {
-    Box(
-        modifier = Modifier.padding(start = 8.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            shape = CircleShape,
-        ) {
-            IconButton(onClick = onBack) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                    contentDescription = stringResource(id = R.string.back),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                )
-            }
-        }
+    IconButton(onClick = onBack) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+            contentDescription = stringResource(id = R.string.back),
+            tint = MaterialTheme.colorScheme.onSurface,
+        )
     }
 }
+
 
 @Composable
 private fun HapticFeedbackSection(
