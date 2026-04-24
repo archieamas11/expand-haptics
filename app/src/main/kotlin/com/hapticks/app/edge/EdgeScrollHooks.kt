@@ -14,6 +14,7 @@ import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface
 import java.lang.reflect.Method
+import java.util.concurrent.atomic.AtomicBoolean
 
 class EdgeScrollHooks : XposedModule() {
 
@@ -22,7 +23,11 @@ class EdgeScrollHooks : XposedModule() {
     @Volatile private var intensity: Float = 1.0f
     @Volatile private var lastPrefCheckMs: Long = 0L
     @Volatile private var remotePrefs: SharedPreferences? = null
-    @Volatile private var isSettingsReceiverRegistered: Boolean = false
+
+    // AtomicBoolean ensures the check-and-set is atomic, preventing a race condition
+    // where two threads both see `false` and both try to register the receiver.
+    private val isSettingsReceiverRegistered = AtomicBoolean(false)
+
     @Volatile private var lastObservedPullEdge: Edge = Edge.BOTTOM
 
     private val edgeController = EdgeHapticController(
@@ -77,15 +82,23 @@ class EdgeScrollHooks : XposedModule() {
         // onPackageReady can run before ActivityThread exposes an app context in some
         // processes; retrying here ensures we eventually subscribe to live settings
         // updates instead of staying pinned to the boot/default pattern forever.
-        if (!isSettingsReceiverRegistered) ensureSettingsReceiverRegistered()
+        if (!isSettingsReceiverRegistered.get()) ensureSettingsReceiverRegistered()
         val now = SystemClock.uptimeMillis()
         if (now - lastPrefCheckMs > PREF_TTL_MS) refreshPrefs()
         return enabled
     }
 
     private fun ensureSettingsReceiverRegistered() {
-        if (isSettingsReceiverRegistered) return
-        val appContext = currentAppContext() ?: return
+        // compareAndSet(false, true) is atomic: only one thread will proceed past this point.
+        if (!isSettingsReceiverRegistered.compareAndSet(false, true)) return
+
+        val appContext = currentAppContext()
+        if (appContext == null) {
+            // Context not yet available — reset so we retry on next isEnabled() call.
+            isSettingsReceiverRegistered.set(false)
+            return
+        }
+
         val filter = IntentFilter(EdgeHapticsBridge.ACTION_SETTINGS_CHANGED)
         runCatching {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -98,9 +111,10 @@ class EdgeScrollHooks : XposedModule() {
                 @Suppress("DEPRECATION")
                 appContext.registerReceiver(settingsReceiver, filter)
             }
-            isSettingsReceiverRegistered = true
             log("$TAG: settings receiver registered")
         }.onFailure { t ->
+            // Registration failed — reset so we can retry.
+            isSettingsReceiverRegistered.set(false)
             log("$TAG: settings receiver registration failed: ${t.message}")
         }
     }
@@ -149,13 +163,17 @@ class EdgeScrollHooks : XposedModule() {
                 return
             }
 
-            enabled = intent.getBooleanExtra(EdgeHapticsBridge.EXTRA_EDGE_ENABLED, enabled)
+            if (hasEnabled) {
+                enabled = intent.getBooleanExtra(EdgeHapticsBridge.EXTRA_EDGE_ENABLED, enabled)
+            }
             val patternName = intent.getStringExtra(EdgeHapticsBridge.EXTRA_EDGE_PATTERN)
             if (!patternName.isNullOrBlank()) {
                 pattern = HapticPattern.fromStorageKey(patternName)
             }
-            val newIntensity = intent.getFloatExtra(EdgeHapticsBridge.EXTRA_EDGE_INTENSITY, intensity)
-            intensity = newIntensity.coerceIn(0f, 1f)
+            if (hasIntensity) {
+                val newIntensity = intent.getFloatExtra(EdgeHapticsBridge.EXTRA_EDGE_INTENSITY, intensity)
+                intensity = newIntensity.coerceIn(0f, 1f)
+            }
             lastPrefCheckMs = SystemClock.uptimeMillis()
             if (!enabled) edgeController.onReleaseAll()
         }

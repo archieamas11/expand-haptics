@@ -33,6 +33,10 @@ class HapticsAccessibilityService : AccessibilityService() {
         val app = application as HapticksApp
         engine = app.hapticEngine
 
+        // Apply the initial event mask based on current defaults before we get
+        // the first DataStore emission, so we don't receive spurious events.
+        applyEventMask(HapticsSettings.Default)
+
         settingsJob = app.preferences.settings
             .distinctUntilChanged()
             .onEach { snapshot ->
@@ -79,6 +83,17 @@ class HapticsAccessibilityService : AccessibilityService() {
         if (settings.scrollEnabled) {
             mask = mask or AccessibilityEvent.TYPE_VIEW_SCROLLED
         }
+
+        // Always subscribe to at least one event type. If mask is 0 (both features disabled),
+        // keep the current mask — removing all event subscriptions makes the service appear
+        // inactive to the system and can cause it to be unbound. The onAccessibilityEvent
+        // guard clauses above will still suppress actual haptic output when disabled.
+        if (mask == 0) {
+            // Subscribe to an innocuous event type as a keepalive; no haptic will fire
+            // since both tapEnabled and scrollEnabled are false.
+            mask = AccessibilityEvent.TYPE_VIEW_CLICKED
+        }
+
         if (info.eventTypes == mask) return
         info.eventTypes = mask
         serviceInfo = info

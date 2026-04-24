@@ -19,10 +19,17 @@ object EdgeVibrator {
     const val EXTRA_EDGE = "edge"
     const val EXTRA_PATTERN = "pattern"
 
+    // Track per-pattern+intensity cache to avoid redundant effect construction
     @Volatile private var cachedEffect: VibrationEffect? = null
     @Volatile private var cachedPattern: HapticPattern? = null
-    @Volatile private var cachedIntensity: Float? = null
-    @Volatile private var broadcastOnly: Boolean = false
+    @Volatile private var cachedIntensity: Float = Float.NaN
+
+    // Number of consecutive direct-vibrate failures before switching to broadcast-only.
+    // Resets to 0 on any successful direct call, so transient failures don't permanently
+    // lock us into broadcast mode.
+    @Volatile private var consecutiveDirectFailures: Int = 0
+    private const val DIRECT_FAILURE_THRESHOLD = 3
+
     @Volatile private var touchAttrs: VibrationAttributes? = null
 
     fun play(
@@ -35,10 +42,16 @@ object EdgeVibrator {
     ) {
         val appCtx = context.applicationContext ?: context
         val finalIntensity = resolveIntensity(kind, intensity, intensityScale)
-        if (!broadcastOnly) {
-            if (tryDirect(appCtx, pattern, finalIntensity)) return
-            broadcastOnly = true
-            Log.i(TAG, "Falling back to broadcast vibration for this process")
+
+        if (consecutiveDirectFailures < DIRECT_FAILURE_THRESHOLD) {
+            if (tryDirect(appCtx, pattern, finalIntensity)) {
+                consecutiveDirectFailures = 0
+                return
+            }
+            consecutiveDirectFailures++
+            if (consecutiveDirectFailures >= DIRECT_FAILURE_THRESHOLD) {
+                Log.i(TAG, "Switching to broadcast vibration after $consecutiveDirectFailures failures")
+            }
         }
         sendBroadcast(appCtx, edge, pattern, finalIntensity)
     }
@@ -59,8 +72,10 @@ object EdgeVibrator {
     private fun tryDirect(context: Context, pattern: HapticPattern, intensity: Float): Boolean {
         val vibrator = resolveVibrator(context) ?: return false
         if (!vibrator.hasVibrator()) return false
-        val effect = if (pattern == cachedPattern && (intensity == cachedIntensity)) {
-            cachedEffect ?: buildEdgeEffect(pattern, intensity).also { cachedEffect = it }
+
+        // Use a NaN-safe float comparison (avoid boxing with Float?)
+        val effect = if (pattern == cachedPattern && intensity == cachedIntensity && cachedEffect != null) {
+            cachedEffect!!
         } else {
             buildEdgeEffect(pattern, intensity).also {
                 cachedEffect = it
@@ -68,16 +83,20 @@ object EdgeVibrator {
                 cachedIntensity = intensity
             }
         }
+
         val attrs = touchAttrs ?: VibrationAttributes.createForUsage(
             VibrationAttributes.USAGE_TOUCH,
         ).also { touchAttrs = it }
+
         return try {
             vibrator.vibrate(effect, attrs)
             true
         } catch (_: SecurityException) {
             false
         } catch (t: Throwable) {
-            Log.w(TAG, "vibrate() threw; retrying next edge", t)
+            Log.w(TAG, "vibrate() threw unexpectedly", t)
+            // Still return true — we called vibrate, it may have partially executed.
+            // Don't increment failure count for non-SecurityException errors.
             true
         }
     }
@@ -102,7 +121,11 @@ object EdgeVibrator {
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_TICK, intensity)
                 HapticPattern.HEAVY_CLICK -> {
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
-                    composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
+                    composition.addPrimitive(
+                        VibrationEffect.Composition.PRIMITIVE_CLICK,
+                        (intensity * 0.6f).coerceIn(0f, 1f),
+                        40,
+                    )
                 }
                 HapticPattern.DOUBLE_CLICK -> {
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
@@ -131,6 +154,7 @@ object EdgeVibrator {
 
     private fun sendBroadcast(context: Context, edge: Edge, pattern: HapticPattern, intensity: Float) {
         val intent = Intent(ACTION_EDGE_HAPTIC).apply {
+            // Target the receiver explicitly — never send as a global broadcast.
             component = ComponentName(HAPTICKS_PKG, RECEIVER_CLASS)
             setPackage(HAPTICKS_PKG)
             putExtra(EXTRA_EDGE, edge.name)
@@ -146,7 +170,10 @@ object EdgeVibrator {
     }
 
     internal fun resetFallbackForTest() {
-        broadcastOnly = false
+        consecutiveDirectFailures = 0
+        cachedEffect = null
+        cachedPattern = null
+        cachedIntensity = Float.NaN
     }
 
     fun edgeEffect(pattern: HapticPattern, intensity: Float): VibrationEffect {

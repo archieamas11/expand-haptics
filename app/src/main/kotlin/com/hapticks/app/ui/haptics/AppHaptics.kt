@@ -24,6 +24,7 @@ import com.hapticks.app.haptics.HapticPattern
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 
 @Stable
@@ -44,8 +45,9 @@ class AppHaptics(
     fun listEdgeTick() {
         val settings = settingsProvider()
         if (!settings.scrollEnabled) return
+        // Respect user's chosen scroll pattern instead of always using TICK
         engine.play(
-            pattern = HapticPattern.TICK,
+            pattern = settings.scrollPattern,
             intensity = settings.scrollIntensity * EDGE_INTENSITY_SCALE,
             throttleMs = EDGE_THROTTLE_MS,
         )
@@ -99,20 +101,19 @@ fun HapticListEdgeFeedback(
     state: LazyListState,
 ) {
     val appHaptics = LocalAppHaptics.current
-    var lastEdge by remember(state) { mutableStateOf(ListEdge.NONE) }
 
     LaunchedEffect(state, appHaptics) {
+        var lastEdge: ListEdge = ListEdge.NONE
         snapshotFlow { state.currentEdge() }
             .drop(1)
             .distinctUntilChanged()
-            .map { edge -> edge.takeIf { it != ListEdge.NONE } }
             .collectLatest { edge ->
-                if (edge != null && edge != lastEdge) {
+                if (edge != ListEdge.NONE && edge != lastEdge) {
                     appHaptics?.listEdgeTick()
                 }
-                if (edge != null) {
-                    lastEdge = edge
-                }
+                // Always update lastEdge, including NONE, so that returning to
+                // the same edge after scrolling away triggers the haptic again.
+                lastEdge = edge
             }
     }
 }
@@ -122,20 +123,17 @@ fun HapticScrollEdgeFeedback(
     state: ScrollState,
 ) {
     val appHaptics = LocalAppHaptics.current
-    var lastEdge by remember(state) { mutableStateOf(ListEdge.NONE) }
 
     LaunchedEffect(state, appHaptics) {
+        var lastEdge: ListEdge = ListEdge.NONE
         snapshotFlow { state.currentEdge() }
             .drop(1)
             .distinctUntilChanged()
-            .map { edge -> edge.takeIf { it != ListEdge.NONE } }
             .collectLatest { edge ->
-                if (edge != null && edge != lastEdge) {
+                if (edge != ListEdge.NONE && edge != lastEdge) {
                     appHaptics?.listEdgeTick()
                 }
-                if (edge != null) {
-                    lastEdge = edge
-                }
+                lastEdge = edge
             }
     }
 }
@@ -148,7 +146,7 @@ private fun LazyListState.currentEdge(): ListEdge {
 
     val firstVisible = layoutInfo.visibleItemsInfo.firstOrNull()
     val lastVisible = layoutInfo.visibleItemsInfo.lastOrNull()
-    val atTop = firstVisible?.index == 0 && firstVisible.offset == 0
+    val atTop = firstVisible?.index == 0 && firstVisible.offset >= 0
     val atBottom = lastVisible?.index == (layoutInfo.totalItemsCount - 1) &&
         (lastVisible.offset + lastVisible.size) <= layoutInfo.viewportEndOffset
 

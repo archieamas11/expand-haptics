@@ -1,18 +1,20 @@
-name: Build Android APK
+name: Build APK
 
 on:
-  push:
-    branches:
-      - "**"
-  pull_request:
   workflow_dispatch:
-
-permissions:
-  contents: read
+    inputs:
+      build_type:
+        description: "Build type"
+        required: true
+        default: "release"
+        type: choice
+        options:
+          - release
+          - debug
 
 jobs:
   build:
-    name: Build debug APK
+    name: Build APK
     runs-on: ubuntu-latest
 
     steps:
@@ -22,21 +24,19 @@ jobs:
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          distribution: temurin
           java-version: "17"
+          distribution: "temurin"
           cache: gradle
 
-      - name: Make Gradle wrapper executable
-        run: chmod +x ./gradlew
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --stacktrace
+      - name: Build APK
+        run: ./gradlew assemble${{ github.event.inputs.build_type }}
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug-apk
-          path: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/debug/output-metadata.json
-          if-no-files-found: error
+          name: app-${{ github.event.inputs.build_type }}
+          path: app/build/outputs/apk/${{ github.event.inputs.build_type }}/*.apk
+          retention-days: 7

@@ -21,7 +21,7 @@ class EdgeHapticController(
         Edge.BOTTOM to EdgeState(),
     )
 
-    @Volatile private var lastTriggerAtMs: Long = Long.MIN_VALUE
+    @Volatile private var lastTriggerAtMs: Long = UNSET_TIMESTAMP
 
     @Synchronized
     fun onPull(edge: Edge, deltaDistance: Float, nowMs: Long): EdgeHapticDispatch? {
@@ -85,8 +85,10 @@ class EdgeHapticController(
     }
 
     private fun isInCooldown(nowMs: Long): Boolean {
+        if (lastTriggerAtMs == UNSET_TIMESTAMP) return false
         val elapsed = nowMs - lastTriggerAtMs
-        return elapsed in 0..cooldownMs
+        // elapsed < 0 means clock jumped backward (e.g. debug/test); treat as not in cooldown.
+        return elapsed in 0L..cooldownMs
     }
 
     private data class EdgeState(
@@ -97,5 +99,6 @@ class EdgeHapticController(
     companion object {
         const val DEFAULT_PULL_THRESHOLD: Float = 0.015f
         const val DEFAULT_COOLDOWN_MS: Long = 60L
+        private const val UNSET_TIMESTAMP: Long = Long.MIN_VALUE
     }
 }

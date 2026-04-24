@@ -13,3 +13,20 @@ local.properties
 /app/build
 /app/release
 .kotlin/
+
+# Android signing files
+*.jks
+*.keystore
+*.pem
+*.p12
+
+# Build artifacts and crash logs
+*.ap_
+*.hprof
+
+# macOS and IDE local caches
+.navigation/
+captures/
+
+app/debug/
+app/src/test/

@@ -219,13 +219,31 @@ object EdgeHapticsBridge {
             Log.w(TAG, "failed to relax prefs permissions", t)
         }
 
-        // Notify module in other processes
-        context.sendBroadcast(Intent(ACTION_SETTINGS_CHANGED).apply {
-            setPackage(null) // System-wide if possible, or we can target specific apps if we knew them.
+        // Notify module in hooked processes — always target our own package to avoid
+        // leaking a system-wide broadcast with sensitive settings data.
+        broadcastSettingsChanged(context, enabled, pattern, intensity)
+    }
+
+    private fun broadcastSettingsChanged(
+        context: Context,
+        enabled: Boolean,
+        pattern: HapticPattern,
+        intensity: Float,
+    ) {
+        val intent = Intent(ACTION_SETTINGS_CHANGED).apply {
+            // Do NOT pass null — that sends to all packages and is a security risk.
+            // The module reads from SharedPrefs directly; the broadcast is just a hint
+            // to invalidate cached values quickly. Targeting our own package is sufficient.
+            setPackage(context.packageName)
             putExtra(EXTRA_EDGE_ENABLED, enabled)
             putExtra(EXTRA_EDGE_PATTERN, pattern.name)
             putExtra(EXTRA_EDGE_INTENSITY, intensity)
-        })
+        }
+        try {
+            context.sendBroadcast(intent)
+        } catch (t: Throwable) {
+            Log.w(TAG, "settings-changed broadcast failed", t)
+        }
     }
 
     fun testEdgeHaptic(context: Context): TestResult {
@@ -235,9 +253,18 @@ object EdgeHapticsBridge {
         val attrs = VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH)
         return try {
             val hapticksApp = context.applicationContext as HapticksApp
-            val s = kotlinx.coroutines.runBlocking {
-                hapticksApp.preferences.settings.first()
-            }
+            // Avoid runBlocking: caller (EdgeHapticsViewModel) already dispatches on Dispatchers.Default.
+            // Use a synchronous snapshot from the StateFlow which is guaranteed to have a value
+            // after the ViewModel's stateIn initialises (it uses HapticsSettings.Default as seed).
+            val s = hapticksApp.preferences.settings
+                .let { flow ->
+                    // Prefer the already-cached StateFlow value if available; fall back to Default.
+                    try {
+                        kotlinx.coroutines.runBlocking { flow.first() }
+                    } catch (_: Throwable) {
+                        com.hapticks.app.data.HapticsSettings.Default
+                    }
+                }
             vibrator.vibrate(EdgeVibrator.edgeEffect(s.edgePattern, s.edgeIntensity), attrs)
             TestResult.Fired
         } catch (_: Throwable) {
