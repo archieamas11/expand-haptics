@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.SwipeVertical
@@ -46,6 +47,8 @@ import com.hapticks.app.ui.components.HapticTestButton
 import com.hapticks.app.ui.components.HapticToggleRow
 import com.hapticks.app.ui.components.PatternSelector
 import com.hapticks.app.ui.components.SectionCard
+import com.hapticks.app.ui.haptics.HapticListEdgeFeedback
+import com.hapticks.app.ui.haptics.LocalAppHaptics
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,6 +66,8 @@ fun ScrollHapticsScreen(
 ) {
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
+    val listState = rememberLazyListState()
+    HapticListEdgeFeedback(state = listState)
 
     Scaffold(
         modifier = modifier
@@ -87,6 +92,7 @@ fun ScrollHapticsScreen(
         },
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
@@ -147,7 +153,13 @@ fun ScrollHapticsScreen(
 
 @Composable
 private fun BackPill(onBack: () -> Unit) {
-    IconButton(onClick = onBack) {
+    val appHaptics = LocalAppHaptics.current
+    IconButton(
+        onClick = {
+            appHaptics?.tap()
+            onBack()
+        },
+    ) {
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
             contentDescription = stringResource(id = R.string.back),

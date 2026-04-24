@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Bolt
@@ -56,6 +57,8 @@ import com.hapticks.app.ui.components.HapticTestButton
 import com.hapticks.app.ui.components.HapticToggleRow
 import com.hapticks.app.ui.components.PatternSelector
 import com.hapticks.app.ui.components.SectionCard
+import com.hapticks.app.ui.haptics.HapticListEdgeFeedback
+import com.hapticks.app.ui.haptics.LocalAppHaptics
 import com.hapticks.app.viewmodel.EdgeHapticsViewModel
 import kotlin.math.roundToInt
 
@@ -76,6 +79,8 @@ fun EdgeHapticsScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
+    val listState = rememberLazyListState()
+    HapticListEdgeFeedback(state = listState)
 
     TestEventSnackbar(
         testEvent = testEvent,
@@ -107,6 +112,7 @@ fun EdgeHapticsScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
@@ -340,7 +346,13 @@ private data class BannerSpec(
 
 @Composable
 private fun BackPill(onBack: () -> Unit) {
-    IconButton(onClick = onBack) {
+    val appHaptics = LocalAppHaptics.current
+    IconButton(
+        onClick = {
+            appHaptics?.tap()
+            onBack()
+        },
+    ) {
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
             contentDescription = stringResource(id = R.string.back),

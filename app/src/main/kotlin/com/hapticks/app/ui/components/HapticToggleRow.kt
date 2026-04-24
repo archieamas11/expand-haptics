@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.hapticks.app.ui.haptics.LocalAppHaptics
 
 /**
  * Settings-style row with an optional leading icon, two-line title/subtitle, and a trailing
@@ -33,6 +34,7 @@ fun HapticToggleRow(
     modifier: Modifier = Modifier,
     leadingIcon: ImageVector? = null,
 ) {
+    val appHaptics = LocalAppHaptics.current
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -77,7 +79,10 @@ fun HapticToggleRow(
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = {
+                appHaptics?.tap()
+                onCheckedChange(it)
+            },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                 checkedTrackColor = MaterialTheme.colorScheme.primary,

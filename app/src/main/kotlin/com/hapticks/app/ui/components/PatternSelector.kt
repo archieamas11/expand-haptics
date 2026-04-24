@@ -39,6 +39,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
 import com.hapticks.app.haptics.HapticPattern
+import com.hapticks.app.ui.haptics.LocalAppHaptics
 
 @Composable
 fun PatternSelector(
@@ -46,6 +47,7 @@ fun PatternSelector(
     onPatternSelected: (HapticPattern) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val appHaptics = LocalAppHaptics.current
     val patterns = remember { HapticPattern.entries.toList() }
     Column(
         modifier = modifier
@@ -62,7 +64,12 @@ fun PatternSelector(
                     PatternCard(
                         pattern = pattern,
                         isSelected = pattern == selected,
-                        onClick = { if (pattern != selected) onPatternSelected(pattern) },
+                        onClick = {
+                            if (pattern != selected) {
+                                appHaptics?.tap()
+                                onPatternSelected(pattern)
+                            }
+                        },
                         modifier = Modifier.weight(1f),
                     )
                 }

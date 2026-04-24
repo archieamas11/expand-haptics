@@ -4,8 +4,8 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.Spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Home
@@ -31,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.hapticks.app.ui.haptics.hapticClickable
 
 enum class BottomTab { HOME, SETTINGS }
 
@@ -46,6 +48,10 @@ fun FloatingBottomBar(
             .height(68.dp),
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.5f),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
+        ),
         tonalElevation = 2.dp,
         shadowElevation = 14.dp,
     ) {
@@ -80,6 +86,7 @@ private fun BottomTabItem(
     onClick: () -> Unit,
 ) {
     val shape = CircleShape
+    val tabWidth = 112.dp
 
     val containerColor by animateColorAsState(
         targetValue = if (selected) {
@@ -113,10 +120,10 @@ private fun BottomTabItem(
     Box(
         modifier = Modifier
             .fillMaxHeight()
-            .defaultMinSize(minWidth = 88.dp)
+            .width(tabWidth)
             .clip(shape)
             .background(containerColor, shape)
-            .clickable(onClick = onClick)
+            .hapticClickable(onClick = onClick)
             .padding(horizontal = horizontalPadding),
         contentAlignment = Alignment.Center,
     ) {

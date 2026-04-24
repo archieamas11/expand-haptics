@@ -25,6 +25,7 @@ import com.hapticks.app.ui.screens.EdgeHapticsScreen
 import com.hapticks.app.ui.screens.HomeScreen
 import com.hapticks.app.ui.screens.ScrollHapticsScreen
 import com.hapticks.app.ui.screens.SettingsScreen
+import com.hapticks.app.ui.haptics.ProvideAppHaptics
 import com.hapticks.app.ui.theme.HapticksTheme
 import com.hapticks.app.viewmodel.CustomHapticsViewModel
 import com.hapticks.app.viewmodel.EdgeHapticsViewModel
@@ -43,6 +44,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val app = application as HapticksApp
             val settings by viewModel.settings.collectAsStateWithLifecycle()
             val isServiceEnabled by viewModel.isServiceEnabled.collectAsStateWithLifecycle()
             val edgeAvailability by edgeViewModel.availability.collectAsStateWithLifecycle()
@@ -53,75 +55,80 @@ class MainActivity : ComponentActivity() {
                 useDynamicColors = settings.useDynamicColors,
                 seedColor = settings.seedColor,
             ) {
-                var route by rememberSaveable { mutableStateOf(Route.HOME) }
+                ProvideAppHaptics(
+                    engine = app.hapticEngine,
+                    settings = settings,
+                ) {
+                    var route by rememberSaveable { mutableStateOf(Route.HOME) }
 
-                Box(modifier = Modifier.fillMaxSize()) {
-                    when (route) {
-                        Route.FEEL_EVERY_TAP -> {
-                            BackHandler { route = Route.HOME }
-                            CustomHapticsScreen(
-                                settings = settings,
-                                isServiceEnabled = isServiceEnabled,
-                                onTapEnabledChange = viewModel::setTapEnabled,
-                                onIntensityCommit = viewModel::commitIntensity,
-                                onPatternSelected = viewModel::setPattern,
-                                onTestHaptic = viewModel::testHaptic,
-                                onOpenAccessibilitySettings = ::openAccessibilitySettings,
-                                onBack = { route = Route.HOME },
-                            )
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        when (route) {
+                            Route.FEEL_EVERY_TAP -> {
+                                BackHandler { route = Route.HOME }
+                                CustomHapticsScreen(
+                                    settings = settings,
+                                    isServiceEnabled = isServiceEnabled,
+                                    onTapEnabledChange = viewModel::setTapEnabled,
+                                    onIntensityCommit = viewModel::commitIntensity,
+                                    onPatternSelected = viewModel::setPattern,
+                                    onTestHaptic = viewModel::testHaptic,
+                                    onOpenAccessibilitySettings = ::openAccessibilitySettings,
+                                    onBack = { route = Route.HOME },
+                                )
+                            }
+                            Route.EDGE_HAPTICS -> {
+                                BackHandler { route = Route.HOME }
+                                val edgeSettings by edgeViewModel.settings.collectAsStateWithLifecycle()
+                                EdgeHapticsScreen(
+                                    settings = edgeSettings,
+                                    availability = edgeAvailability,
+                                    testEvent = edgeTestEvent,
+                                    onEdgeEnabledChange = edgeViewModel::setEdgeEnabled,
+                                    onPatternSelected = edgeViewModel::setEdgePattern,
+                                    onIntensityCommit = edgeViewModel::setEdgeIntensity,
+                                    onTestEdgeHaptic = edgeViewModel::testEdgeHaptic,
+                                    onTestEventConsumed = edgeViewModel::consumeTestEvent,
+                                    onBack = { route = Route.HOME },
+                                )
+                            }
+                            Route.HOME -> {
+                                HomeScreen(
+                                    onOpenFeelEveryTap = { route = Route.FEEL_EVERY_TAP },
+                                    onOpenEdgeHaptics = { route = Route.EDGE_HAPTICS },
+                                    onOpenTactileScrolling = { route = Route.TACTILE_SCROLLING },
+                                )
+                            }
+                            Route.TACTILE_SCROLLING -> {
+                                BackHandler { route = Route.HOME }
+                                ScrollHapticsScreen(
+                                    settings = settings,
+                                    isServiceEnabled = isServiceEnabled,
+                                    onScrollEnabledChange = viewModel::setScrollEnabled,
+                                    onIntensityCommit = viewModel::commitScrollIntensity,
+                                    onPatternSelected = viewModel::setScrollPattern,
+                                    onTestHaptic = viewModel::testScrollHaptic,
+                                    onOpenAccessibilitySettings = ::openAccessibilitySettings,
+                                    onBack = { route = Route.HOME },
+                                )
+                            }
+                            Route.SETTINGS -> {
+                                SettingsScreen(
+                                    settings = settings,
+                                    onUseDynamicColorsChange = viewModel::setUseDynamicColors,
+                                    onThemeModeChange = viewModel::setThemeMode,
+                                )
+                            }
                         }
-                        Route.EDGE_HAPTICS -> {
-                            BackHandler { route = Route.HOME }
-                            val edgeSettings by edgeViewModel.settings.collectAsStateWithLifecycle()
-                            EdgeHapticsScreen(
-                                settings = edgeSettings,
-                                availability = edgeAvailability,
-                                testEvent = edgeTestEvent,
-                                onEdgeEnabledChange = edgeViewModel::setEdgeEnabled,
-                                onPatternSelected = edgeViewModel::setEdgePattern,
-                                onIntensityCommit = edgeViewModel::setEdgeIntensity,
-                                onTestEdgeHaptic = edgeViewModel::testEdgeHaptic,
-                                onTestEventConsumed = edgeViewModel::consumeTestEvent,
-                                onBack = { route = Route.HOME },
-                            )
-                        }
-                        Route.HOME -> {
-                            HomeScreen(
-                                onOpenFeelEveryTap = { route = Route.FEEL_EVERY_TAP },
-                                onOpenEdgeHaptics = { route = Route.EDGE_HAPTICS },
-                                onOpenTactileScrolling = { route = Route.TACTILE_SCROLLING },
-                            )
-                        }
-                        Route.TACTILE_SCROLLING -> {
-                            BackHandler { route = Route.HOME }
-                            ScrollHapticsScreen(
-                                settings = settings,
-                                isServiceEnabled = isServiceEnabled,
-                                onScrollEnabledChange = viewModel::setScrollEnabled,
-                                onIntensityCommit = viewModel::commitScrollIntensity,
-                                onPatternSelected = viewModel::setScrollPattern,
-                                onTestHaptic = viewModel::testScrollHaptic,
-                                onOpenAccessibilitySettings = ::openAccessibilitySettings,
-                                onBack = { route = Route.HOME },
-                            )
-                        }
-                        Route.SETTINGS -> {
-                            SettingsScreen(
-                                settings = settings,
-                                onUseDynamicColorsChange = viewModel::setUseDynamicColors,
-                                onThemeModeChange = viewModel::setThemeMode,
-                            )
-                        }
-                    }
 
-                    if ((route == Route.HOME) || (route == Route.SETTINGS)) {
-                        FloatingBottomBar(
-                            selectedTab = if (route == Route.HOME) BottomTab.HOME else BottomTab.SETTINGS,
-                            onTabSelected = { tab ->
-                                route = if (tab == BottomTab.HOME) Route.HOME else Route.SETTINGS
-                            },
-                            modifier = Modifier.align(Alignment.BottomCenter)
-                        )
+                        if ((route == Route.HOME) || (route == Route.SETTINGS)) {
+                            FloatingBottomBar(
+                                selectedTab = if (route == Route.HOME) BottomTab.HOME else BottomTab.SETTINGS,
+                                onTabSelected = { tab ->
+                                    route = if (tab == BottomTab.HOME) Route.HOME else Route.SETTINGS
+                                },
+                                modifier = Modifier.align(Alignment.BottomCenter)
+                            )
+                        }
                     }
                 }
             }

@@ -2,7 +2,6 @@ package com.hapticks.app.ui.screens
 
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -50,6 +50,9 @@ import androidx.core.net.toUri
 import com.hapticks.app.R
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.data.ThemeMode
+import com.hapticks.app.ui.haptics.HapticListEdgeFeedback
+import com.hapticks.app.ui.haptics.LocalAppHaptics
+import com.hapticks.app.ui.haptics.hapticClickable
 
 @Composable
 fun SettingsScreen(
@@ -58,12 +61,16 @@ fun SettingsScreen(
     onThemeModeChange: (ThemeMode) -> Unit,
 ) {
     val context = LocalContext.current
+    val appHaptics = LocalAppHaptics.current
+    val listState = rememberLazyListState()
+    HapticListEdgeFeedback(state = listState)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
@@ -86,7 +93,10 @@ fun SettingsScreen(
                         trailing = {
                             Switch(
                                 checked = settings.useDynamicColors,
-                                onCheckedChange = onUseDynamicColorsChange,
+                                onCheckedChange = {
+                                    appHaptics?.tap()
+                                    onUseDynamicColorsChange(it)
+                                },
                             )
                         },
                     )
@@ -234,7 +244,7 @@ private fun SettingsRow(
         modifier = Modifier
             .fillMaxWidth()
             .then(
-                if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
+                if (onClick != null) Modifier.hapticClickable(onClick = onClick) else Modifier,
             )
             .defaultMinSize(minHeight = 52.dp)
             .padding(horizontal = 14.dp)
@@ -283,6 +293,7 @@ private fun ThemeModeRow(
     selected: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
 ) {
+    val appHaptics = LocalAppHaptics.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -306,7 +317,10 @@ private fun ThemeModeRow(
             modes.forEachIndexed { index, option ->
                 SegmentedButton(
                     selected = selected == option.mode,
-                    onClick = { onThemeModeChange(option.mode) },
+                    onClick = {
+                        appHaptics?.tap()
+                        onThemeModeChange(option.mode)
+                    },
                     shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size),
                     icon = {
                         Icon(

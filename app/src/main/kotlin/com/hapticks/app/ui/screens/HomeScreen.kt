@@ -1,7 +1,6 @@
 package com.hapticks.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +36,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hapticks.app.R
+import com.hapticks.app.ui.haptics.HapticScrollEdgeFeedback
+import com.hapticks.app.ui.haptics.hapticClickable
 
 @Composable
 fun HomeScreen(
@@ -45,6 +46,9 @@ fun HomeScreen(
     onOpenTactileScrolling: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val scrollState = rememberScrollState()
+    HapticScrollEdgeFeedback(state = scrollState)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -53,7 +57,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .padding(horizontal = 20.dp)
                 .padding(top = 24.dp),
         ) {
@@ -153,7 +157,7 @@ private fun FeatureCard(
         shape = RoundedCornerShape(28.dp),
         modifier = modifier
             .fillMaxWidth()
-            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier),
+            .then(if (enabled) Modifier.hapticClickable(onClick = onClick) else Modifier),
     ) {
         Row(
             modifier = Modifier
