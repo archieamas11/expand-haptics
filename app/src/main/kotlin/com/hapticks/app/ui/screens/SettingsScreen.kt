@@ -137,7 +137,6 @@ fun SettingsScreen(
                     )
                 }
             }
-
             item {
                 Spacer(modifier = Modifier.height(96.dp))
             }
@@ -163,7 +162,7 @@ private fun SettingsHeader() {
         )
         Text(
             text = stringResource(R.string.settings_header_title),
-            style = MaterialTheme.typography.headlineLarge,
+            style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
     }

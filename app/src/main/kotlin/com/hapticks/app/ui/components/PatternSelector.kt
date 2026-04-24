@@ -110,12 +110,6 @@ private fun PatternCard(
         targetValue = if (isSelected) 1.5.dp else 1.dp,
         label = "pattern-border-width",
     )
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1f else 0.985f,
-        animationSpec = spring(stiffness = 500f),
-        label = "pattern-scale",
-    )
-
     val titleColor = if (isSelected) {
         MaterialTheme.colorScheme.onPrimaryContainer
     } else {
@@ -131,7 +125,6 @@ private fun PatternCard(
 
     Surface(
         modifier = modifier
-            .scale(scale)
             .heightIn(min = 132.dp)
             .selectable(
                 selected = isSelected,
