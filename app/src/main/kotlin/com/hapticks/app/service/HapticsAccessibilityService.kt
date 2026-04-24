@@ -24,6 +24,7 @@ class HapticsAccessibilityService : AccessibilityService() {
     private var current: HapticsSettings = HapticsSettings.Default
 
     @Volatile private var tapEnabled: Boolean = current.tapEnabled
+    @Volatile private var scrollEnabled: Boolean = current.scrollEnabled
 
     private lateinit var engine: HapticEngine
 
@@ -37,6 +38,7 @@ class HapticsAccessibilityService : AccessibilityService() {
             .onEach { snapshot ->
                 current = snapshot
                 tapEnabled = snapshot.tapEnabled
+                scrollEnabled = snapshot.scrollEnabled
                 applyEventMask(snapshot)
             }
             .launchIn(scope)
@@ -51,6 +53,13 @@ class HapticsAccessibilityService : AccessibilityService() {
             engine.play(s.pattern, s.intensity)
             return
         }
+
+        if (type == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+            if (!scrollEnabled) return
+            val s = current
+            // Keep cadence tight enough to feel rhythmic while avoiding motor spam.
+            engine.play(s.scrollPattern, s.scrollIntensity, throttleMs = SCROLL_THROTTLE_MS)
+        }
     }
 
     override fun onInterrupt() = Unit
@@ -63,9 +72,19 @@ class HapticsAccessibilityService : AccessibilityService() {
 
     private fun applyEventMask(settings: HapticsSettings) {
         val info = serviceInfo ?: return
-        val mask = if (settings.tapEnabled) AccessibilityEvent.TYPE_VIEW_CLICKED else 0
+        var mask = 0
+        if (settings.tapEnabled) {
+            mask = mask or AccessibilityEvent.TYPE_VIEW_CLICKED
+        }
+        if (settings.scrollEnabled) {
+            mask = mask or AccessibilityEvent.TYPE_VIEW_SCROLLED
+        }
         if (info.eventTypes == mask) return
         info.eventTypes = mask
         serviceInfo = info
+    }
+
+    private companion object {
+        const val SCROLL_THROTTLE_MS = 42L
     }
 }

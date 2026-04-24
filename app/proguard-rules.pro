@@ -13,10 +13,9 @@
     public static int i(...);
 }
 
-# --- LSPosed / Xposed ---
-# EdgeScrollHooks is loaded reflectively by LSPosed via the class name listed
-# in assets/xposed_init. R8 has no static reference to it, so we must pin the
-# whole class + its IXposedHookLoadPackage entry point by name.
+# --- LSPosed / libxposed ---
+# EdgeScrollHooks is loaded reflectively by LSPosed via
+# META-INF/xposed/java_init.list. R8 has no static reference to it, so pin it.
 -keep class com.hapticks.app.edge.EdgeScrollHooks { *; }
 
 # isModuleActive is the activation stub hooked by EdgeScrollHooks.
@@ -34,7 +33,7 @@
 # fields so the broadcast fallback path is not stripped.
 -keep class com.hapticks.app.edge.EdgeHapticReceiver { *; }
 
-# Xposed compile-time API is marked compileOnly, but keep any rule R8 might
+# libxposed compile-time API is marked compileOnly, but keep any rule R8 might
 # need to not choke on the missing symbols at optimization time.
 -dontwarn de.robv.android.xposed.**
 -dontwarn io.github.libxposed.api.**

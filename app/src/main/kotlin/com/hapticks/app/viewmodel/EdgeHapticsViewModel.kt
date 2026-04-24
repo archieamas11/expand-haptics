@@ -54,7 +54,7 @@ class EdgeHapticsViewModel(
 
     fun refreshAvailability() {
         viewModelScope.launch(Dispatchers.IO) {
-            _availability.value = EdgeHapticsBridge.isAvailable()
+            _availability.value = EdgeHapticsBridge.isAvailable(getApplication())
         }
     }
 

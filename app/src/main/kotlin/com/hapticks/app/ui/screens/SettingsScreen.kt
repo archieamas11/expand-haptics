@@ -1,17 +1,7 @@
 package com.hapticks.app.ui.screens
 
 import android.content.Intent
-import androidx.core.net.toUri
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,15 +21,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Brightness6
-import androidx.compose.material.icons.rounded.Code
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -47,84 +35,53 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
+import com.hapticks.app.R
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.data.ThemeMode
-import com.hapticks.app.ui.theme.SeedBlue
-import com.hapticks.app.ui.theme.SeedGreen
-import com.hapticks.app.ui.theme.SeedPurple
-import com.hapticks.app.ui.theme.SeedRed
-import com.hapticks.app.ui.theme.SeedYellow
 
-/**
- * Settings surface, styled in the Material 3 Expressive idiom: a collapsing large top
- * app bar, sectioned tonal groups with icon-led headers, tall rounded rows, a segmented
- * theme mode picker, and a color swatch rail with a selection ring. The background
- * bottom spacer leaves room for the floating nav bar.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     settings: HapticsSettings,
     onUseDynamicColorsChange: (Boolean) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
-    onSeedColorChange: (Int) -> Unit,
 ) {
     val context = LocalContext.current
-    val topAppBarState = rememberTopAppBarState()
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
 
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            LargeTopAppBar(
-                title = {
-                    Text(
-                        text = "Settings",
-                        style = MaterialTheme.typography.displaySmall,
-                        color = MaterialTheme.colorScheme.onBackground,
-                    )
-                },
-                scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background,
-                ),
-            )
-        },
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
+                SettingsHeader()
+            }
+
+            item {
                 SettingsSection(
-                    title = "Appearance",
-                    subtitle = "Tune how Hapticks looks and feels",
+                    title = stringResource(R.string.settings_section_appearance),
                     icon = Icons.Rounded.Palette,
                 ) {
                     SettingsRow(
-                        icon = Icons.Rounded.Palette,
-                        title = "Dynamic Color",
-                        subtitle = "Pull accents from your wallpaper",
+                        title = stringResource(R.string.settings_dynamic_color_title),
+                        subtitle = null,
                         position = RowPosition.Top,
                         trailing = {
                             Switch(
@@ -136,20 +93,6 @@ fun SettingsScreen(
 
                     RowDivider()
 
-                    AnimatedVisibility(
-                        visible = !settings.useDynamicColors,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically(),
-                    ) {
-                        Column {
-                            SeedColorRow(
-                                selectedSeed = settings.seedColor,
-                                onSeedColorChange = onSeedColorChange,
-                            )
-                            RowDivider()
-                        }
-                    }
-
                     ThemeModeRow(
                         selected = settings.themeMode,
                         onThemeModeChange = onThemeModeChange,
@@ -159,15 +102,13 @@ fun SettingsScreen(
 
             item {
                 SettingsSection(
-                    title = "About",
-                    subtitle = "Learn more about the project",
+                    title = stringResource(R.string.settings_section_about),
                     icon = Icons.Rounded.Settings,
                 ) {
                     SettingsRow(
-                        icon = Icons.Rounded.Code,
-                        title = "GitHub Repository",
-                        subtitle = "View source code and contribute",
-                        position = RowPosition.Top,
+                        title = stringResource(R.string.settings_github_title),
+                        subtitle = stringResource(R.string.settings_github_subtitle),
+                        position = RowPosition.Single,
                         onClick = {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,
@@ -180,6 +121,7 @@ fun SettingsScreen(
                                 imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp),
                             )
                         },
                     )
@@ -187,75 +129,94 @@ fun SettingsScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(120.dp))
+                Spacer(modifier = Modifier.height(96.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun SettingsHeader() {
+    val junicodeFontFamily = FontFamily(Font(R.font.junicode_italic))
+
+    Column(
+        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Text(
+            text = stringResource(R.string.settings_header_caption),
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontFamily = junicodeFontFamily,
+                fontSize = 15.sp,
+            ),
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = stringResource(R.string.settings_header_title),
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
     }
 }
 
 @Composable
 private fun SettingsSection(
     title: String,
-    subtitle: String,
     icon: ImageVector,
     content: @Composable () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 4.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Box(
+            Row(
                 modifier = Modifier
-                    .size(42.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        shape = RoundedCornerShape(14.dp),
-                    ),
-                contentAlignment = Alignment.Center,
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.size(22.dp),
-                )
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
             }
-        }
 
-        Surface(
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            shape = RoundedCornerShape(28.dp),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Column { content() }
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
+                Column { content() }
+            }
         }
     }
 }
 
-private enum class RowPosition { Top, Middle, Bottom }
+private enum class RowPosition { Top, Middle, Bottom, Single }
 
 @Composable
 private fun SettingsRow(
-    icon: ImageVector,
     title: String,
     subtitle: String? = null,
     position: RowPosition = RowPosition.Middle,
@@ -263,9 +224,10 @@ private fun SettingsRow(
     trailing: @Composable (() -> Unit)? = null,
 ) {
     val verticalPadding = when (position) {
-        RowPosition.Top -> PaddingValues(top = 16.dp, bottom = 14.dp)
-        RowPosition.Middle -> PaddingValues(vertical = 14.dp)
-        RowPosition.Bottom -> PaddingValues(top = 14.dp, bottom = 16.dp)
+        RowPosition.Top -> PaddingValues(top = 14.dp, bottom = 10.dp)
+        RowPosition.Middle -> PaddingValues(vertical = 10.dp)
+        RowPosition.Bottom -> PaddingValues(top = 10.dp, bottom = 14.dp)
+        RowPosition.Single -> PaddingValues(vertical = 14.dp)
     }
 
     Row(
@@ -274,28 +236,12 @@ private fun SettingsRow(
             .then(
                 if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier,
             )
-            .padding(horizontal = 18.dp)
+            .defaultMinSize(minHeight = 52.dp)
+            .padding(horizontal = 14.dp)
             .padding(verticalPadding),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    shape = RoundedCornerShape(12.dp),
-                ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(20.dp),
-            )
-        }
-
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(2.dp),
@@ -325,9 +271,9 @@ private fun RowDivider() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp)
+            .padding(horizontal = 14.dp)
             .height(1.dp)
-            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+            .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
     )
 }
 
@@ -340,51 +286,20 @@ private fun ThemeModeRow(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 18.dp)
-            .padding(top = 14.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = 14.dp)
+            .padding(top = 12.dp, bottom = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        shape = RoundedCornerShape(12.dp),
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.DarkMode,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = "Theme Mode",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = "Follow the system or force a mode",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+        Text(
+            text = stringResource(R.string.settings_theme_mode_title),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
 
         val modes = listOf(
-            ThemeModeOption(ThemeMode.SYSTEM, "System", Icons.Rounded.Brightness6),
-            ThemeModeOption(ThemeMode.LIGHT, "Light", Icons.Rounded.LightMode),
-            ThemeModeOption(ThemeMode.DARK, "Dark", Icons.Rounded.DarkMode),
+            ThemeModeOption(ThemeMode.SYSTEM, stringResource(R.string.settings_theme_mode_system), Icons.Rounded.Brightness6),
+            ThemeModeOption(ThemeMode.LIGHT, stringResource(R.string.settings_theme_mode_light), Icons.Rounded.LightMode),
+            ThemeModeOption(ThemeMode.DARK, stringResource(R.string.settings_theme_mode_dark), Icons.Rounded.DarkMode),
         )
 
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -413,119 +328,3 @@ private data class ThemeModeOption(
     val label: String,
     val icon: ImageVector,
 )
-
-@Composable
-private fun SeedColorRow(
-    selectedSeed: Int,
-    onSeedColorChange: (Int) -> Unit,
-) {
-    val swatches = listOf(
-        SeedSwatch(SeedPurple, "Purple"),
-        SeedSwatch(SeedBlue, "Blue"),
-        SeedSwatch(SeedGreen, "Green"),
-        SeedSwatch(SeedRed, "Red"),
-        SeedSwatch(SeedYellow, "Amber"),
-    )
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp)
-            .padding(vertical = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = Color(selectedSeed),
-                        shape = RoundedCornerShape(12.dp),
-                    ),
-            )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = "Theme Color",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = "Pick an accent that seeds the palette",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            swatches.forEach { swatch ->
-                SeedSwatchChip(
-                    color = swatch.color,
-                    selected = selectedSeed == swatch.color.toArgb(),
-                    onClick = { onSeedColorChange(swatch.color.toArgb()) },
-                )
-            }
-        }
-    }
-}
-
-private data class SeedSwatch(val color: Color, val label: String)
-
-@Composable
-private fun SeedSwatchChip(
-    color: Color,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val ringWidth by animateDpAsState(
-        targetValue = if (selected) 3.dp else 0.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow,
-        ),
-        label = "swatchRing",
-    )
-    val innerSize by animateDpAsState(
-        targetValue = if (selected) 32.dp else 40.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow,
-        ),
-        label = "swatchInner",
-    )
-
-    Box(
-        modifier = Modifier
-            .size(48.dp)
-            .clip(CircleShape)
-            .clickable(onClick = onClick)
-            .then(
-                if (selected) {
-                    Modifier.border(
-                        width = ringWidth,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        shape = CircleShape,
-                    )
-                } else {
-                    Modifier
-                }
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(innerSize)
-                .clip(CircleShape)
-                .background(color),
-        )
-    }
-}

@@ -23,6 +23,7 @@ import com.hapticks.app.ui.components.FloatingBottomBar
 import com.hapticks.app.ui.screens.CustomHapticsScreen
 import com.hapticks.app.ui.screens.EdgeHapticsScreen
 import com.hapticks.app.ui.screens.HomeScreen
+import com.hapticks.app.ui.screens.ScrollHapticsScreen
 import com.hapticks.app.ui.screens.SettingsScreen
 import com.hapticks.app.ui.theme.HapticksTheme
 import com.hapticks.app.viewmodel.CustomHapticsViewModel
@@ -88,6 +89,20 @@ class MainActivity : ComponentActivity() {
                             HomeScreen(
                                 onOpenFeelEveryTap = { route = Route.FEEL_EVERY_TAP },
                                 onOpenEdgeHaptics = { route = Route.EDGE_HAPTICS },
+                                onOpenTactileScrolling = { route = Route.TACTILE_SCROLLING },
+                            )
+                        }
+                        Route.TACTILE_SCROLLING -> {
+                            BackHandler { route = Route.HOME }
+                            ScrollHapticsScreen(
+                                settings = settings,
+                                isServiceEnabled = isServiceEnabled,
+                                onScrollEnabledChange = viewModel::setScrollEnabled,
+                                onIntensityCommit = viewModel::commitScrollIntensity,
+                                onPatternSelected = viewModel::setScrollPattern,
+                                onTestHaptic = viewModel::testScrollHaptic,
+                                onOpenAccessibilitySettings = ::openAccessibilitySettings,
+                                onBack = { route = Route.HOME },
                             )
                         }
                         Route.SETTINGS -> {
@@ -95,7 +110,6 @@ class MainActivity : ComponentActivity() {
                                 settings = settings,
                                 onUseDynamicColorsChange = viewModel::setUseDynamicColors,
                                 onThemeModeChange = viewModel::setThemeMode,
-                                onSeedColorChange = viewModel::setSeedColor,
                             )
                         }
                     }
@@ -120,7 +134,7 @@ class MainActivity : ComponentActivity() {
         edgeViewModel.refreshAvailability()
     }
 
-    private enum class Route { HOME, FEEL_EVERY_TAP, EDGE_HAPTICS, SETTINGS }
+    private enum class Route { HOME, FEEL_EVERY_TAP, EDGE_HAPTICS, TACTILE_SCROLLING, SETTINGS }
 
     private fun openAccessibilitySettings() {
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {

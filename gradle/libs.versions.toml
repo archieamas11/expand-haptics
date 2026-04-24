@@ -1,6 +1,6 @@
 [versions]
-agp = "8.13.2"
-kotlin = "2.0.20"
+agp = "9.2.0"
+kotlin = "2.2.10"
 coreKtx = "1.13.1"
 lifecycle = "2.8.6"
 activityCompose = "1.9.2"
@@ -8,6 +8,7 @@ composeBom = "2024.09.02"
 datastore = "1.1.1"
 coroutines = "1.8.1"
 junit = "4.13.2"
+libxposed = "101.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -26,6 +27,7 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+libxposed-api = { group = "io.github.libxposed", name = "api", version.ref = "libxposed" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

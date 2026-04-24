@@ -2,6 +2,7 @@ package com.hapticks.app.edge
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.os.VibrationAttributes
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -48,11 +49,13 @@ object EdgeHapticsBridge {
         object NoVibrator : TestResult()
     }
 
-    fun isAvailable(): AvailabilityStatus {
+    fun isAvailable(context: Context): AvailabilityStatus {
         val rooted = isDeviceRooted()
         val xposedActive = isXposedActive()
+        val hasRuntimeConfig = hasPersistedRuntimeConfig(context)
         return when {
             xposedActive -> AvailabilityStatus.READY
+            rooted && hasRuntimeConfig -> AvailabilityStatus.READY
             !rooted -> AvailabilityStatus.ROOT_MISSING
             else -> AvailabilityStatus.LSPOSED_INACTIVE
         }
@@ -71,6 +74,7 @@ object EdgeHapticsBridge {
     @JvmStatic
     fun isModuleActive(): Boolean = false
 
+    @JvmStatic
     fun isXposedActive(): Boolean {
         if (isModuleActive()) return true
         return isXposedClassLoadable()
@@ -89,6 +93,13 @@ object EdgeHapticsBridge {
         return false
     }
 
+    private fun hasPersistedRuntimeConfig(context: Context): Boolean = runCatching {
+        val prefs = context.applicationContext.getSharedPreferences(XPOSED_PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.contains(KEY_EDGE_ENABLED) &&
+            prefs.contains(KEY_EDGE_PATTERN) &&
+            prefs.contains(KEY_EDGE_INTENSITY)
+    }.getOrDefault(false)
+
     fun isDeviceRooted(): Boolean {
         for (path in SU_PATHS) {
             if (File(path).exists()) return true
@@ -100,6 +111,7 @@ object EdgeHapticsBridge {
         "de.robv.android.xposed.XposedBridge",
         "de.robv.android.xposed.XposedHelpers",
         "org.lsposed.lspd.core.ApplicationServiceClient",
+        "io.github.libxposed.api.XposedInterface",
     )
 
     private val SU_PATHS = arrayOf(
@@ -117,6 +129,11 @@ object EdgeHapticsBridge {
     const val KEY_EDGE_ENABLED = "edge_enabled"
     const val KEY_EDGE_PATTERN = "edge_pattern"
     const val KEY_EDGE_INTENSITY = "edge_intensity"
+
+    const val ACTION_SETTINGS_CHANGED = "com.hapticks.app.edge.SETTINGS_CHANGED"
+    const val EXTRA_EDGE_ENABLED = "extra_edge_enabled"
+    const val EXTRA_EDGE_PATTERN = "extra_edge_pattern"
+    const val EXTRA_EDGE_INTENSITY = "extra_edge_intensity"
 
     suspend fun enable(context: Context) {
         val prefs = context.hapticks().preferences
@@ -201,6 +218,14 @@ object EdgeHapticsBridge {
         } catch (t: Throwable) {
             Log.w(TAG, "failed to relax prefs permissions", t)
         }
+
+        // Notify module in other processes
+        context.sendBroadcast(Intent(ACTION_SETTINGS_CHANGED).apply {
+            setPackage(null) // System-wide if possible, or we can target specific apps if we knew them.
+            putExtra(EXTRA_EDGE_ENABLED, enabled)
+            putExtra(EXTRA_EDGE_PATTERN, pattern.name)
+            putExtra(EXTRA_EDGE_INTENSITY, intensity)
+        })
     }
 
     fun testEdgeHaptic(context: Context): TestResult {

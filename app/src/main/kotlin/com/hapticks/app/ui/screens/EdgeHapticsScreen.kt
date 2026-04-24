@@ -12,24 +12,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.ErrorOutline
-import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.SwipeVertical
 import androidx.compose.material.icons.rounded.WarningAmber
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -38,8 +33,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -50,12 +45,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.edge.EdgeHapticsBridge
 import com.hapticks.app.haptics.HapticPattern
+import com.hapticks.app.ui.components.HapticTestButton
 import com.hapticks.app.ui.components.HapticToggleRow
 import com.hapticks.app.ui.components.PatternSelector
 import com.hapticks.app.ui.components.SectionCard
@@ -77,6 +74,8 @@ fun EdgeHapticsScreen(
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val topAppBarState = rememberTopAppBarState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
 
     TestEventSnackbar(
         testEvent = testEvent,
@@ -85,85 +84,85 @@ fun EdgeHapticsScreen(
     )
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            TopAppBar(
+            LargeTopAppBar(
                 title = {
                     Text(
                         text = stringResource(id = R.string.edge_screen_title),
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.displaySmall,
                     )
                 },
                 navigationIcon = { BackPill(onBack = onBack) },
-                colors = TopAppBarDefaults.topAppBarColors(
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.largeTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background,
                 ),
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(top = 4.dp, bottom = 24.dp),
+                .padding(padding),
+            contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            AvailabilityBanner(availability = availability)
-
-            SectionCard(
-                title = stringResource(id = R.string.edge_section_title),
-                subtitle = stringResource(id = R.string.edge_section_subtitle),
-                icon = Icons.Rounded.SwipeVertical,
-                contentPadding = PaddingValues(vertical = 4.dp),
-            ) {
-                HapticToggleRow(
-                    title = stringResource(id = R.string.edge_toggle_title),
-                    subtitle = stringResource(id = R.string.edge_toggle_subtitle),
-                    checked = settings.edgeEnabled,
-                    onCheckedChange = onEdgeEnabledChange,
-                    leadingIcon = Icons.Rounded.Bolt,
-                )
-                IntensityControl(
-                    intensity = settings.edgeIntensity,
-                    onIntensityCommit = onIntensityCommit,
-                )
+            item {
+                AvailabilityBanner(availability = availability)
             }
 
-            SectionCard(
-                title = stringResource(id = R.string.section_pattern),
-                subtitle = stringResource(id = R.string.section_pattern_subtitle),
-                icon = Icons.Rounded.GraphicEq,
-                contentPadding = PaddingValues(vertical = 4.dp),
-            ) {
-                PatternSelector(
-                    selected = settings.edgePattern,
-                    onPatternSelected = onPatternSelected,
-                )
+            item {
+                SectionCard {
+                    HapticToggleRow(
+                        title = stringResource(id = R.string.edge_toggle_title),
+                        subtitle = stringResource(id = R.string.edge_toggle_subtitle),
+                        checked = settings.edgeEnabled,
+                        onCheckedChange = onEdgeEnabledChange,
+                        leadingIcon = Icons.Rounded.Bolt,
+                    )
+                    IntensityControl(
+                        intensity = settings.edgeIntensity,
+                        onIntensityCommit = onIntensityCommit,
+                    )
+                }
             }
 
-            // The test button previews the pattern locally (Hapticks has
-            // VIBRATE), so we only gate it on the master toggle — users can
-            // still tune intensity/pattern before finishing LSPosed setup.
-            TestEdgeButton(
-                enabled = settings.edgeEnabled,
-                onClick = onTestEdgeHaptic,
-            )
+            item {
+                SectionCard {
+                    PatternSelector(
+                        selected = settings.edgePattern,
+                        onPatternSelected = onPatternSelected,
+                    )
+                }
+            }
+
+            item {
+                HapticTestButton(
+                    label = stringResource(id = R.string.edge_test_button),
+                    enabled = settings.edgeEnabled,
+                    onClick = onTestEdgeHaptic,
+                )
+            }
 
             if (availability == EdgeHapticsBridge.AvailabilityStatus.READY) {
-                Text(
-                    text = stringResource(id = R.string.edge_note_scope),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                )
+                item {
+                    Text(
+                        text = stringResource(id = R.string.edge_note_scope),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                    )
+                }
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+            }
         }
     }
 }
@@ -231,7 +230,6 @@ private fun TestEventSnackbar(
     snackbarHostState: SnackbarHostState,
     onConsumed: () -> Unit,
 ) {
-    val firedLabel = stringResource(id = R.string.edge_test_fired)
     val noVibratorLabel = stringResource(id = R.string.edge_test_no_vibrator)
     val readyLabel = stringResource(id = R.string.edge_status_ready_title)
     val noRootLabel = stringResource(id = R.string.edge_status_root_missing_title)
@@ -241,7 +239,6 @@ private fun TestEventSnackbar(
     LaunchedEffect(testEvent) {
         val message = when (testEvent) {
             null -> null
-            EdgeHapticsViewModel.TestEvent.Fired -> firedLabel
             EdgeHapticsViewModel.TestEvent.NoVibrator -> noVibratorLabel
             is EdgeHapticsViewModel.TestEvent.Unavailable -> {
                 val reason = when (testEvent.reason) {
@@ -251,6 +248,7 @@ private fun TestEventSnackbar(
                 }
                 unavailableFormat.format(reason)
             }
+            EdgeHapticsViewModel.TestEvent.Fired -> null
         }
         if (message != null) {
             snackbarHostState.showSnackbar(message)
@@ -339,51 +337,6 @@ private data class BannerSpec(
     val accent: Color,
     val onAccent: Color,
 )
-
-@Composable
-private fun TestEdgeButton(enabled: Boolean, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp),
-        shape = RoundedCornerShape(100.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-        ),
-        contentPadding = PaddingValues(horizontal = 24.dp),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .background(
-                        color = (if (enabled) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurfaceVariant).copy(alpha = 0.18f),
-                        shape = CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.PlayArrow,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-            }
-            Text(
-                text = stringResource(id = R.string.edge_test_button),
-                style = MaterialTheme.typography.titleMedium,
-            )
-        }
-    }
-}
 
 @Composable
 private fun BackPill(onBack: () -> Unit) {

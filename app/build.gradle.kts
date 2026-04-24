@@ -89,10 +89,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
 
-    // LSPosed / Xposed classic API. Provided at runtime by the LSPosed framework,
-    // so we only need compile-time signatures. The `:xposed-api` subproject vendors
-    // those stubs in-tree — no external repo or drop-in jar required.
-    compileOnly(project(":xposed-api"))
+    // libxposed API 101 (provided by LSPosed at runtime).
+    compileOnly(libs.libxposed.api)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

@@ -8,7 +8,6 @@ import androidx.compose.material.icons.rounded.DensityMedium
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.TouchApp
-import androidx.compose.material.icons.rounded.Waves
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.hapticks.app.R
 
@@ -53,17 +52,30 @@ enum class HapticPattern(
         labelRes = R.string.pattern_double_tick,
         descriptionRes = R.string.pattern_double_tick_desc,
         icon = Icons.Rounded.DensityMedium,
-    ),
-    TENSION_RELEASE(
-        labelRes = R.string.pattern_tension_release,
-        descriptionRes = R.string.pattern_tension_release_desc,
-        icon = Icons.Rounded.Waves,
     );
 
     companion object {
         val Default: HapticPattern = TICK
 
-        fun fromStorageKey(key: String?): HapticPattern =
-            entries.firstOrNull { it.name == key } ?: Default
+        fun fromStorageKey(key: String?): HapticPattern {
+            val normalized = key?.trim().orEmpty()
+            if (normalized.isEmpty()) return Default
+
+            // Be permissive: old builds and external callers may persist lowercase or
+            // slightly different tokens. Falling back to strict enum-name matching only
+            // makes edge haptics appear "stuck" on the default pattern.
+            val canonical = when (normalized.lowercase()) {
+                "default" -> Default.name
+                "click" -> CLICK.name
+                "tick" -> TICK.name
+                "heavy_click", "heavy-click", "heavyclick" -> HEAVY_CLICK.name
+                "double_click", "double-click", "doubleclick" -> DOUBLE_CLICK.name
+                "soft_bump", "soft-bump", "softbump" -> SOFT_BUMP.name
+                "double_tick", "double-tick", "doubletick" -> DOUBLE_TICK.name
+                else -> normalized.uppercase()
+            }
+
+            return entries.firstOrNull { it.name == canonical } ?: Default
+        }
     }
 }

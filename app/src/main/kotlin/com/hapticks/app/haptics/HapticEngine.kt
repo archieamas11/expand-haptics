@@ -93,10 +93,6 @@ class HapticEngine(context: Context) {
                         60,
                     )
                 }
-                HapticPattern.TENSION_RELEASE -> {
-                    composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_SLOW_RISE, intensity)
-                    composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
-                }
             }
             return composition.compose()
         }
@@ -108,7 +104,6 @@ class HapticEngine(context: Context) {
             HapticPattern.DOUBLE_CLICK -> VibrationEffect.EFFECT_DOUBLE_CLICK
             HapticPattern.SOFT_BUMP -> VibrationEffect.EFFECT_TICK
             HapticPattern.DOUBLE_TICK -> VibrationEffect.EFFECT_DOUBLE_CLICK
-            HapticPattern.TENSION_RELEASE -> VibrationEffect.EFFECT_HEAVY_CLICK
         }
         return if (hasAmplitudeControl && intensity < AMPLITUDE_FALLBACK_THRESHOLD) {
             val amplitude = (intensity * 255f).toInt().coerceIn(1, 255)
@@ -133,10 +128,6 @@ class HapticEngine(context: Context) {
             HapticPattern.TICK -> intArrayOf(VibrationEffect.Composition.PRIMITIVE_TICK)
             HapticPattern.SOFT_BUMP -> intArrayOf(VibrationEffect.Composition.PRIMITIVE_LOW_TICK)
             HapticPattern.DOUBLE_TICK -> intArrayOf(VibrationEffect.Composition.PRIMITIVE_TICK)
-            HapticPattern.TENSION_RELEASE -> intArrayOf(
-                VibrationEffect.Composition.PRIMITIVE_SLOW_RISE,
-                VibrationEffect.Composition.PRIMITIVE_CLICK,
-            )
         }
     }
 }

@@ -25,14 +25,35 @@ object EdgeVibrator {
     @Volatile private var broadcastOnly: Boolean = false
     @Volatile private var touchAttrs: VibrationAttributes? = null
 
-    fun play(context: Context, edge: Edge, pattern: HapticPattern, intensity: Float) {
+    fun play(
+        context: Context,
+        edge: Edge,
+        pattern: HapticPattern,
+        intensity: Float,
+        kind: EdgeHapticKind = EdgeHapticKind.FALLBACK,
+        intensityScale: Float = 1.0f,
+    ) {
         val appCtx = context.applicationContext ?: context
+        val finalIntensity = resolveIntensity(kind, intensity, intensityScale)
         if (!broadcastOnly) {
-            if (tryDirect(appCtx, pattern, intensity)) return
+            if (tryDirect(appCtx, pattern, finalIntensity)) return
             broadcastOnly = true
             Log.i(TAG, "Falling back to broadcast vibration for this process")
         }
-        sendBroadcast(appCtx, edge, pattern, intensity)
+        sendBroadcast(appCtx, edge, pattern, finalIntensity)
+    }
+
+    private fun resolveIntensity(
+        kind: EdgeHapticKind,
+        baseIntensity: Float,
+        intensityScale: Float,
+    ): Float {
+        val profileScale = when (kind) {
+            EdgeHapticKind.PULL -> 0.50f
+            EdgeHapticKind.ABSORB -> 1.00f
+            EdgeHapticKind.FALLBACK -> 0.65f
+        }
+        return (baseIntensity * profileScale * intensityScale).coerceIn(0.05f, 1.0f)
     }
 
     private fun tryDirect(context: Context, pattern: HapticPattern, intensity: Float): Boolean {
@@ -93,10 +114,6 @@ object EdgeVibrator {
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_TICK, intensity)
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_TICK, intensity, 60)
                 }
-                HapticPattern.TENSION_RELEASE -> {
-                    composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_SLOW_RISE, intensity)
-                    composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
-                }
             }
             composition.compose()
         } catch (_: Throwable) {
@@ -107,7 +124,6 @@ object EdgeVibrator {
                 HapticPattern.DOUBLE_CLICK -> VibrationEffect.EFFECT_DOUBLE_CLICK
                 HapticPattern.SOFT_BUMP -> VibrationEffect.EFFECT_TICK
                 HapticPattern.DOUBLE_TICK -> VibrationEffect.EFFECT_DOUBLE_CLICK
-                HapticPattern.TENSION_RELEASE -> VibrationEffect.EFFECT_HEAVY_CLICK
             }
             VibrationEffect.createPredefined(effectId)
         }

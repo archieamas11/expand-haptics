@@ -4,14 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.TouchApp
+import androidx.compose.material.icons.rounded.SwipeVertical
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -48,10 +50,10 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomHapticsScreen(
+fun ScrollHapticsScreen(
     settings: HapticsSettings,
     isServiceEnabled: Boolean,
-    onTapEnabledChange: (Boolean) -> Unit,
+    onScrollEnabledChange: (Boolean) -> Unit,
     onIntensityCommit: (Float) -> Unit,
     onPatternSelected: (HapticPattern) -> Unit,
     onTestHaptic: () -> Unit,
@@ -71,13 +73,11 @@ fun CustomHapticsScreen(
             LargeTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(id = R.string.screen_title),
+                        text = stringResource(id = R.string.scroll_haptics_title),
                         style = MaterialTheme.typography.displaySmall,
                     )
                 },
-                navigationIcon = {
-                    BackPill(onBack = onBack)
-                },
+                navigationIcon = { BackPill(onBack = onBack) },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.largeTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
@@ -98,27 +98,48 @@ fun CustomHapticsScreen(
                     EnableServiceCard(onOpenSettings = onOpenAccessibilitySettings)
                 }
             }
+    
 
             item {
-                HapticFeedbackSection(
-                    settings = settings,
-                    onTapEnabledChange = onTapEnabledChange,
-                    onIntensityCommit = onIntensityCommit,
-                )
+                SectionCard {
+                    HapticToggleRow(
+                        title = stringResource(id = R.string.scroll_toggle_title),
+                        subtitle = stringResource(id = R.string.scroll_toggle_subtitle),
+                        checked = settings.scrollEnabled,
+                        onCheckedChange = onScrollEnabledChange,
+                        leadingIcon = Icons.Rounded.SwipeVertical,
+                    )
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                    )
+                    IntensityControl(
+                        intensity = settings.scrollIntensity,
+                        onIntensityCommit = onIntensityCommit,
+                    )
+                }
             }
 
             item {
-                PatternSection(
-                    settings = settings,
-                    onPatternSelected = onPatternSelected,
-                )
+                SectionCard {
+                    PatternSelector(
+                        selected = settings.scrollPattern,
+                        onPatternSelected = onPatternSelected,
+                    )
+                }
             }
 
             item {
                 HapticTestButton(
-                    label = stringResource(id = R.string.test_haptic),
+                    label = stringResource(id = R.string.scroll_haptic_screen_test_button),
+                    enabled = settings.scrollEnabled,
                     onClick = onTestHaptic,
                 )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
             }
         }
     }
@@ -131,32 +152,6 @@ private fun BackPill(onBack: () -> Unit) {
             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
             contentDescription = stringResource(id = R.string.back),
             tint = MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
-@Composable
-private fun HapticFeedbackSection(
-    settings: HapticsSettings,
-    onTapEnabledChange: (Boolean) -> Unit,
-    onIntensityCommit: (Float) -> Unit,
-) {
-    SectionCard {
-        HapticToggleRow(
-        title = stringResource(id = R.string.toggle_tap_title),
-        subtitle = stringResource(id = R.string.toggle_tap_subtitle),
-        checked = settings.tapEnabled,
-        onCheckedChange = onTapEnabledChange,
-        leadingIcon = Icons.Rounded.TouchApp,
-        )
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant,
-            thickness = 0.5.dp,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        IntensityControl(
-            intensity = settings.intensity,
-            onIntensityCommit = onIntensityCommit,
         )
     }
 }
@@ -218,17 +213,3 @@ private fun IntensityBadge(percent: Int) {
     }
 }
 
-@Composable
-private fun PatternSection(
-    settings: HapticsSettings,
-    onPatternSelected: (HapticPattern) -> Unit,
-) {
-    Column {
-        SectionCard {
-            PatternSelector(
-                selected = settings.pattern,
-                onPatternSelected = onPatternSelected,
-            )
-        }
-    }
-}

@@ -74,6 +74,25 @@ class CustomHapticsViewModel(
         engine.play(pattern, settings.value.intensity)
     }
 
+    fun setScrollEnabled(enabled: Boolean) {
+        viewModelScope.launch { preferences.setScrollEnabled(enabled) }
+    }
+
+    fun commitScrollIntensity(intensity: Float) {
+        viewModelScope.launch { preferences.setScrollIntensity(intensity) }
+        engine.play(settings.value.scrollPattern, intensity)
+    }
+
+    fun setScrollPattern(pattern: HapticPattern) {
+        viewModelScope.launch { preferences.setScrollPattern(pattern) }
+        engine.play(pattern, settings.value.scrollIntensity)
+    }
+
+    fun testScrollHaptic() {
+        val s = settings.value
+        engine.play(s.scrollPattern, s.scrollIntensity)
+    }
+
     fun testHaptic() {
         val s = settings.value
         engine.play(s.pattern, s.intensity)

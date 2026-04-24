@@ -40,6 +40,11 @@ class HapticsPreferences(context: Context) {
                 intensity = (prefs[Keys.INTENSITY] ?: HapticsSettings.Default.intensity)
                     .coerceIn(0f, 1f),
                 pattern = HapticPattern.fromStorageKey(prefs[Keys.PATTERN]),
+                scrollEnabled = prefs[Keys.SCROLL_ENABLED] ?: HapticsSettings.Default.scrollEnabled,
+                scrollIntensity = (prefs[Keys.SCROLL_INTENSITY] ?: HapticsSettings.Default.scrollIntensity)
+                    .coerceIn(0f, 1f),
+                scrollPattern = HapticPattern.fromStorageKey(prefs[Keys.SCROLL_PATTERN])
+                    .takeIf { prefs.contains(Keys.SCROLL_PATTERN) } ?: HapticsSettings.Default.scrollPattern,
                 edgeEnabled = prefs[Keys.EDGE_ENABLED] ?: HapticsSettings.Default.edgeEnabled,
                 edgePattern = HapticPattern.fromStorageKey(prefs[Keys.EDGE_PATTERN])
                     .takeIf { prefs.contains(Keys.EDGE_PATTERN) } ?: HapticsSettings.Default.edgePattern,
@@ -60,6 +65,11 @@ class HapticsPreferences(context: Context) {
         it[Keys.INTENSITY] = intensity.coerceIn(0f, 1f)
     }
     suspend fun setPattern(pattern: HapticPattern) = edit { it[Keys.PATTERN] = pattern.name }
+    suspend fun setScrollEnabled(enabled: Boolean) = edit { it[Keys.SCROLL_ENABLED] = enabled }
+    suspend fun setScrollPattern(pattern: HapticPattern) = edit { it[Keys.SCROLL_PATTERN] = pattern.name }
+    suspend fun setScrollIntensity(intensity: Float) = edit {
+        it[Keys.SCROLL_INTENSITY] = intensity.coerceIn(0f, 1f)
+    }
     suspend fun setEdgeEnabled(enabled: Boolean) = edit { it[Keys.EDGE_ENABLED] = enabled }
     suspend fun setEdgePattern(pattern: HapticPattern) = edit { it[Keys.EDGE_PATTERN] = pattern.name }
     suspend fun setEdgeIntensity(intensity: Float) = edit {
@@ -88,6 +98,9 @@ class HapticsPreferences(context: Context) {
         val TAP_ENABLED = booleanPreferencesKey("tap_enabled")
         val INTENSITY = floatPreferencesKey("intensity")
         val PATTERN = stringPreferencesKey("pattern")
+        val SCROLL_ENABLED = booleanPreferencesKey("scroll_enabled")
+        val SCROLL_PATTERN = stringPreferencesKey("scroll_pattern")
+        val SCROLL_INTENSITY = floatPreferencesKey("scroll_intensity")
         val EDGE_ENABLED = booleanPreferencesKey("edge_enabled")
         val EDGE_PATTERN = stringPreferencesKey("edge_pattern")
         val EDGE_INTENSITY = floatPreferencesKey("edge_intensity")

@@ -10,8 +10,6 @@
     <string name="home_subtitle">Tune how your phone feels</string>
 
     <string name="screen_title">Feel Every Tap</string>
-    <string name="section_haptic_feedback">Haptic Feedback</string>
-    <string name="section_haptic_feedback_subtitle">Control how taps feel across your device</string>
     <string name="section_pattern">Pattern</string>
     <string name="section_pattern_subtitle">Pick the texture of each tap</string>
 
@@ -34,8 +32,6 @@
     <string name="pattern_soft_bump_desc">Gentle tap like hitting a soft wall</string>
     <string name="pattern_double_tick">Double Tick</string>
     <string name="pattern_double_tick_desc">Firm bump-bump boundary feel</string>
-    <string name="pattern_tension_release">Tension &amp; Release</string>
-    <string name="pattern_tension_release_desc">Premium pull-and-snap sensation</string>
     <string name="pattern_selected">Selected</string>
 
     <string name="enable_service_title">Turn on accessibility service</string>
@@ -47,13 +43,13 @@
     <string name="home_feel_every_tap_subtitle">Adds responsive touch feedback across apps and system UI for a more refined, premium feel</string>
     <string name="home_edge_haptics_title">Edge Haptics</string>
     <string name="home_edge_haptics_subtitle">Feel a firm pulse the instant a scroll hits the absolute top or bottom in any app</string>
+    <string name="home_tactile_scrolling_title">Tactile Scrolling</string>
+    <string name="home_tactile_scrolling_subtitle">Adds a subtle, rhythmic click as you scroll for a more grounded, physical experience.</string>
     <string name="home_coming_soon_title">Coming Soon</string>
     <string name="home_coming_soon_subtitle">More haptic experiences are on the way. Stay tuned.</string>
 
     <!-- Edge Haptics screen -->
     <string name="edge_screen_title">Edge Haptics</string>
-    <string name="edge_section_title">Scroll-edge feedback</string>
-    <string name="edge_section_subtitle">Hooks RecyclerView, ScrollView, NestedScrollView, and WebView so you feel exactly when a list cannot scroll any further.</string>
     <string name="edge_toggle_title">Enable Edge Haptics</string>
     <string name="edge_toggle_subtitle">Fires a distinct pulse the instant you hit the top or bottom of any scrollable surface</string>
     <string name="edge_test_button">Test edge haptic</string>
@@ -62,11 +58,29 @@
     <string name="edge_status_root_missing_title">Rooted device required</string>
     <string name="edge_status_root_missing_body">Edge Haptics relies on LSPosed to hook into other apps\' scroll containers. Install a Magisk-based root and LSPosed to enable this feature.</string>
     <string name="edge_status_lsposed_inactive_title">LSPosed not active</string>
-    <string name="edge_status_lsposed_inactive_body">Root is present but LSPosed has not injected this app. Open LSPosed Manager, enable the \u201cHapticks\u201d module, add Hapticks to its scope, then restart.</string>
-    <string name="edge_test_fired">Edge haptic fired</string>
+    <string name="edge_status_lsposed_inactive_body">Root found, but LSPosed isn’t active here. In LSPosed Manager, enable the “Hapticks” module, add apps to the scope, then restart.</string>
     <string name="edge_test_no_vibrator">Device has no vibrator</string>
     <string name="edge_test_unavailable">Feature unavailable: %1$s</string>
     <string name="edge_note_scope">Tip: add other apps to the Hapticks module scope in LSPosed Manager to feel edge haptics inside them.</string>
+
+    <!-- Scroll haptic screen -->
+    <string name="scroll_toggle_title">Enable Tactile Scrolling</string>
+    <string name="scroll_toggle_subtitle">Use accessibility scroll events to fire a soft haptic cadence while lists and pages move</string>
+    <string name="scroll_haptic_screen_test_button">Test scroll haptic</string>
+    <string name="scroll_haptics_title">Tactile Scrolling</string>
+
+    <!-- Settings screen -->
+    <string name="settings_header_caption">Preferences</string>
+    <string name="settings_header_title">Settings</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_dynamic_color_title">Dynamic Color</string>
+    <string name="settings_theme_mode_title">Theme Mode</string>
+    <string name="settings_theme_mode_system">System</string>
+    <string name="settings_theme_mode_light">Light</string>
+    <string name="settings_theme_mode_dark">Dark</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_github_title">GitHub Repository</string>
+    <string name="settings_github_subtitle">View source code and contribute</string>
 
     <!-- LSPosed module metadata -->
     <string name="xposed_description">Hapticks Edge Haptics: pixel-perfect top/bottom scroll feedback for RecyclerView, ScrollView, NestedScrollView, and WebView.</string>

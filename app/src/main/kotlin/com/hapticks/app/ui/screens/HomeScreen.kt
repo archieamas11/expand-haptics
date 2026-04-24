@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.SwipeVertical
 import androidx.compose.material.icons.rounded.TouchApp
+import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -31,13 +32,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hapticks.app.R
 
 @Composable
 fun HomeScreen(
     onOpenFeelEveryTap: () -> Unit,
     onOpenEdgeHaptics: () -> Unit,
+    onOpenTactileScrolling: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -60,11 +65,21 @@ fun HomeScreen(
                     title = stringResource(id = R.string.home_feel_every_tap_title),
                     subtitle = stringResource(id = R.string.home_feel_every_tap_subtitle),
                     icon = Icons.Rounded.TouchApp,
-                    accent = MaterialTheme.colorScheme.primaryContainer,
-                    onAccent = MaterialTheme.colorScheme.onPrimaryContainer,
-                    iconBg = MaterialTheme.colorScheme.primary,
-                    iconTint = MaterialTheme.colorScheme.onPrimary,
+                    accent = MaterialTheme.colorScheme.secondaryContainer,
+                    onAccent = MaterialTheme.colorScheme.onSecondaryContainer,
+                    iconBg = MaterialTheme.colorScheme.secondary,
+                    iconTint = MaterialTheme.colorScheme.onSecondary,
                     onClick = onOpenFeelEveryTap,
+                )
+                FeatureCard(
+                    title = stringResource(id = R.string.home_tactile_scrolling_title),
+                    subtitle = stringResource(id = R.string.home_tactile_scrolling_subtitle),
+                    icon = Icons.Rounded.GraphicEq,
+                    accent = MaterialTheme.colorScheme.secondaryContainer,
+                    onAccent = MaterialTheme.colorScheme.onSecondaryContainer,
+                    iconBg = MaterialTheme.colorScheme.secondary,
+                    iconTint = MaterialTheme.colorScheme.onSecondary,
+                    onClick = onOpenTactileScrolling,
                 )
                 FeatureCard(
                     title = stringResource(id = R.string.home_edge_haptics_title),
@@ -95,10 +110,15 @@ fun HomeScreen(
 
 @Composable
 private fun HomeHeader() {
+    val junicodeFontFamily = FontFamily(Font(R.font.junicode_italic))
+
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
             text = stringResource(id = R.string.home_greeting),
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontFamily = junicodeFontFamily,
+                fontSize = 15.sp,
+            ),
             color = MaterialTheme.colorScheme.primary,
         )
         Text(

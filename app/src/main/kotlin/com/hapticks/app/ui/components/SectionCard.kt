@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun SectionCard(
-    title: String,
+    title: String? = null,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: ImageVector? = null,
@@ -36,7 +36,9 @@ fun SectionCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        SectionHeader(title = title, subtitle = subtitle, icon = icon)
+        if (title != null) {
+            SectionHeader(title = title, subtitle = subtitle, icon = icon)
+        }
         Surface(
             color = MaterialTheme.colorScheme.surfaceContainer,
             shape = RoundedCornerShape(28.dp),
