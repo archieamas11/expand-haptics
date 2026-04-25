@@ -76,16 +76,12 @@ class HapticEngine(context: Context) {
                 HapticPattern.TICK ->
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_TICK, intensity)
                 HapticPattern.HEAVY_CLICK -> {
-                    if (vibrator.areAllPrimitivesSupported(VibrationEffect.Composition.PRIMITIVE_THUD)) {
-                        composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, intensity)
-                    } else {
-                        composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
-                        composition.addPrimitive(
-                            VibrationEffect.Composition.PRIMITIVE_CLICK,
-                            (intensity * 0.6f).coerceIn(0f, 1f),
-                            HEAVY_CLICK_GAP_MS,
-                        )
-                    }
+                    composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
+                    composition.addPrimitive(
+                        VibrationEffect.Composition.PRIMITIVE_CLICK,
+                        (intensity * 0.6f).coerceIn(0f, 1f),
+                        HEAVY_CLICK_GAP_MS,
+                    )
                 }
                 HapticPattern.DOUBLE_CLICK -> {
                     composition.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)

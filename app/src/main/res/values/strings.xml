@@ -43,7 +43,7 @@
     <string name="home_feel_every_tap_title">Feel Every Tap</string>
     <string name="home_feel_every_tap_subtitle">Adds responsive touch feedback across apps and system UI for a more refined, premium feel</string>
     <string name="home_edge_haptics_title">Edge Haptics</string>
-    <string name="home_edge_haptics_subtitle">Accessibility-based edge pulse, or LSPosed EdgeEffect hooks from the same app when you prefer that path</string>
+    <string name="home_edge_haptics_subtitle">Feel a firm pulse the instant a scroll hits the absolute top or bottom in any app.</string>
     <string name="home_tactile_scrolling_title">Tactile Scrolling</string>
     <string name="home_tactile_scrolling_subtitle">Adds a subtle, rhythmic click as you scroll for a more grounded, physical experience.</string>
     <string name="home_coming_soon_title">Coming Soon</string>
@@ -75,6 +75,11 @@
     <string name="scroll_toggle_subtitle">Use accessibility scroll events to fire a soft haptic cadence while lists and pages move</string>
     <string name="scroll_haptic_screen_test_button">Test scroll haptic</string>
     <string name="scroll_haptics_title">Tactile Scrolling</string>
+    <string name="scroll_events_per_unit_title">Haptic events per scroll distance</string>
+    <string name="scroll_events_per_unit_subtitle">How many pulses to play per about 100 pixels of list or page movement. Higher feels denser; lower feels more spaced out.</string>
+    <string name="scroll_events_per_unit_value">%1$s / 100 px</string>
+    <string name="scroll_intensity_title">Pulse strength</string>
+    <string name="scroll_intensity_subtitle">How strong each scroll pulse feels while you move through content.</string>
 
     <!-- Settings screen -->
     <string name="settings_header_caption">Preferences</string>

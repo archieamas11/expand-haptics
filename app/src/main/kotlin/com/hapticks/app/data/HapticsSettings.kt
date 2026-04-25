@@ -9,6 +9,7 @@ data class HapticsSettings(
     val intensity: Float = 1.0f,
     val pattern: HapticPattern = HapticPattern.Default,
     val scrollEnabled: Boolean = false,
+    val scrollHapticEventsPerHundredPx: Float = 2.2f,
     val scrollIntensity: Float = 0.45f,
     val scrollPattern: HapticPattern = HapticPattern.TICK,
     val edgePattern: HapticPattern = HapticPattern.TICK,
@@ -22,6 +23,8 @@ data class HapticsSettings(
     val seedColor: Int = 0xFF6750A4.toInt(),
 ) {
     companion object {
+        const val MIN_SCROLL_EVENTS_PER_HUNDRED_PX = 0.1f
+        const val MAX_SCROLL_EVENTS_PER_HUNDRED_PX = 20f
         val Default: HapticsSettings = HapticsSettings()
     }
 }

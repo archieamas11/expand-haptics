@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -83,6 +84,16 @@ class CustomHapticsViewModel(
         engine.play(settings.value.scrollPattern, intensity)
     }
 
+    fun commitScrollHapticDensity(eventsPerHundredPx: Float) {
+        viewModelScope.launch { preferences.setScrollHapticEventsPerHundredPx(eventsPerHundredPx) }
+        val s = settings.value
+        engine.play(
+            s.scrollPattern,
+            s.scrollIntensity,
+            throttleMs = 0L,
+        )
+    }
+
     fun setScrollPattern(pattern: HapticPattern) {
         viewModelScope.launch { preferences.setScrollPattern(pattern) }
         engine.play(pattern, settings.value.scrollIntensity)
@@ -90,7 +101,14 @@ class CustomHapticsViewModel(
 
     fun testScrollHaptic() {
         val s = settings.value
-        engine.play(s.scrollPattern, s.scrollIntensity)
+        viewModelScope.launch {
+            val i = s.scrollIntensity
+            engine.play(s.scrollPattern, i, 0L)
+            delay(52)
+            engine.play(s.scrollPattern, i, 0L)
+            delay(52)
+            engine.play(s.scrollPattern, i, 0L)
+        }
     }
 
     fun testHaptic() {

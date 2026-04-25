@@ -40,6 +40,11 @@ class HapticsPreferences(context: Context) {
                     .coerceIn(0f, 1f),
                 pattern = HapticPattern.fromStorageKey(prefs[Keys.PATTERN]),
                 scrollEnabled = prefs[Keys.SCROLL_ENABLED] ?: HapticsSettings.Default.scrollEnabled,
+                scrollHapticEventsPerHundredPx = (prefs[Keys.SCROLL_HAPTIC_EVENTS_PER_HUNDRED_PX]
+                    ?: HapticsSettings.Default.scrollHapticEventsPerHundredPx).coerceIn(
+                    HapticsSettings.MIN_SCROLL_EVENTS_PER_HUNDRED_PX,
+                    HapticsSettings.MAX_SCROLL_EVENTS_PER_HUNDRED_PX,
+                ),
                 scrollIntensity = (prefs[Keys.SCROLL_INTENSITY] ?: HapticsSettings.Default.scrollIntensity)
                     .coerceIn(0f, 1f),
                 scrollPattern = HapticPattern.fromStorageKey(prefs[Keys.SCROLL_PATTERN])
@@ -72,6 +77,12 @@ class HapticsPreferences(context: Context) {
     suspend fun setScrollIntensity(intensity: Float) = edit {
         it[Keys.SCROLL_INTENSITY] = intensity.coerceIn(0f, 1f)
     }
+    suspend fun setScrollHapticEventsPerHundredPx(value: Float) = edit {
+        it[Keys.SCROLL_HAPTIC_EVENTS_PER_HUNDRED_PX] = value.coerceIn(
+            HapticsSettings.MIN_SCROLL_EVENTS_PER_HUNDRED_PX,
+            HapticsSettings.MAX_SCROLL_EVENTS_PER_HUNDRED_PX,
+        )
+    }
     suspend fun setEdgePattern(pattern: HapticPattern) = edit { it[Keys.EDGE_PATTERN] = pattern.name }
     suspend fun setEdgeIntensity(intensity: Float) = edit {
         it[Keys.EDGE_INTENSITY] = intensity.coerceIn(0f, 1f)
@@ -99,6 +110,7 @@ class HapticsPreferences(context: Context) {
         val PATTERN = stringPreferencesKey("pattern")
         val SCROLL_ENABLED = booleanPreferencesKey("scroll_enabled")
         val SCROLL_PATTERN = stringPreferencesKey("scroll_pattern")
+        val SCROLL_HAPTIC_EVENTS_PER_HUNDRED_PX = floatPreferencesKey("scroll_haptic_events_per_hundred_px")
         val SCROLL_INTENSITY = floatPreferencesKey("scroll_intensity")
         val EDGE_PATTERN = stringPreferencesKey("edge_pattern")
         val EDGE_INTENSITY = floatPreferencesKey("edge_intensity")

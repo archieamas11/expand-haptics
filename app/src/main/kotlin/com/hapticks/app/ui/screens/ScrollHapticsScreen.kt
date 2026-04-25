@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.SwipeVertical
-import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -49,6 +48,7 @@ import com.hapticks.app.ui.components.PatternSelector
 import com.hapticks.app.ui.components.SectionCard
 import com.hapticks.app.ui.haptics.HapticListEdgeFeedback
 import com.hapticks.app.ui.haptics.LocalAppHaptics
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,6 +57,7 @@ fun ScrollHapticsScreen(
     settings: HapticsSettings,
     isServiceEnabled: Boolean,
     onScrollEnabledChange: (Boolean) -> Unit,
+    onScrollHapticDensityCommit: (Float) -> Unit,
     onIntensityCommit: (Float) -> Unit,
     onPatternSelected: (HapticPattern) -> Unit,
     onTestHaptic: () -> Unit,
@@ -119,6 +120,15 @@ fun ScrollHapticsScreen(
                         thickness = 0.5.dp,
                         modifier = Modifier.padding(horizontal = 20.dp),
                     )
+                    ScrollPulseDensityControl(
+                        eventsPerHundredPx = settings.scrollHapticEventsPerHundredPx,
+                        onCommit = onScrollHapticDensityCommit,
+                    )
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                    )
                     IntensityControl(
                         intensity = settings.scrollIntensity,
                         onIntensityCommit = onIntensityCommit,
@@ -167,6 +177,83 @@ private fun BackPill(onBack: () -> Unit) {
     }
 }
 
+private fun scrollDensitySliderToEvents(slider01: Float): Float {
+    val t = slider01.coerceIn(0f, 1f)
+    return HapticsSettings.MIN_SCROLL_EVENTS_PER_HUNDRED_PX +
+        t * (HapticsSettings.MAX_SCROLL_EVENTS_PER_HUNDRED_PX - HapticsSettings.MIN_SCROLL_EVENTS_PER_HUNDRED_PX)
+}
+
+private fun eventsToScrollDensitySlider(eventsPerHundredPx: Float): Float {
+    val e = eventsPerHundredPx.coerceIn(
+        HapticsSettings.MIN_SCROLL_EVENTS_PER_HUNDRED_PX,
+        HapticsSettings.MAX_SCROLL_EVENTS_PER_HUNDRED_PX,
+    )
+    return ((e - HapticsSettings.MIN_SCROLL_EVENTS_PER_HUNDRED_PX) /
+        (HapticsSettings.MAX_SCROLL_EVENTS_PER_HUNDRED_PX - HapticsSettings.MIN_SCROLL_EVENTS_PER_HUNDRED_PX))
+        .coerceIn(0f, 1f)
+}
+
+@Composable
+private fun ScrollPulseDensityControl(
+    eventsPerHundredPx: Float,
+    onCommit: (Float) -> Unit,
+) {
+    var draftSlider by remember(eventsPerHundredPx) {
+        mutableFloatStateOf(eventsToScrollDensitySlider(eventsPerHundredPx))
+    }
+    val draftEvents = scrollDensitySliderToEvents(draftSlider)
+    val eventsLabel = String.format(Locale.US, "%.2f", draftEvents)
+
+    val sliderColors = SliderDefaults.colors(
+        thumbColor = MaterialTheme.colorScheme.secondary,
+        activeTrackColor = MaterialTheme.colorScheme.secondary,
+        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        activeTickColor = MaterialTheme.colorScheme.secondary,
+        inactiveTickColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+    )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(id = R.string.scroll_events_per_unit_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = stringResource(id = R.string.scroll_events_per_unit_subtitle),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End,
+        ) {
+            Surface(
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                shape = CircleShape,
+            ) {
+                Text(
+                    text = stringResource(id = R.string.scroll_events_per_unit_value, eventsLabel),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                )
+            }
+        }
+        Slider(
+            value = draftSlider,
+            onValueChange = { draftSlider = it },
+            onValueChangeFinished = { onCommit(scrollDensitySliderToEvents(draftSlider)) },
+            valueRange = 0f..1f,
+            colors = sliderColors,
+        )
+    }
+}
+
 @Composable
 private fun IntensityControl(
     intensity: Float,
@@ -186,7 +273,7 @@ private fun IntensityControl(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -194,12 +281,18 @@ private fun IntensityControl(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = stringResource(id = R.string.intensity_label),
+                text = stringResource(id = R.string.scroll_intensity_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f),
             )
             IntensityBadge(percent = percent)
         }
+        Text(
+            text = stringResource(id = R.string.scroll_intensity_subtitle),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         Slider(
             value = draft,
             onValueChange = { draft = it },

@@ -114,6 +114,7 @@ class MainActivity : ComponentActivity() {
                                     settings = settings,
                                     isServiceEnabled = isServiceEnabled,
                                     onScrollEnabledChange = viewModel::setScrollEnabled,
+                                    onScrollHapticDensityCommit = viewModel::commitScrollHapticDensity,
                                     onIntensityCommit = viewModel::commitScrollIntensity,
                                     onPatternSelected = viewModel::setScrollPattern,
                                     onTestHaptic = viewModel::testScrollHaptic,

@@ -1,11 +1,12 @@
 package com.hapticks.app.service
 
 import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.view.accessibility.AccessibilityEvent
 import com.hapticks.app.HapticksApp
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.haptics.HapticEngine
+import com.hapticks.app.service.accessibility.typeviewscrolled.ScrollAbsoluteEdgeVibration
+import com.hapticks.app.service.accessibility.typeviewscrolled.ScrollContentVibration
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -49,13 +50,24 @@ class HapticsAccessibilityService : AccessibilityService() {
         if (type == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
             var consumedByEdge = false
             if (current.a11yScrollBoundEdge) {
-                if (A11yScrollBoundEdgeHaptics.onViewScrolled(event) == A11yScrollBoundEdgeHaptics.Result.PlayEdgeHaptic) {
+                if (ScrollAbsoluteEdgeVibration.onViewScrolled(event) ==
+                    ScrollAbsoluteEdgeVibration.Result.PlayEdgeHaptic
+                ) {
                     engine.play(current.edgePattern, current.edgeIntensity, throttleMs = EDGE_THROTTLE_MS)
                     consumedByEdge = true
                 }
             }
             if (current.scrollEnabled && !consumedByEdge) {
-                engine.play(current.scrollPattern, current.scrollIntensity, throttleMs = SCROLL_THROTTLE_MS)
+                when (val scroll = ScrollContentVibration.onViewScrolled(event, current)) {
+                    is ScrollContentVibration.Decision.Play -> {
+                        engine.play(
+                            current.scrollPattern,
+                            scroll.intensity,
+                            throttleMs = 0L,
+                        )
+                    }
+                    ScrollContentVibration.Decision.None -> Unit
+                }
             }
         }
     }
@@ -80,7 +92,6 @@ class HapticsAccessibilityService : AccessibilityService() {
     }
 
     private companion object {
-        const val SCROLL_THROTTLE_MS = 42L
         const val EDGE_THROTTLE_MS = 200L
     }
 }

@@ -21,7 +21,7 @@ class EdgeEffectHapticsModule : XposedModule() {
     @Volatile private var cachedApp: Application? = null
     @Volatile private var cachedVibrator: Vibrator? = null
 
-    private val pullDistanceMap = WeakHashMap<EdgeEffect, Float>()
+    private val hapticFiredMap = WeakHashMap<EdgeEffect, Boolean>()
 
     @Volatile private var enabled = false
     @Volatile private var cachedPattern: HapticPattern? = null
@@ -37,7 +37,6 @@ class EdgeEffectHapticsModule : XposedModule() {
         }
 
         setupPreferenceListener()
-
         installEdgeHooks()
     }
 
@@ -50,7 +49,6 @@ class EdgeEffectHapticsModule : XposedModule() {
         }
 
         updateCachedPrefs(prefs)
-
         prefs.registerOnSharedPreferenceChangeListener { _, _ ->
             updateCachedPrefs(prefs)
         }
@@ -92,22 +90,30 @@ class EdgeEffectHapticsModule : XposedModule() {
                     if (effect != null) afterEdgeAbsorb(effect)
                     null
                 }
+
+            val setDistance = edge.getDeclaredMethod("setDistance", Float::class.javaPrimitiveType)
+            hook(setDistance)
+                .setExceptionMode(ExceptionMode.PROTECTIVE)
+                .intercept { chain ->
+                    chain.proceed()
+                    val effect = chain.getThisObject() as? EdgeEffect
+                    if (effect != null) onSetDistance(effect)
+                    null
+                }
         } catch (t: Throwable) {
             log(Log.ERROR, TAG, "EdgeEffect hook installation failed", t)
         }
     }
 
     private fun afterEdgePull(effect: EdgeEffect) {
-        if (!enabled) return  
-
-        val currentDistance = effect.distance.coerceIn(0f, 1f)
-
-        synchronized(pullDistanceMap) {
-            val previous = pullDistanceMap[effect] ?: 0f
-            pullDistanceMap[effect] = currentDistance
-
-            if (previous == 0f && currentDistance > 0f) {
-                triggerHaptic()
+        if (!enabled) return
+        val distance = effect.distance
+        if (distance > 0f) {
+            synchronized(hapticFiredMap) {
+                if (hapticFiredMap[effect] != true) {
+                    hapticFiredMap[effect] = true
+                    triggerHaptic()
+                }
             }
         }
     }
@@ -115,6 +121,14 @@ class EdgeEffectHapticsModule : XposedModule() {
     private fun afterEdgeAbsorb(effect: EdgeEffect) {
         if (!enabled) return
         triggerHaptic()
+    }
+
+    private fun onSetDistance(effect: EdgeEffect) {
+        if (effect.distance == 0f) {
+            synchronized(hapticFiredMap) {
+                hapticFiredMap[effect] = false
+            }
+        }
     }
 
     private fun triggerHaptic() {
