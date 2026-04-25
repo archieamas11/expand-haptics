@@ -158,7 +158,7 @@ class EdgeEffectHapticsModule : XposedModule() {
             hapticFiredMap[effect] = false
         }
     }
-fix ci/cd
+
     private fun triggerHaptic() {
         val pattern = cachedPattern ?: return
         val intensity = cachedIntensity
