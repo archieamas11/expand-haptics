@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
             HapticksTheme(
                 themeMode = settings.themeMode,
                 useDynamicColors = settings.useDynamicColors,
+                amoledBlack = settings.amoledBlack,
                 seedColor = settings.seedColor,
             ) {
                 ProvideAppHaptics(
@@ -102,6 +103,7 @@ class MainActivity : ComponentActivity() {
                                             settings = settings,
                                             onUseDynamicColorsChange = viewModel::setUseDynamicColors,
                                             onThemeModeChange = viewModel::setThemeMode,
+                                            onAmoledBlackChange = viewModel::setAmoledBlack,
                                         )
                                     }
                                 }

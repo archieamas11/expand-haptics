@@ -85,6 +85,9 @@
     <string name="settings_theme_mode_system">System</string>
     <string name="settings_theme_mode_light">Light</string>
     <string name="settings_theme_mode_dark">Dark</string>
+    <string name="settings_amoled_title">AMOLED mode</string>
+    <string name="settings_amoled_subtitle">Use a pure black theme, useful for AMOLED screens to reduce eye strain and save battery.</string>
+    <string name="settings_amoled_subtitle_light">Applies when the app is in dark theme</string>
     <string name="settings_section_about">About</string>
     <string name="settings_github_title">GitHub Repository</string>
     <string name="settings_github_subtitle">View source code and contribute</string>

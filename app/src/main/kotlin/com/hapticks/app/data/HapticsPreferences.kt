@@ -57,6 +57,7 @@ class HapticsPreferences(context: Context) {
                 } catch (_: Exception) {
                     ThemeMode.SYSTEM
                 },
+                amoledBlack = prefs[Keys.AMOLED_BLACK] ?: HapticsSettings.Default.amoledBlack,
                 seedColor = prefs[Keys.SEED_COLOR] ?: HapticsSettings.Default.seedColor,
             )
         }
@@ -81,6 +82,7 @@ class HapticsPreferences(context: Context) {
 
     suspend fun setUseDynamicColors(enabled: Boolean) = edit { it[Keys.USE_DYNAMIC_COLORS] = enabled }
     suspend fun setThemeMode(mode: ThemeMode) = edit { it[Keys.THEME_MODE] = mode.name }
+    suspend fun setAmoledBlack(enabled: Boolean) = edit { it[Keys.AMOLED_BLACK] = enabled }
     suspend fun setSeedColor(color: Int) = edit { it[Keys.SEED_COLOR] = color }
 
     private suspend inline fun edit(crossinline block: (MutablePreferences) -> Unit) {
@@ -104,6 +106,7 @@ class HapticsPreferences(context: Context) {
         val EDGE_LSPOSED_LIBXPOSED_PATH = booleanPreferencesKey("edge_lsposed_libxposed_path")
         val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val AMOLED_BLACK = booleanPreferencesKey("amoled_black")
         val SEED_COLOR = intPreferencesKey("seed_color")
     }
 

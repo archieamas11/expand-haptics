@@ -106,6 +106,10 @@ class CustomHapticsViewModel(
         viewModelScope.launch { preferences.setThemeMode(mode) }
     }
 
+    fun setAmoledBlack(enabled: Boolean) {
+        viewModelScope.launch { preferences.setAmoledBlack(enabled) }
+    }
+
     fun setSeedColor(color: Int) {
         viewModelScope.launch { preferences.setSeedColor(color) }
     }

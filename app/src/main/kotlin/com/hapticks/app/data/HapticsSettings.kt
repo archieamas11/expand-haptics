@@ -18,6 +18,7 @@ data class HapticsSettings(
 
     val useDynamicColors: Boolean = true,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val amoledBlack: Boolean = false,
     val seedColor: Int = 0xFF6750A4.toInt(),
 ) {
     companion object {

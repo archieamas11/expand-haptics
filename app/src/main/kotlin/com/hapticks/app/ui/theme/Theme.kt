@@ -3,6 +3,7 @@ package com.hapticks.app.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -68,10 +69,18 @@ private val HapticksLightColorScheme = lightColorScheme(
     outline = Color(0xFF74777F),
 )
 
+private fun ColorScheme.withAmoledSurfaces(): ColorScheme {
+    val black = Color.Black
+    return copy(
+        background = black,
+    )
+}
+
 @Composable
 fun HapticksTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     useDynamicColors: Boolean = true,
+    amoledBlack: Boolean = false,
     seedColor: Int? = null,
     content: @Composable () -> Unit
 ) {
@@ -82,7 +91,7 @@ fun HapticksTheme(
     }
 
     val context = LocalContext.current
-    val colorScheme = remember(darkTheme, useDynamicColors, seedColor, context) {
+    val baseColorScheme = remember(darkTheme, useDynamicColors, seedColor, context) {
         when {
             useDynamicColors && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
                 if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -102,6 +111,9 @@ fun HapticksTheme(
                 }
             }
         }
+    }
+    val colorScheme = remember(baseColorScheme, amoledBlack, darkTheme) {
+        if (amoledBlack && darkTheme) baseColorScheme.withAmoledSurfaces() else baseColorScheme
     }
 
     val view = LocalView.current

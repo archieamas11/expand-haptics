@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,10 +61,16 @@ fun SettingsScreen(
     settings: HapticsSettings,
     onUseDynamicColorsChange: (Boolean) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
+    onAmoledBlackChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     val appHaptics = LocalAppHaptics.current
     val listState = rememberLazyListState()
+    val appInDarkTheme = when (settings.themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+    }
     HapticListEdgeFeedback(state = listState)
 
     Scaffold(
@@ -97,6 +104,25 @@ fun SettingsScreen(
                                 onCheckedChange = {
                                     appHaptics?.tap()
                                     onUseDynamicColorsChange(it)
+                                },
+                            )
+                        },
+                    )
+
+                    SettingsRow(
+                        title = stringResource(R.string.settings_amoled_title),
+                        subtitle = if (appInDarkTheme) {
+                            stringResource(R.string.settings_amoled_subtitle)
+                        } else {
+                            stringResource(R.string.settings_amoled_subtitle_light)
+                        },
+                        position = RowPosition.Bottom,
+                        trailing = {
+                            Switch(
+                                checked = settings.amoledBlack,
+                                onCheckedChange = {
+                                    appHaptics?.tap()
+                                    onAmoledBlackChange(it)
                                 },
                             )
                         },
