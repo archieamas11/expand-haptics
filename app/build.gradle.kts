@@ -5,20 +5,11 @@ plugins {
 }
 
 fun getVersionName(): String {
-    System.getenv("APP_VERSION_NAME")?.takeIf { it.isNotBlank() }?.let { return it }
-    val ref = System.getenv("GITHUB_REF_NAME") ?: return "1.0.0"
-    if (ref.matches(Regex("^v?\\d+\\.\\d+\\.\\d+.*"))) {
-        return ref.removePrefix("v")
-    }
-    return "1.0.0"
+    return System.getenv("GITHUB_REF_NAME") ?: "1.0.0"
 }
 
 fun getVersionCode(): Int {
-    System.getenv("APP_VERSION_CODE")?.toIntOrNull()?.takeIf { it > 0 }?.let { return it }
-    val ref = System.getenv("GITHUB_REF_NAME") ?: return 1
-    val m = Regex("^v?(\\d+)\\.(\\d+)\\.(\\d+)").find(ref) ?: return 1
-    val (major, minor, patch) = m.destructured
-    return major.toInt() * 10_000 + minor.toInt() * 100 + patch.toInt()
+    return System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
 }
 
 android {
