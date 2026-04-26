@@ -5,7 +5,13 @@ plugins {
 }
 
 fun getVersionName(): String {
-    return System.getenv("GITHUB_REF_NAME") ?: "1.0.0"
+    val refName = System.getenv("GITHUB_REF_NAME") ?: return "1.0.0"
+    val tagRegex = Regex("""^v?\d+\.\d+\.\d+(-[\w\.]+)?$""")
+    return if (tagRegex.matches(refName)) {
+        refName.removePrefix("v")
+    } else {
+        refName
+    }
 }
 
 fun getVersionCode(): Int {
