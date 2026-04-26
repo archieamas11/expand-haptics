@@ -43,9 +43,14 @@ class HapticsAccessibilityService : AccessibilityService() {
         val ev = event ?: return
         val type = ev.eventType
 
-        if (type == AccessibilityEvent.TYPE_VIEW_CLICKED ||
-            type == AccessibilityEvent.TYPE_VIEW_SELECTED
-        ) {
+        if (type == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+            if (current.tapEnabled && InteractableViewHaptics.hasToggleLikeContentChange(ev)) {
+                InteractableViewHaptics.handle(engine, current, ev)
+            }
+            return
+        }
+
+        if (type == AccessibilityEvent.TYPE_VIEW_CLICKED) {
             InteractableViewHaptics.handle(engine, current, ev)
             return
         }
