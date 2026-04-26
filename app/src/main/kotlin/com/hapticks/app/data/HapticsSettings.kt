@@ -5,6 +5,7 @@ import com.hapticks.app.haptics.HapticPattern
 
 @Immutable
 data class HapticsSettings(
+    /** When true: [android.view.accessibility.AccessibilityEvent.TYPE_VIEW_CLICKED] and switch-like [android.view.accessibility.AccessibilityEvent.TYPE_VIEW_SELECTED]. */
     val tapEnabled: Boolean = true,
     val intensity: Float = 1.0f,
     val pattern: HapticPattern = HapticPattern.Default,

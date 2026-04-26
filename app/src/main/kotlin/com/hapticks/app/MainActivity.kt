@@ -22,20 +22,20 @@ import com.hapticks.app.data.ThemeMode
 import com.hapticks.app.ui.components.BottomTab
 import com.hapticks.app.ui.components.FloatingBottomBar
 import com.hapticks.app.ui.components.SlidingBottomTabHost
-import com.hapticks.app.ui.screens.CustomHapticsScreen
+import com.hapticks.app.ui.screens.everytap.FeelEveryTapScreen
 import com.hapticks.app.ui.screens.EdgeHapticsScreen
 import com.hapticks.app.ui.screens.HomeScreen
 import com.hapticks.app.ui.screens.ScrollHapticsScreen
 import com.hapticks.app.ui.screens.SettingsScreen
 import com.hapticks.app.ui.haptics.ProvideAppHaptics
 import com.hapticks.app.ui.theme.HapticksTheme
-import com.hapticks.app.viewmodel.CustomHapticsViewModel
+import com.hapticks.app.viewmodel.FeelEveryTapViewModel
 import com.hapticks.app.viewmodel.EdgeHapticsViewModel
 
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: CustomHapticsViewModel by viewModels {
-        CustomHapticsViewModel.factory(application)
+    private val viewModel: FeelEveryTapViewModel by viewModels {
+        FeelEveryTapViewModel.factory(application)
     }
 
     private val edgeViewModel: EdgeHapticsViewModel by viewModels {
@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
                         when (route) {
                             Route.FEEL_EVERY_TAP -> {
                                 BackHandler { route = Route.HOME }
-                                CustomHapticsScreen(
+                                FeelEveryTapScreen(
                                     settings = settings,
                                     isServiceEnabled = isServiceEnabled,
                                     onTapEnabledChange = viewModel::setTapEnabled,
@@ -163,9 +163,11 @@ private fun EdgeHapticsFlowHost(
 ) {
     val edgeSettings by edgeViewModel.settings.collectAsStateWithLifecycle()
     val edgeTestEvent by edgeViewModel.testEvent.collectAsStateWithLifecycle()
+    val isLsposedXposedBridgeActive by edgeViewModel.isLsposedXposedBridgeActive.collectAsStateWithLifecycle()
     EdgeHapticsScreen(
         settings = edgeSettings,
         isServiceEnabled = isServiceEnabled,
+        isLsposedXposedBridgeActive = isLsposedXposedBridgeActive,
         testEvent = edgeTestEvent,
         onA11yScrollBoundEdgeChange = edgeViewModel::setA11yScrollBoundEdge,
         onEdgeLsposedLibxposedPathChange = edgeViewModel::setEdgeLsposedLibxposedPath,

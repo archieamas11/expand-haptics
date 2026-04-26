@@ -16,24 +16,20 @@ import com.hapticks.app.data.ThemeMode
 import com.hapticks.app.haptics.HapticEngine
 import com.hapticks.app.haptics.HapticPattern
 import com.hapticks.app.service.HapticsAccessibilityService
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * UI state holder for [com.hapticks.app.ui.screens.CustomHapticsScreen].
- *
- * Reads from the same DataStore the accessibility service uses, so any UI edit propagates to the
- * system-wide haptic bridge on the next accessibility event. The "service enabled" state is
- * derived by querying [AccessibilityManager] and must be refreshed whenever the activity resumes,
- * since the user can toggle it outside the app.
+ * UI state for the Feel Every Tap flow: tap toggle (including switch selection haptics), pattern,
+ * and intensity shared with [HapticsAccessibilityService] via [HapticsPreferences].
  */
-class CustomHapticsViewModel(
+class FeelEveryTapViewModel(
     application: Application,
     private val preferences: HapticsPreferences,
     private val engine: HapticEngine,
@@ -54,7 +50,6 @@ class CustomHapticsViewModel(
         refreshServiceState()
     }
 
-    /** Must be invoked from the hosting activity's onResume. */
     fun refreshServiceState() {
         _isServiceEnabled.value = isAccessibilityServiceEnabled(getApplication())
     }
@@ -63,7 +58,6 @@ class CustomHapticsViewModel(
         viewModelScope.launch { preferences.setTapEnabled(enabled) }
     }
 
-    /** Persist the final intensity value and fire a preview so the user can feel the level. */
     fun commitIntensity(intensity: Float) {
         viewModelScope.launch { preferences.setIntensity(intensity) }
         engine.play(settings.value.pattern, intensity)
@@ -71,7 +65,6 @@ class CustomHapticsViewModel(
 
     fun setPattern(pattern: HapticPattern) {
         viewModelScope.launch { preferences.setPattern(pattern) }
-        // Fire an immediate preview so selecting a pattern feels alive.
         engine.play(pattern, settings.value.intensity)
     }
 
@@ -138,7 +131,6 @@ class CustomHapticsViewModel(
                 as? AccessibilityManager ?: return false
             if (!manager.isEnabled) return false
 
-            // Read the canonical secure-setting source so we do not depend on feedback-type filters.
             val enabledServices = Settings.Secure.getString(
                 context.contentResolver,
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
@@ -162,7 +154,7 @@ class CustomHapticsViewModel(
             @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val app = application as HapticksApp
-                return CustomHapticsViewModel(app, app.preferences, app.hapticEngine) as T
+                return FeelEveryTapViewModel(app, app.preferences, app.hapticEngine) as T
             }
         }
     }

@@ -9,6 +9,9 @@ import io.github.libxposed.service.XposedServiceHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -27,6 +30,9 @@ class HapticksApp : Application(), XposedServiceHelper.OnServiceListener {
     @Volatile
     var xposedService: XposedService? = null
         private set
+
+    private val _xposedServiceConnected = MutableStateFlow(false)
+    val xposedServiceConnected: StateFlow<Boolean> = _xposedServiceConnected.asStateFlow()
 
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -47,6 +53,7 @@ class HapticksApp : Application(), XposedServiceHelper.OnServiceListener {
 
     override fun onServiceBind(service: XposedService) {
         xposedService = service
+        _xposedServiceConnected.value = true
         appScope.launch {
             val settings = try {
                 preferences.settings.first()
@@ -61,5 +68,6 @@ class HapticksApp : Application(), XposedServiceHelper.OnServiceListener {
 
     override fun onServiceDied(service: XposedService) {
         xposedService = null
+        _xposedServiceConnected.value = false
     }
 }

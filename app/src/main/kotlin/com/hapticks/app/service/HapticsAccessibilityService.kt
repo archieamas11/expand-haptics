@@ -5,6 +5,7 @@ import android.view.accessibility.AccessibilityEvent
 import com.hapticks.app.HapticksApp
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.haptics.HapticEngine
+import com.hapticks.app.service.accessibility.typeviewinteracted.InteractableViewHaptics
 import com.hapticks.app.service.accessibility.typeviewscrolled.ScrollAbsoluteEdgeVibration
 import com.hapticks.app.service.accessibility.typeviewscrolled.ScrollContentVibration
 import kotlinx.coroutines.*
@@ -39,18 +40,20 @@ class HapticsAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        val type = event?.eventType ?: return
+        val ev = event ?: return
+        val type = ev.eventType
 
-        if (type == AccessibilityEvent.TYPE_VIEW_CLICKED) {
-            if (!current.tapEnabled) return
-            engine.play(current.pattern, current.intensity)
+        if (type == AccessibilityEvent.TYPE_VIEW_CLICKED ||
+            type == AccessibilityEvent.TYPE_VIEW_SELECTED
+        ) {
+            InteractableViewHaptics.handle(engine, current, ev)
             return
         }
 
         if (type == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
             var consumedByEdge = false
             if (current.a11yScrollBoundEdge) {
-                if (ScrollAbsoluteEdgeVibration.onViewScrolled(event) ==
+                if (ScrollAbsoluteEdgeVibration.onViewScrolled(ev) ==
                     ScrollAbsoluteEdgeVibration.Result.PlayEdgeHaptic
                 ) {
                     engine.play(current.edgePattern, current.edgeIntensity, throttleMs = EDGE_THROTTLE_MS)
@@ -58,7 +61,7 @@ class HapticsAccessibilityService : AccessibilityService() {
                 }
             }
             if (current.scrollEnabled && !consumedByEdge) {
-                when (val scroll = ScrollContentVibration.onViewScrolled(event, current)) {
+                when (val scroll = ScrollContentVibration.onViewScrolled(ev, current)) {
                     is ScrollContentVibration.Decision.Play -> {
                         engine.play(
                             current.scrollPattern,
@@ -82,9 +85,10 @@ class HapticsAccessibilityService : AccessibilityService() {
 
     private fun applyEventMask(settings: HapticsSettings) {
         val info = serviceInfo ?: return
-        var mask = 0
-        if (settings.tapEnabled) mask = mask or AccessibilityEvent.TYPE_VIEW_CLICKED
-        if (settings.scrollEnabled || settings.a11yScrollBoundEdge) mask = mask or AccessibilityEvent.TYPE_VIEW_SCROLLED
+        var mask = InteractableViewHaptics.eventTypeMask(settings)
+        if (settings.scrollEnabled || settings.a11yScrollBoundEdge) {
+            mask = mask or AccessibilityEvent.TYPE_VIEW_SCROLLED
+        }
         if (mask == 0) mask = AccessibilityEvent.TYPE_VIEW_CLICKED
         if (info.eventTypes == mask) return
         info.eventTypes = mask

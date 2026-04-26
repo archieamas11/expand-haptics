@@ -41,6 +41,16 @@ class EdgeHapticsViewModel(
     private val _testEvent = MutableStateFlow<TestEvent?>(null)
     val testEvent: StateFlow<TestEvent?> = _testEvent.asStateFlow()
 
+    private val hapticksApp: HapticksApp = application as HapticksApp
+
+    /** True while the LibXposed service bridge is bound (LSPosed runtime is talking to this app). */
+    val isLsposedXposedBridgeActive: StateFlow<Boolean> = hapticksApp.xposedServiceConnected
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000L),
+            initialValue = hapticksApp.xposedServiceConnected.value,
+        )
+
     fun setEdgePattern(pattern: HapticPattern) {
         viewModelScope.launch {
             preferences.setEdgePattern(pattern)

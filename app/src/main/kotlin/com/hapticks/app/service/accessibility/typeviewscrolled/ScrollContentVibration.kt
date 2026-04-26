@@ -11,17 +11,16 @@ internal object ScrollContentVibration {
     private const val REFERENCE_PX = 100f
     private const val MAX_TRACKED_SURFACES = 128
 
-    /** Ignore sub-pixel / accidental jitter; real scroll steps are usually larger. */
-    private const val NOISE_FLOOR_PX = 3
-
     /**
-     * At most one physical tick per accessibility event so the vibrator is not asked to
-     * stack pulses in the same frame; remaining credit carries to the next event.
+     * Ignore tiny steps from touch noise / layout jitter. Slightly higher than 2px so
+     * alternating 2px+2px micro-shifts do not stack into meaningful credit.
      */
-    private const val MAX_PULSES_PER_EVENT = 1
+    private const val NOISE_FLOOR_PX = 4
 
-    /** Spacing between emitted ticks (ms); credit is not consumed while this window is active. */
-    private const val MIN_EMIT_INTERVAL_MS = 45L
+    /** At most one tick per accessibility event so pulses never stack in the same frame. */
+
+    /** Spacing between emitted ticks (ms). */
+    private const val MIN_EMIT_INTERVAL_MS = 55L
 
     /** Above this speed (px/s), credit gain tapers so flings feel less mechanical. */
     private const val FLING_BLEND_START_PPS = 900f
@@ -54,21 +53,21 @@ internal object ScrollContentVibration {
         if (prev == null) {
             perSurface[key] = ContentState(
                 lastPos = pos,
-                credit = 0f,
                 lastEventTime = eventTime,
                 smoothedVelocityPps = -1f,
                 lastHapticEmitUptimeMs = 0L,
+                emitAnchorPx = pos.toFloat(),
             )
             evictIfNeeded()
             return Decision.None
         }
 
-        val delta = abs(pos - prev.lastPos)
-        if (delta == 0) {
+        val signedStep = pos - prev.lastPos
+        if (signedStep == 0) {
             return Decision.None
         }
 
-        if (delta < NOISE_FLOOR_PX) {
+        if (abs(signedStep) < NOISE_FLOOR_PX) {
             perSurface[key] = prev.copy(
                 lastPos = pos,
                 lastEventTime = eventTime,
@@ -83,7 +82,8 @@ internal object ScrollContentVibration {
             16L
         }
         val dtForVelocity = dtRaw.coerceIn(1L, VELOCITY_DT_CAP_MS)
-        val instantVelocityPps = delta * 1000f / dtForVelocity.toFloat()
+        val stepAbs = abs(signedStep).toFloat()
+        val instantVelocityPps = stepAbs * 1000f / dtForVelocity.toFloat()
         val smoothedV = if (prev.smoothedVelocityPps < 0f) {
             instantVelocityPps
         } else {
@@ -96,8 +96,16 @@ internal object ScrollContentVibration {
             HapticsSettings.MAX_SCROLL_EVENTS_PER_HUNDRED_PX,
         )
         val flingScale = flingCreditGainScale(smoothedV)
-        val creditGain = delta * (rate / REFERENCE_PX) * flingScale
-        var credit = prev.credit + creditGain
+        val k = (rate / REFERENCE_PX) * flingScale
+
+        /**
+         * Credit is derived from distance to [emitAnchorPx], not summed abs(step).
+         * That way rubber-band / bounce (same net scrollY) does not accrue multiple
+         * pulses for back-and-forth motion over the same range.
+         */
+        val signedFromAnchor = pos.toFloat() - prev.emitAnchorPx
+        val distFromAnchor = abs(signedFromAnchor)
+        val creditsAvailable = distFromAnchor * k
 
         val baseIntensity = settings.scrollIntensity.coerceIn(0f, 1f)
         val intensityScale = slowDragIntensityScale(smoothedV)
@@ -113,18 +121,22 @@ internal object ScrollContentVibration {
 
         var pulses = 0
         var lastEmit = prev.lastHapticEmitUptimeMs
-        while (credit >= 1f && pulses < MAX_PULSES_PER_EVENT && canEmitTick) {
-            credit -= 1f
-            pulses++
+        var emitAnchorPx = prev.emitAnchorPx
+        if (creditsAvailable >= 1f && canEmitTick) {
+            val denom = (rate * flingScale).coerceAtLeast(1e-5f)
+            val pxPerCredit = REFERENCE_PX / denom
+            val towardPos = if (signedFromAnchor >= 0f) 1f else -1f
+            emitAnchorPx += towardPos * pxPerCredit
+            pulses = 1
             lastEmit = nowUptime
         }
 
         perSurface[key] = ContentState(
             lastPos = pos,
-            credit = credit,
             lastEventTime = eventTime,
             smoothedVelocityPps = smoothedV,
             lastHapticEmitUptimeMs = lastEmit,
+            emitAnchorPx = emitAnchorPx,
         )
 
         return if (pulses > 0) {
@@ -155,10 +167,11 @@ internal object ScrollContentVibration {
 
     private data class ContentState(
         val lastPos: Int,
-        val credit: Float,
         val lastEventTime: Long,
         val smoothedVelocityPps: Float,
         val lastHapticEmitUptimeMs: Long,
+        /** Scroll phase reference so credit is not double-counted on reversing motion. */
+        val emitAnchorPx: Float,
     )
 
     sealed class Decision {
