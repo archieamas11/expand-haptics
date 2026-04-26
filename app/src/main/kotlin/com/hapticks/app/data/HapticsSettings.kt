@@ -5,19 +5,24 @@ import com.hapticks.app.haptics.HapticPattern
 
 @Immutable
 data class HapticsSettings(
-    /** When true: [android.view.accessibility.AccessibilityEvent.TYPE_VIEW_CLICKED] and toggle-related [android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED] (checked / state). */
+    // Tap Haptics Default Settings
     val tapEnabled: Boolean = true,
     val intensity: Float = 1.0f,
     val pattern: HapticPattern = HapticPattern.Default,
+
+    // Scroll Haptics Default Settings
     val scrollEnabled: Boolean = false,
     val scrollHapticEventsPerHundredPx: Float = 2.2f,
     val scrollIntensity: Float = 0.45f,
     val scrollPattern: HapticPattern = HapticPattern.TICK,
-    val edgePattern: HapticPattern = HapticPattern.TICK,
+
+    // Edge Haptics Default Settings
+    val edgePattern: HapticPattern = HapticPattern.SOFT_BUMP,
     val edgeIntensity: Float = 1.0f,
     val a11yScrollBoundEdge: Boolean = false,
     val edgeLsposedLibxposedPath: Boolean = false,
 
+    // Theme Default Settings
     val useDynamicColors: Boolean = true,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val amoledBlack: Boolean = false,

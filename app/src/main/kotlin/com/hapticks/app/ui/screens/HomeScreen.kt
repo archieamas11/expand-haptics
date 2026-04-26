@@ -37,7 +37,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hapticks.app.R
-import com.hapticks.app.ui.haptics.HapticScrollEdgeFeedback
 import com.hapticks.app.ui.haptics.hapticClickable
 
 @Composable
@@ -48,7 +47,6 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
-    HapticScrollEdgeFeedback(state = scrollState)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),

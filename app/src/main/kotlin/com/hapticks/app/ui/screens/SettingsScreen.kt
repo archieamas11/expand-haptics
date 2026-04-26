@@ -52,8 +52,6 @@ import androidx.core.net.toUri
 import com.hapticks.app.R
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.data.ThemeMode
-import com.hapticks.app.ui.haptics.HapticListEdgeFeedback
-import com.hapticks.app.ui.haptics.LocalAppHaptics
 import com.hapticks.app.ui.haptics.hapticClickable
 
 @Composable
@@ -64,15 +62,12 @@ fun SettingsScreen(
     onAmoledBlackChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
-    val appHaptics = LocalAppHaptics.current
     val listState = rememberLazyListState()
     val appInDarkTheme = when (settings.themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
-    HapticListEdgeFeedback(state = listState)
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
@@ -101,10 +96,7 @@ fun SettingsScreen(
                         trailing = {
                             Switch(
                                 checked = settings.useDynamicColors,
-                                onCheckedChange = {
-                                    appHaptics?.tap()
-                                    onUseDynamicColorsChange(it)
-                                },
+                                onCheckedChange = onUseDynamicColorsChange,
                             )
                         },
                     )
@@ -120,10 +112,7 @@ fun SettingsScreen(
                         trailing = {
                             Switch(
                                 checked = settings.amoledBlack,
-                                onCheckedChange = {
-                                    appHaptics?.tap()
-                                    onAmoledBlackChange(it)
-                                },
+                                onCheckedChange = onAmoledBlackChange,
                             )
                         },
                     )
@@ -319,7 +308,6 @@ private fun ThemeModeRow(
     selected: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
 ) {
-    val appHaptics = LocalAppHaptics.current
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -343,10 +331,7 @@ private fun ThemeModeRow(
             modes.forEachIndexed { index, option ->
                 SegmentedButton(
                     selected = selected == option.mode,
-                    onClick = {
-                        appHaptics?.tap()
-                        onThemeModeChange(option.mode)
-                    },
+                    onClick = { onThemeModeChange(option.mode) },
                     shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size),
                     icon = {
                         Icon(

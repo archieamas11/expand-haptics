@@ -27,12 +27,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
 
-/**
- * Persistent onboarding card shown when the accessibility service isn't enabled. Restyled to
- * an Expressive tonal block: tertiary-container accent surface, large icon badge, and a pill
- * primary button. Tapping the CTA launches
- * [android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS] via [onOpenSettings].
- */
 @Composable
 fun EnableServiceCard(
     onOpenSettings: () -> Unit,

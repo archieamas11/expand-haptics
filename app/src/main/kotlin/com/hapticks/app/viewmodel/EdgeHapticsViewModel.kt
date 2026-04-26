@@ -77,6 +77,7 @@ class EdgeHapticsViewModel(
         }
     }
 
+    /** Edge waveform test (dedicated test button only). */
     fun testEdgeHaptic() {
         viewModelScope.launch {
             val result = withContext(Dispatchers.Default) {

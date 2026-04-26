@@ -1,4 +1,4 @@
-package com.hapticks.app.ui.screens
+package com.hapticks.app.ui.screens.scrollhaptics
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,11 +31,13 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
@@ -46,8 +48,9 @@ import com.hapticks.app.ui.components.HapticTestButton
 import com.hapticks.app.ui.components.HapticToggleRow
 import com.hapticks.app.ui.components.PatternSelector
 import com.hapticks.app.ui.components.SectionCard
-import com.hapticks.app.ui.haptics.HapticListEdgeFeedback
-import com.hapticks.app.ui.haptics.LocalAppHaptics
+import com.hapticks.app.ui.haptics.SliderTickStepsDefault
+import com.hapticks.app.ui.haptics.performHapticSliderTick
+import com.hapticks.app.ui.haptics.slider01ToTickIndex
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -68,7 +71,6 @@ fun ScrollHapticsScreen(
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
     val listState = rememberLazyListState()
-    HapticListEdgeFeedback(state = listState)
 
     Scaffold(
         modifier = modifier
@@ -162,12 +164,8 @@ fun ScrollHapticsScreen(
 
 @Composable
 private fun BackPill(onBack: () -> Unit) {
-    val appHaptics = LocalAppHaptics.current
     IconButton(
-        onClick = {
-            appHaptics?.tap()
-            onBack()
-        },
+        onClick = onBack,
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
@@ -198,8 +196,13 @@ private fun ScrollPulseDensityControl(
     eventsPerHundredPx: Float,
     onCommit: (Float) -> Unit,
 ) {
+    val context = LocalContext.current
+    val initialSlider = eventsToScrollDensitySlider(eventsPerHundredPx)
     var draftSlider by remember(eventsPerHundredPx) {
-        mutableFloatStateOf(eventsToScrollDensitySlider(eventsPerHundredPx))
+        mutableFloatStateOf(initialSlider)
+    }
+    var lastTickIndex by remember(eventsPerHundredPx) {
+        mutableIntStateOf(slider01ToTickIndex(initialSlider))
     }
     val draftEvents = scrollDensitySliderToEvents(draftSlider)
     val eventsLabel = String.format(Locale.US, "%.2f", draftEvents)
@@ -246,9 +249,17 @@ private fun ScrollPulseDensityControl(
         }
         Slider(
             value = draftSlider,
-            onValueChange = { draftSlider = it },
+            onValueChange = { newValue ->
+                draftSlider = newValue
+                val tickIndex = slider01ToTickIndex(newValue)
+                if (tickIndex != lastTickIndex) {
+                    lastTickIndex = tickIndex
+                    context.performHapticSliderTick()
+                }
+            },
             onValueChangeFinished = { onCommit(scrollDensitySliderToEvents(draftSlider)) },
             valueRange = 0f..1f,
+            steps = SliderTickStepsDefault,
             colors = sliderColors,
         )
     }
@@ -259,7 +270,11 @@ private fun IntensityControl(
     intensity: Float,
     onIntensityCommit: (Float) -> Unit,
 ) {
+    val context = LocalContext.current
     var draft by remember(intensity) { mutableFloatStateOf(intensity) }
+    var lastTickIndex by remember(intensity) {
+        mutableIntStateOf(slider01ToTickIndex(intensity))
+    }
     val percent = (draft * 100f).roundToInt()
 
     val sliderColors = SliderDefaults.colors(
@@ -295,9 +310,17 @@ private fun IntensityControl(
         )
         Slider(
             value = draft,
-            onValueChange = { draft = it },
+            onValueChange = { newValue ->
+                draft = newValue
+                val tickIndex = slider01ToTickIndex(newValue)
+                if (tickIndex != lastTickIndex) {
+                    lastTickIndex = tickIndex
+                    context.performHapticSliderTick()
+                }
+            },
             onValueChangeFinished = { onIntensityCommit(draft) },
             valueRange = 0f..1f,
+            steps = SliderTickStepsDefault,
             colors = sliderColors,
         )
     }

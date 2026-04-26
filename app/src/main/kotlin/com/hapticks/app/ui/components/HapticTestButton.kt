@@ -25,7 +25,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.hapticks.app.ui.haptics.LocalAppHaptics
 
 @Composable
 fun BottomPinnedActionBar(
@@ -51,7 +50,6 @@ fun HapticTestButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val appHaptics = LocalAppHaptics.current
     val currentOnClick by rememberUpdatedState(onClick)
     val buttonColors = ButtonDefaults.buttonColors(
         containerColor = MaterialTheme.colorScheme.primary,
@@ -60,10 +58,7 @@ fun HapticTestButton(
         disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     Button(
-        onClick = {
-            appHaptics?.tap()
-            currentOnClick()
-        },
+        onClick = { currentOnClick() },
         enabled = enabled,
         modifier = modifier
             .fillMaxWidth()

@@ -1,13 +1,9 @@
-package com.hapticks.app.service.accessibility.typeviewscrolled
+package com.hapticks.app.service.accessibility.scrolled
 
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 
-/**
- * Stable key for grouping [android.view.accessibility.AccessibilityEvent.TYPE_VIEW_SCROLLED]
- * updates per scroll surface. Shared by scroll-content vibration and absolute-edge vibration.
- */
-internal fun typeViewScrolledSurfaceKey(event: AccessibilityEvent): String? {
+internal fun scrolledSurfaceKey(event: AccessibilityEvent): String? {
     val source: AccessibilityNodeInfo? = event.source
     return if (source != null) {
         try {

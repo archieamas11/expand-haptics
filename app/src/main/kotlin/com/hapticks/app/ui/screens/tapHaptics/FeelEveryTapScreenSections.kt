@@ -20,29 +20,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.hapticks.app.ui.haptics.SliderTickStepsDefault
+import com.hapticks.app.ui.haptics.performHapticSliderTick
+import com.hapticks.app.ui.haptics.slider01ToTickIndex
 import com.hapticks.app.R
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.haptics.HapticPattern
 import com.hapticks.app.ui.components.HapticToggleRow
 import com.hapticks.app.ui.components.PatternSelector
 import com.hapticks.app.ui.components.SectionCard
-import com.hapticks.app.ui.haptics.LocalAppHaptics
 import kotlin.math.roundToInt
 
 @Composable
 internal fun FeelEveryTapBackPill(onBack: () -> Unit) {
-    val appHaptics = LocalAppHaptics.current
     IconButton(
-        onClick = {
-            appHaptics?.tap()
-            onBack()
-        },
+        onClick = onBack,
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
@@ -83,7 +83,11 @@ private fun FeelEveryTapIntensityControl(
     intensity: Float,
     onIntensityCommit: (Float) -> Unit,
 ) {
+    val context = LocalContext.current
     var draft by remember(intensity) { mutableFloatStateOf(intensity) }
+    var lastTickIndex by remember(intensity) {
+        mutableIntStateOf(slider01ToTickIndex(intensity))
+    }
     val percent = (draft * 100f).roundToInt()
 
     val sliderColors = SliderDefaults.colors(
@@ -113,9 +117,17 @@ private fun FeelEveryTapIntensityControl(
         }
         Slider(
             value = draft,
-            onValueChange = { draft = it },
+            onValueChange = { newValue ->
+                draft = newValue
+                val tickIndex = slider01ToTickIndex(newValue)
+                if (tickIndex != lastTickIndex) {
+                    lastTickIndex = tickIndex
+                    context.performHapticSliderTick()
+                }
+            },
             onValueChangeFinished = { onIntensityCommit(draft) },
             valueRange = 0f..1f,
+            steps = SliderTickStepsDefault,
             colors = sliderColors,
         )
     }

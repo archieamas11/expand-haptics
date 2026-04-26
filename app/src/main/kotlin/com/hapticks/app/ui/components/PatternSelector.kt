@@ -43,7 +43,6 @@ import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
 import com.hapticks.app.haptics.HapticPattern
-import com.hapticks.app.ui.haptics.LocalAppHaptics
 
 @Composable
 fun PatternSelector(
@@ -51,7 +50,6 @@ fun PatternSelector(
     onPatternSelected: (HapticPattern) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val appHaptics = LocalAppHaptics.current
     val patterns = remember { HapticPattern.entries }
 
     Column(
@@ -64,7 +62,7 @@ fun PatternSelector(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(IntrinsicSize.Min),   // Ensures equal row height
+                    .height(IntrinsicSize.Min),  
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 rowItems.forEach { pattern ->
@@ -73,16 +71,14 @@ fun PatternSelector(
                         isSelected = pattern == selected,
                         onClick = {
                             if (pattern != selected) {
-                                appHaptics?.tap()
                                 onPatternSelected(pattern)
                             }
                         },
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight(),     // Stretch to row height
+                            .fillMaxHeight(),   
                     )
                 }
-                // Invisible placeholder for odd‑numbered rows to keep grid alignment
                 if (rowItems.size == 1) {
                     Box(modifier = Modifier.weight(1f).fillMaxHeight())
                 }
@@ -131,7 +127,6 @@ private fun PatternCard(
         MaterialTheme.colorScheme.onSurfaceVariant
     }
 
-    // Compute the accessibility string in a composable context
     val stateDescription = stringResource(
         id = if (isSelected) R.string.pattern_selected else R.string.pattern_not_selected
     )
@@ -149,7 +144,6 @@ private fun PatternCard(
                 indication = ripple(bounded = true),
             )
             .semantics {
-                // Use the pre‑computed string, no composable call inside
                 this.stateDescription = stateDescription
             },
         color = containerColor,
@@ -159,7 +153,7 @@ private fun PatternCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight()   // Fill entire card height
+                .fillMaxHeight()  
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.Top),
         ) {
@@ -214,7 +208,7 @@ private fun PatternIconBadge(icon: ImageVector, isSelected: Boolean) {
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,   // decorative
+            contentDescription = null,   
             tint = tint,
             modifier = Modifier.size(22.dp),
         )
@@ -238,7 +232,6 @@ private fun SelectionDot(isSelected: Boolean) {
             ),
         contentAlignment = Alignment.Center,
     ) {
-        // Only compose the icon when selected – reduces work
         if (isSelected) {
             Icon(
                 imageVector = Icons.Rounded.Check,

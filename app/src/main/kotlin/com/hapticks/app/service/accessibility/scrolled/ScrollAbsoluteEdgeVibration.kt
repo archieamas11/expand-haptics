@@ -1,16 +1,10 @@
-package com.hapticks.app.service.accessibility.typeviewscrolled
+package com.hapticks.app.service.accessibility.scrolled
 
 import android.view.accessibility.AccessibilityEvent
 import java.util.LinkedHashMap
 
-/**
- * Edge haptics from [AccessibilityEvent.TYPE_VIEW_SCROLLED]: fires when scroll position
- * moves onto the absolute top (y == 0) or bottom (y == maxScrollY) from inside the range.
- */
 internal object ScrollAbsoluteEdgeVibration {
-
     private const val MAX_TRACKED_SURFACES = 128
-
     private val perSurface = object : LinkedHashMap<String, AbsoluteEdgeState>(
         16, 0.75f, true
     ) {
@@ -20,7 +14,7 @@ internal object ScrollAbsoluteEdgeVibration {
 
     fun onViewScrolled(event: AccessibilityEvent): Result {
         val my = event.maxScrollY
-        val key = typeViewScrolledSurfaceKey(event) ?: return Result.NoHaptic
+        val key = scrolledSurfaceKey(event) ?: return Result.NoHaptic
 
         if (my <= 0) {
             perSurface.remove(key)
@@ -44,11 +38,8 @@ internal object ScrollAbsoluteEdgeVibration {
 }
 
 private enum class AbsoluteEdgeAction { REACHED_TOP, REACHED_BOTTOM }
-
 private data class AbsoluteEdgeState(val lastScrollY: Int? = null)
-
 private data class AbsoluteEdgeSnapshot(val scrollY: Int, val maxScrollY: Int)
-
 private fun advanceAbsoluteEdge(
     state: AbsoluteEdgeState,
     snap: AbsoluteEdgeSnapshot,

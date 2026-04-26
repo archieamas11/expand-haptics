@@ -23,7 +23,6 @@ import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.haptics.HapticPattern
 import com.hapticks.app.ui.components.EnableServiceCard
 import com.hapticks.app.ui.components.HapticTestButton
-import com.hapticks.app.ui.haptics.HapticListEdgeFeedback
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +40,6 @@ fun FeelEveryTapScreen(
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
     val listState = rememberLazyListState()
-    HapticListEdgeFeedback(state = listState)
 
     Scaffold(
         modifier = modifier

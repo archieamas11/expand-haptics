@@ -5,9 +5,10 @@ import android.view.accessibility.AccessibilityEvent
 import com.hapticks.app.HapticksApp
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.haptics.HapticEngine
-import com.hapticks.app.service.accessibility.typeviewinteracted.InteractableViewHaptics
-import com.hapticks.app.service.accessibility.typeviewscrolled.ScrollAbsoluteEdgeVibration
-import com.hapticks.app.service.accessibility.typeviewscrolled.ScrollContentVibration
+import com.hapticks.app.service.accessibility.isAccessibilityEventFromOwnApplication
+import com.hapticks.app.service.accessibility.interacted.InteractableViewHaptics
+import com.hapticks.app.service.accessibility.scrolled.ScrollAbsoluteEdgeVibration
+import com.hapticks.app.service.accessibility.scrolled.ScrollContentVibration
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
@@ -41,6 +42,11 @@ class HapticsAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val ev = event ?: return
+        val fromOwnApp = isAccessibilityEventFromOwnApplication(ev)
+        if (fromOwnApp && ev.eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+            return
+        }
+
         val type = ev.eventType
 
         if (type == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {

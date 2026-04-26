@@ -1,4 +1,4 @@
-package com.hapticks.app.service.accessibility.typeviewscrolled
+package com.hapticks.app.service.accessibility.scrolled
 
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
@@ -46,7 +46,7 @@ internal object ScrollContentVibration {
         }
 
         val pos = event.scrollY.coerceIn(0, my)
-        val key = typeViewScrolledSurfaceKey(event) ?: return Decision.None
+        val key = scrolledSurfaceKey(event) ?: return Decision.None
         val eventTime = event.eventTime
 
         val prev = perSurface[key]
@@ -97,12 +97,6 @@ internal object ScrollContentVibration {
         )
         val flingScale = flingCreditGainScale(smoothedV)
         val k = (rate / REFERENCE_PX) * flingScale
-
-        /**
-         * Credit is derived from distance to [emitAnchorPx], not summed abs(step).
-         * That way rubber-band / bounce (same net scrollY) does not accrue multiple
-         * pulses for back-and-forth motion over the same range.
-         */
         val signedFromAnchor = pos.toFloat() - prev.emitAnchorPx
         val distFromAnchor = abs(signedFromAnchor)
         val creditsAvailable = distFromAnchor * k
@@ -170,7 +164,6 @@ internal object ScrollContentVibration {
         val lastEventTime: Long,
         val smoothedVelocityPps: Float,
         val lastHapticEmitUptimeMs: Long,
-        /** Scroll phase reference so credit is not double-counted on reversing motion. */
         val emitAnchorPx: Float,
     )
 

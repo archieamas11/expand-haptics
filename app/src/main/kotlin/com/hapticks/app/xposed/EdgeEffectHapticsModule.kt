@@ -2,7 +2,7 @@ package com.hapticks.app.xposed
 
 import android.app.Application
 import android.content.Context
-import android.os.EdgeEffect
+import android.widget.EdgeEffect
 import android.os.VibrationAttributes
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -12,8 +12,6 @@ import com.hapticks.app.haptics.HapticPattern
 import io.github.libxposed.api.XposedInterface.ExceptionMode
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
-import java.lang.reflect.Field
-import java.lang.reflect.Method
 import java.util.WeakHashMap
 
 class EdgeEffectHapticsModule : XposedModule() {
@@ -34,16 +32,6 @@ class EdgeEffectHapticsModule : XposedModule() {
 
     private val touchAttrs: VibrationAttributes by lazy {
         VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH)
-    }
-
-    private val getDistanceMethod: Method? by lazy {
-        runCatching { EdgeEffect::class.java.getMethod("getDistance") }.getOrNull()
-    }
-
-    private val mDistanceField: Field? by lazy {
-        runCatching {
-            EdgeEffect::class.java.getDeclaredField("mDistance").apply { isAccessible = true }
-        }.getOrNull()
     }
 
     override fun onModuleLoaded(param: ModuleLoadedParam) {
@@ -102,23 +90,23 @@ class EdgeEffectHapticsModule : XposedModule() {
 
         runCatching {
             hookAfter(cls, "onPull",
+                Float::class.javaPrimitiveType
+            ) { effect, _ -> processDistanceChange(effect) }
+        }.onFailure { log(Log.ERROR, TAG, "onPull(float) hook failed", it) }
+
+        runCatching {
+            hookAfter(cls, "onPull",
                 Float::class.javaPrimitiveType,
                 Float::class.javaPrimitiveType
             ) { effect, _ -> processDistanceChange(effect) }
-        }.onFailure { log(Log.ERROR, TAG, "onPull hook failed", it) }
+        }.onFailure { log(Log.ERROR, TAG, "onPull(float, float) hook failed", it) }
 
         runCatching {
             hookAfter(cls, "onPullDistance",
                 Float::class.javaPrimitiveType,
                 Float::class.javaPrimitiveType
             ) { effect, _ -> processDistanceChange(effect) }
-        }.onFailure { log(Log.DEBUG, TAG, "onPullDistance unavailable (< API 33)") }
-
-        runCatching {
-            hookAfter(cls, "setDistance",
-                Float::class.javaPrimitiveType
-            ) { effect, _ -> processDistanceChange(effect) }
-        }.onFailure { log(Log.DEBUG, TAG, "setDistance unavailable (< API 31)") }
+        }.onFailure { log(Log.DEBUG, TAG, "onPullDistance unavailable (< API 31)") }
 
         runCatching {
             hookAfter(cls, "onRelease") { effect, _ -> processRelease(effect) }
@@ -184,14 +172,8 @@ class EdgeEffectHapticsModule : XposedModule() {
         synchronized(sessions) { sessions.remove(effect) }
     }
 
-    private fun readDistance(effect: Any): Float = when {
-        getDistanceMethod != null -> runCatching {
-            getDistanceMethod!!.invoke(effect) as Float
-        }.getOrDefault(0f)
-        mDistanceField != null -> runCatching {
-            mDistanceField!!.getFloat(effect)
-        }.getOrDefault(0f)
-        else -> 0f
+    private fun readDistance(effect: Any): Float {
+        return (effect as? EdgeEffect)?.distance ?: 0f
     }
 
     private enum class HapticEventType { PULL, RELEASE, ABSORB }
@@ -205,12 +187,7 @@ class EdgeEffectHapticsModule : XposedModule() {
         val effect = runCatching {
             EdgeHapticsBridge.edgeVibrationEffect(
                 pattern = pattern,
-                intensity = intensity,
-                eventType = when (type) {
-                    HapticEventType.PULL    -> EdgeHapticsBridge.EdgeVibrationEvent.EDGE_HIT
-                    HapticEventType.RELEASE -> EdgeHapticsBridge.EdgeVibrationEvent.RELEASE
-                    HapticEventType.ABSORB  -> EdgeHapticsBridge.EdgeVibrationEvent.ABSORB
-                }
+                intensity = intensity
             )
         }.onFailure {
             log(Log.DEBUG, TAG, "VibrationEffect build failed [$type]: ${it.message}")

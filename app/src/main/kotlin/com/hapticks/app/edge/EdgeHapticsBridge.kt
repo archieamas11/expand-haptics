@@ -9,9 +9,10 @@ import com.hapticks.app.HapticksApp
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.haptics.HapticPattern
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 /**
- * In-app preview of the scroll-edge haptic (same waveform the accessibility service uses).
+ * Builds [VibrationEffect]s for scroll-edge feedback (accessibility / LSPosed hooks).
  */
 object EdgeHapticsBridge {
 
@@ -22,6 +23,7 @@ object EdgeHapticsBridge {
         object NoVibrator : TestResult()
     }
 
+    /** In-app edge waveform test (dedicated test button only). */
     fun testEdgeHaptic(context: Context): TestResult {
         val vibrator = resolveVibrator(context) ?: return TestResult.NoVibrator
         if (!vibrator.hasVibrator()) return TestResult.NoVibrator
@@ -32,7 +34,7 @@ object EdgeHapticsBridge {
             val s = hapticksApp.preferences.settings
                 .let { flow ->
                     try {
-                        kotlinx.coroutines.runBlocking { flow.first() }
+                        runBlocking { flow.first() }
                     } catch (_: Throwable) {
                         HapticsSettings.Default
                     }
@@ -44,9 +46,6 @@ object EdgeHapticsBridge {
         }
     }
 
-    /**
-     * Builds the same [VibrationEffect] used for edge preview and for the LSPosed [EdgeEffect] hooks.
-     */
     fun edgeVibrationEffect(pattern: HapticPattern, intensity: Float): VibrationEffect =
         edgeVibrationEffect(pattern, intensity, EdgeVibrationEvent.EDGE_HIT)
 

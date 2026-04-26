@@ -20,12 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.hapticks.app.ui.haptics.hapticClickable
 
-/**
- * Shared section scaffolding. The header can optionally display a leading icon badge and a
- * one-line subtitle under the title, which gives each section a distinct, expressive feel
- * without nesting cards. The body is rendered inside a rounded tonal container.
- */
 @Composable
 fun SectionCard(
     title: String? = null,
@@ -33,6 +29,7 @@ fun SectionCard(
     subtitle: String? = null,
     icon: ImageVector? = null,
     contentPadding: PaddingValues = PaddingValues(vertical = 4.dp),
+    onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -42,7 +39,15 @@ fun SectionCard(
         Surface(
             color = MaterialTheme.colorScheme.surfaceContainer,
             shape = RoundedCornerShape(28.dp),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .then(
+                    if (onClick != null) {
+                        Modifier.hapticClickable(onClick = onClick)
+                    } else {
+                        Modifier
+                    },
+                ),
         ) {
             Column(
                 modifier = Modifier.padding(contentPadding),

@@ -26,8 +26,8 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * UI state for the Feel Every Tap flow: tap toggle (including switch selection haptics), pattern,
- * and intensity shared with [HapticsAccessibilityService] via [HapticsPreferences].
+ * UI state for the Feel Every Tap flow: tap toggle, pattern, and intensity shared with
+ * [HapticsAccessibilityService] via [HapticsPreferences].
  */
 class FeelEveryTapViewModel(
     application: Application,
@@ -60,12 +60,10 @@ class FeelEveryTapViewModel(
 
     fun commitIntensity(intensity: Float) {
         viewModelScope.launch { preferences.setIntensity(intensity) }
-        engine.play(settings.value.pattern, intensity)
     }
 
     fun setPattern(pattern: HapticPattern) {
         viewModelScope.launch { preferences.setPattern(pattern) }
-        engine.play(pattern, settings.value.intensity)
     }
 
     fun setScrollEnabled(enabled: Boolean) {
@@ -74,24 +72,23 @@ class FeelEveryTapViewModel(
 
     fun commitScrollIntensity(intensity: Float) {
         viewModelScope.launch { preferences.setScrollIntensity(intensity) }
-        engine.play(settings.value.scrollPattern, intensity)
     }
 
     fun commitScrollHapticDensity(eventsPerHundredPx: Float) {
         viewModelScope.launch { preferences.setScrollHapticEventsPerHundredPx(eventsPerHundredPx) }
-        val s = settings.value
-        engine.play(
-            s.scrollPattern,
-            s.scrollIntensity,
-            throttleMs = 0L,
-        )
     }
 
     fun setScrollPattern(pattern: HapticPattern) {
         viewModelScope.launch { preferences.setScrollPattern(pattern) }
-        engine.play(pattern, settings.value.scrollIntensity)
     }
 
+    /** Plays the configured tap pattern (for the dedicated test control only). */
+    fun testHaptic() {
+        val s = settings.value
+        engine.play(s.pattern, s.intensity)
+    }
+
+    /** Plays a short burst of scroll haptics (for the dedicated test control only). */
     fun testScrollHaptic() {
         val s = settings.value
         viewModelScope.launch {
@@ -102,11 +99,6 @@ class FeelEveryTapViewModel(
             delay(52)
             engine.play(s.scrollPattern, i, 0L)
         }
-    }
-
-    fun testHaptic() {
-        val s = settings.value
-        engine.play(s.pattern, s.intensity)
     }
 
     fun setUseDynamicColors(enabled: Boolean) {

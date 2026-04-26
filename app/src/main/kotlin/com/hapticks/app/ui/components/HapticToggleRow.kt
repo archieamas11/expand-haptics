@@ -18,13 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.hapticks.app.ui.haptics.LocalAppHaptics
+import com.hapticks.app.ui.haptics.hapticClickable
+import com.hapticks.app.ui.haptics.performHapticClick
 
-/**
- * Settings-style row with an optional leading icon, two-line title/subtitle, and a trailing
- * [Switch]. The row is compact but expressive-flavored with an icon tile on the left.
- */
 @Composable
 fun HapticToggleRow(
     title: String,
@@ -34,7 +32,7 @@ fun HapticToggleRow(
     modifier: Modifier = Modifier,
     leadingIcon: ImageVector? = null,
 ) {
-    val appHaptics = LocalAppHaptics.current
+    val context = LocalContext.current
     val switchColors = SwitchDefaults.colors(
         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
         checkedTrackColor = MaterialTheme.colorScheme.primary,
@@ -50,46 +48,54 @@ fun HapticToggleRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        if (leadingIcon != null) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        shape = RoundedCornerShape(14.dp),
-                    ),
-                contentAlignment = Alignment.Center,
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .hapticClickable { onCheckedChange(!checked) },
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (leadingIcon != null) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            shape = RoundedCornerShape(14.dp),
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = leadingIcon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier.padding(
+                    start = if (leadingIcon != null) 14.dp else 0.dp,
+                    end = 16.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
-                Icon(
-                    imageVector = leadingIcon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp),
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = if (leadingIcon != null) 14.dp else 0.dp, end = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
         Switch(
             checked = checked,
-            onCheckedChange = {
-                appHaptics?.tap()
-                onCheckedChange(it)
+            onCheckedChange = { value ->
+                context.performHapticClick()
+                onCheckedChange(value)
             },
             colors = switchColors,
         )

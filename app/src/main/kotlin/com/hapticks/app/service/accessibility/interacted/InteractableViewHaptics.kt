@@ -1,4 +1,4 @@
-package com.hapticks.app.service.accessibility.typeviewinteracted
+package com.hapticks.app.service.accessibility.interacted
 
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
