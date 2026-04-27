@@ -1,3 +1,6 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -5,11 +8,18 @@ plugins {
 }
 
 fun getVersionName(): String {
-    return System.getenv("GITHUB_REF_NAME") ?: "1.0.0"
+    val githubRef = System.getenv("GITHUB_REF_NAME")
+    if (githubRef != null) return githubRef
+
+    return "1.0.0-dev-" + SimpleDateFormat("MMddHHmm").format(Date())
 }
 
 fun getVersionCode(): Int {
-    return System.getenv("GITHUB_RUN_NUMBER")?.toInt() ?: 1
+    val githubRun = System.getenv("GITHUB_RUN_NUMBER")
+    if (githubRun != null) return githubRun.toInt()
+
+    val epochOffset = 1704067200000L
+    return ((System.currentTimeMillis() - epochOffset) / 60000).toInt()
 }
 
 android {
@@ -69,6 +79,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -107,6 +118,7 @@ dependencies {
 
     compileOnly(libs.libxposed.api)
     implementation(libs.libxposed.service)
+    implementation(libs.dexkit)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

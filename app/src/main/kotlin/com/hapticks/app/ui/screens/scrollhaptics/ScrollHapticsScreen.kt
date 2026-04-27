@@ -115,7 +115,6 @@ fun ScrollHapticsScreen(
                         subtitle = stringResource(id = R.string.scroll_toggle_subtitle),
                         checked = settings.scrollEnabled,
                         onCheckedChange = onScrollEnabledChange,
-                        leadingIcon = Icons.Rounded.SwipeVertical,
                     )
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.outlineVariant,

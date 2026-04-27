@@ -2,12 +2,14 @@ package com.hapticks.app.ui.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
@@ -38,16 +40,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.ui.haptics.hapticClickable
 
 enum class BottomTab { HOME, SETTINGS }
 
-private val bottomNavSlideSpec = tween<IntOffset>(durationMillis = 320)
-private val bottomNavFadeSpec = tween<Float>(durationMillis = 280)
+private val nativeEasing = FastOutSlowInEasing
+private const val duration = 400
 
-/** Slides between main tabs (Home → Settings moves content left; reverse moves right). */
 @Composable
 fun SlidingBottomTabHost(
     selectedTab: BottomTab,
@@ -59,13 +59,15 @@ fun SlidingBottomTabHost(
         targetState = selectedTab,
         modifier = modifier.background(tabBg),
         transitionSpec = {
-            if (targetState.ordinal > initialState.ordinal) {
-                (slideInHorizontally(bottomNavSlideSpec) { fullWidth -> fullWidth } + fadeIn(bottomNavFadeSpec)) togetherWith
-                    (slideOutHorizontally(bottomNavSlideSpec) { fullWidth -> -fullWidth } + fadeOut(bottomNavFadeSpec))
-            } else {
-                (slideInHorizontally(bottomNavSlideSpec) { fullWidth -> -fullWidth } + fadeIn(bottomNavFadeSpec)) togetherWith
-                    (slideOutHorizontally(bottomNavSlideSpec) { fullWidth -> fullWidth } + fadeOut(bottomNavFadeSpec))
-            }
+            val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
+            (slideInHorizontally(tween(duration, easing = nativeEasing)) { direction * it / 4 } +
+                    fadeIn(tween(duration)) +
+                    scaleIn(initialScale = 0.95f, animationSpec = tween(duration, easing = nativeEasing)))
+                .togetherWith(
+                    slideOutHorizontally(tween(duration, easing = nativeEasing)) { -direction * it / 4 } +
+                            fadeOut(tween(duration / 2)) +
+                            scaleOut(targetScale = 0.95f, animationSpec = tween(duration, easing = nativeEasing))
+                )
         },
         label = "slidingBottomTabHost",
     ) { tab ->
@@ -88,15 +90,13 @@ fun FloatingBottomBar(
     Surface(
         modifier = modifier
             .padding(bottom = 25.dp)
-            .height(60.dp),
+            .height(64.dp),
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.5f),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.8f),
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
         ),
-        tonalElevation = 2.dp,
-        shadowElevation = 14.dp,
     ) {
         Row(
             modifier = Modifier
@@ -128,27 +128,23 @@ private fun BottomTabItem(
     label: String,
     onClick: () -> Unit,
 ) {
-    val shape = CircleShape
     val tabWidth = 100.dp
 
     val containerColor by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else {
-            Color.Transparent
-        },
+        targetValue = if (selected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+        animationSpec = tween(250, easing = nativeEasing),
         label = "bottomBarContainerColor",
     )
+
     val contentColor by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.onPrimaryContainer
-        } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
-        },
+        targetValue = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(250, easing = nativeEasing),
         label = "bottomBarContentColor",
     )
+
     val horizontalPadding by animateDpAsState(
-        targetValue = if (selected) 26.dp else 22.dp,
+        targetValue = if (selected) 24.dp else 20.dp,
+        animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f),
         label = "bottomBarHorizontalPadding",
     )
 
@@ -156,20 +152,20 @@ private fun BottomTabItem(
         modifier = Modifier
             .fillMaxHeight()
             .width(tabWidth)
-            .clip(shape)
-            .background(containerColor, shape)
+            .clip(CircleShape)
+            .background(containerColor)
             .hapticClickable(onClick = onClick)
             .padding(horizontal = horizontalPadding),
         contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(3.dp),
+            verticalArrangement = Arrangement.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(22.dp),
                 tint = contentColor,
             )
             Text(

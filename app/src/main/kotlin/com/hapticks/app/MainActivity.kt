@@ -8,8 +8,23 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,7 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hapticks.app.ui.components.BottomTab
 import com.hapticks.app.ui.components.FloatingBottomBar
 import com.hapticks.app.ui.components.SlidingBottomTabHost
-import com.hapticks.app.ui.screens.everytap.FeelEveryTapScreen
+import com.hapticks.app.ui.screens.tapHaptics.FeelEveryTapScreen
 import com.hapticks.app.ui.screens.HomeScreen
 import com.hapticks.app.ui.screens.edgehaptics.EdgeHapticsScreen
 import com.hapticks.app.ui.screens.scrollhaptics.ScrollHapticsScreen
@@ -47,6 +62,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settings by viewModel.settings.collectAsStateWithLifecycle()
             val isServiceEnabled by viewModel.isServiceEnabled.collectAsStateWithLifecycle()
+            val nativeEasing = FastOutSlowInEasing
+            val animDuration = 400
 
             HapticksTheme(
                 themeMode = settings.themeMode,
@@ -54,81 +71,132 @@ class MainActivity : ComponentActivity() {
                 amoledBlack = settings.amoledBlack,
                 seedColor = settings.seedColor,
             ) {
+                val backgroundColor = MaterialTheme.colorScheme.background
+
                 ProvideHapticksEdgeOverscrollHaptics {
                     var route by rememberSaveable { mutableStateOf(Route.HOME) }
+                    val lastRootRoute = rememberSaveable { mutableStateOf(Route.HOME) }
 
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        when (route) {
-                        Route.FEEL_EVERY_TAP -> {
-                            BackHandler { route = Route.HOME }
-                            FeelEveryTapScreen(
-                                settings = settings,
-                                isServiceEnabled = isServiceEnabled,
-                                onTapEnabledChange = viewModel::setTapEnabled,
-                                onIntensityCommit = viewModel::commitIntensity,
-                                onPatternSelected = viewModel::setPattern,
-                                onTestHaptic = viewModel::testHaptic,
-                                onOpenAccessibilitySettings = ::openAccessibilitySettings,
-                                onBack = { route = Route.HOME },
-                            )
-                        }
-                        Route.EDGE_HAPTICS -> {
-                            BackHandler { route = Route.HOME }
-                            EdgeHapticsFlowHost(
-                                edgeViewModel = edgeViewModel,
-                                isServiceEnabled = isServiceEnabled,
-                                onOpenAccessibilitySettings = ::openAccessibilitySettings,
-                                onBack = { route = Route.HOME },
-                            )
-                        }
-                        Route.HOME, Route.SETTINGS -> {
-                            val bottomTab =
-                                if (route == Route.HOME) BottomTab.HOME else BottomTab.SETTINGS
-                            SlidingBottomTabHost(
-                                selectedTab = bottomTab,
-                                modifier = Modifier.fillMaxSize(),
-                            ) { tab ->
-                                when (tab) {
-                                    BottomTab.HOME -> HomeScreen(
-                                        onOpenFeelEveryTap = { route = Route.FEEL_EVERY_TAP },
-                                        onOpenEdgeHaptics = { route = Route.EDGE_HAPTICS },
-                                        onOpenTactileScrolling = { route = Route.TACTILE_SCROLLING },
-                                    )
-                                    BottomTab.SETTINGS -> SettingsScreen(
-                                        settings = settings,
-                                        onUseDynamicColorsChange = viewModel::setUseDynamicColors,
-                                        onThemeModeChange = viewModel::setThemeMode,
-                                        onAmoledBlackChange = viewModel::setAmoledBlack,
-                                    )
+                    if (route == Route.HOME || route == Route.SETTINGS) {
+                        lastRootRoute.value = route
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(backgroundColor)
+                    ) {
+                        val transitionRoute = if (route == Route.HOME || route == Route.SETTINGS) Route.HOME else route
+
+                        AnimatedContent(
+                            targetState = transitionRoute,
+                            transitionSpec = {
+                                if (initialState == Route.HOME && targetState != Route.HOME) {
+                                    (slideInHorizontally(tween(animDuration, easing = nativeEasing)) { it } +
+                                            fadeIn(tween(animDuration)) +
+                                            scaleIn(initialScale = 0.92f, animationSpec = tween(animDuration, easing = nativeEasing)))
+                                        .togetherWith(
+                                            slideOutHorizontally(tween(animDuration, easing = nativeEasing)) { -it / 3 } +
+                                                    fadeOut(tween(animDuration / 2)) +
+                                                    scaleOut(targetScale = 0.95f, animationSpec = tween(animDuration, easing = nativeEasing))
+                                        )
+                                } else if (initialState != Route.HOME && targetState == Route.HOME) {
+                                    (slideInHorizontally(tween(animDuration, easing = nativeEasing)) { -it / 3 } +
+                                            fadeIn(tween(animDuration)) +
+                                            scaleIn(initialScale = 0.95f, animationSpec = tween(animDuration, easing = nativeEasing)))
+                                        .togetherWith(
+                                            slideOutHorizontally(tween(animDuration, easing = nativeEasing)) { it } +
+                                                    fadeOut(tween(animDuration / 2)) +
+                                                    scaleOut(targetScale = 0.92f, animationSpec = tween(animDuration, easing = nativeEasing))
+                                        )
+                                } else {
+                                    fadeIn(tween(animDuration)) togetherWith fadeOut(tween(animDuration))
+                                }
+                            },
+                            label = "screen_transition",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(backgroundColor)
+                        ) { targetTransitionRoute ->
+                            val currentRoute = if (targetTransitionRoute == Route.HOME) lastRootRoute.value else targetTransitionRoute
+
+                            Box(modifier = Modifier.fillMaxSize().background(backgroundColor)) {
+                                when (currentRoute) {
+                                    Route.FEEL_EVERY_TAP -> {
+                                        BackHandler { route = Route.HOME }
+                                        FeelEveryTapScreen(
+                                            settings = settings,
+                                            isServiceEnabled = isServiceEnabled,
+                                            onTapEnabledChange = viewModel::setTapEnabled,
+                                            onIntensityCommit = viewModel::commitIntensity,
+                                            onPatternSelected = viewModel::setPattern,
+                                            onTestHaptic = viewModel::testHaptic,
+                                            onOpenAccessibilitySettings = ::openAccessibilitySettings,
+                                            onBack = { route = Route.HOME },
+                                        )
+                                    }
+                                    Route.EDGE_HAPTICS -> {
+                                        BackHandler { route = Route.HOME }
+                                        EdgeHapticsFlowHost(
+                                            edgeViewModel = edgeViewModel,
+                                            isServiceEnabled = isServiceEnabled,
+                                            onOpenAccessibilitySettings = ::openAccessibilitySettings,
+                                            onBack = { route = Route.HOME },
+                                        )
+                                    }
+                                    Route.HOME, Route.SETTINGS -> {
+                                        val bottomTab = if (currentRoute == Route.HOME) BottomTab.HOME else BottomTab.SETTINGS
+                                        SlidingBottomTabHost(
+                                            selectedTab = bottomTab,
+                                            modifier = Modifier.fillMaxSize(),
+                                        ) { tab ->
+                                            when (tab) {
+                                                BottomTab.HOME -> HomeScreen(
+                                                    onOpenFeelEveryTap = { route = Route.FEEL_EVERY_TAP },
+                                                    onOpenEdgeHaptics = { route = Route.EDGE_HAPTICS },
+                                                    onOpenTactileScrolling = { route = Route.TACTILE_SCROLLING },
+                                                )
+                                                BottomTab.SETTINGS -> SettingsScreen(
+                                                    settings = settings,
+                                                    onUseDynamicColorsChange = viewModel::setUseDynamicColors,
+                                                    onThemeModeChange = viewModel::setThemeMode,
+                                                    onAmoledBlackChange = viewModel::setAmoledBlack,
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Route.TACTILE_SCROLLING -> {
+                                        BackHandler { route = Route.HOME }
+                                        ScrollHapticsScreen(
+                                            settings = settings,
+                                            isServiceEnabled = isServiceEnabled,
+                                            onScrollEnabledChange = viewModel::setScrollEnabled,
+                                            onScrollHapticDensityCommit = viewModel::commitScrollHapticDensity,
+                                            onIntensityCommit = viewModel::commitScrollIntensity,
+                                            onPatternSelected = viewModel::setScrollPattern,
+                                            onTestHaptic = viewModel::testScrollHaptic,
+                                            onOpenAccessibilitySettings = ::openAccessibilitySettings,
+                                            onBack = { route = Route.HOME },
+                                        )
+                                    }
                                 }
                             }
                         }
-                        Route.TACTILE_SCROLLING -> {
-                            BackHandler { route = Route.HOME }
-                            ScrollHapticsScreen(
-                                settings = settings,
-                                isServiceEnabled = isServiceEnabled,
-                                onScrollEnabledChange = viewModel::setScrollEnabled,
-                                onScrollHapticDensityCommit = viewModel::commitScrollHapticDensity,
-                                onIntensityCommit = viewModel::commitScrollIntensity,
-                                onPatternSelected = viewModel::setScrollPattern,
-                                onTestHaptic = viewModel::testScrollHaptic,
-                                onOpenAccessibilitySettings = ::openAccessibilitySettings,
-                                onBack = { route = Route.HOME },
+
+                        AnimatedVisibility(
+                            visible = (route == Route.HOME) || (route == Route.SETTINGS),
+                            enter = slideInVertically(tween(animDuration, easing = nativeEasing)) { it / 2 } + fadeIn(tween(animDuration)),
+                            exit = slideOutVertically(tween(animDuration, easing = nativeEasing)) { it / 2 } + fadeOut(tween(animDuration)),
+                            modifier = Modifier.align(Alignment.BottomCenter)
+                        ) {
+                            FloatingBottomBar(
+                                selectedTab = if (route == Route.HOME) BottomTab.HOME else BottomTab.SETTINGS,
+                                onTabSelected = { tab ->
+                                    route = if (tab == BottomTab.HOME) Route.HOME else Route.SETTINGS
+                                },
                             )
                         }
                     }
-
-                    if ((route == Route.HOME) || (route == Route.SETTINGS)) {
-                        FloatingBottomBar(
-                            selectedTab = if (route == Route.HOME) BottomTab.HOME else BottomTab.SETTINGS,
-                            onTabSelected = { tab ->
-                                route = if (tab == BottomTab.HOME) Route.HOME else Route.SETTINGS
-                            },
-                            modifier = Modifier.align(Alignment.BottomCenter)
-                        )
-                    }
-                }
                 }
             }
         }

@@ -1,34 +1,34 @@
 package com.hapticks.app.xposed
 
-import android.app.Application
+import android.annotation.SuppressLint
 import android.content.Context
-import android.widget.EdgeEffect
+import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
+import android.os.SystemClock
 import android.os.VibrationAttributes
+import android.os.VibrationEffect
 import android.os.Vibrator
-import android.os.VibratorManager
-import android.util.Log
+import android.widget.EdgeEffect
 import com.hapticks.app.edge.EdgeHapticsBridge
 import com.hapticks.app.haptics.HapticPattern
 import io.github.libxposed.api.XposedInterface.ExceptionMode
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
+import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
+import java.lang.reflect.Field
 import java.util.WeakHashMap
 
 class EdgeEffectHapticsModule : XposedModule() {
+    private val edgeStates = WeakHashMap<Any, EdgeState>()
 
-    private enum class Phase { IDLE, STRETCHED, RELEASED }
-
-    private class Session(
-        @Volatile var phase: Phase = Phase.IDLE,
-        @Volatile var lastDistance: Float = 0f,
-    )
-
-    private val sessions = WeakHashMap<Any, Session>()
-
-    @Volatile private var vibrator: Vibrator? = null
     @Volatile private var enabled = false
-    @Volatile private var cachedPattern: HapticPattern? = null
-    @Volatile private var cachedIntensity = 1f
+    @Volatile private var cachedEffect: VibrationEffect? = null
+    @Volatile private var isProcessGame = false
+    @Volatile private var vibrator: Vibrator? = null
+    @Volatile private var vibratorResolved = false
+
+    @Volatile private var contextField: Field? = null
+    @Volatile private var contextFieldResolved = false
 
     private val touchAttrs: VibrationAttributes by lazy {
         VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH)
@@ -36,189 +36,163 @@ class EdgeEffectHapticsModule : XposedModule() {
 
     override fun onModuleLoaded(param: ModuleLoadedParam) {
         super.onModuleLoaded(param)
-        log(Log.INFO, TAG, "Loaded — process=${param.processName}")
-
         loadRemotePrefs()
-        hookApplicationForVibrator()
-        installEdgeEffectHooks()
+    }
+
+    override fun onPackageLoaded(param: PackageLoadedParam) {
+        super.onPackageLoaded(param)
+        if (param.isFirstPackage) {
+            isProcessGame = isGame(param.applicationInfo)
+            hookEdgeEffect()
+        }
     }
 
     private fun loadRemotePrefs() {
-        if ((getFrameworkProperties() and PROP_CAP_REMOTE) == 0L) {
-            log(Log.WARN, TAG, "Remote prefs unsupported in this process")
-            return
-        }
-        val prefs = runCatching {
-            getRemotePreferences(XposedEdgeRemotePrefs.GROUP)
-        }.onFailure {
-            log(Log.WARN, TAG, "Remote prefs error: ${it.message}")
-        }.getOrNull() ?: return
-
+        val prefs = runCatching { getRemotePreferences(XposedEdgeRemotePrefs.GROUP) }
+            .getOrNull() ?: return
         applyPrefs(prefs)
         prefs.registerOnSharedPreferenceChangeListener { p, _ -> applyPrefs(p) }
     }
 
-    private fun applyPrefs(prefs: android.content.SharedPreferences) {
-        enabled         = prefs.getBoolean(XposedEdgeRemotePrefs.KEY_ENABLED, false)
-        cachedPattern   = HapticPattern.fromStorageKey(
+    private fun applyPrefs(prefs: SharedPreferences) {
+        enabled = prefs.getBoolean(XposedEdgeRemotePrefs.KEY_ENABLED, false)
+        val pattern = HapticPattern.fromStorageKey(
             prefs.getString(XposedEdgeRemotePrefs.KEY_PATTERN, null)
         )
-        cachedIntensity = prefs.getFloat(XposedEdgeRemotePrefs.KEY_INTENSITY, 1f).coerceIn(0f, 1f)
+        val intensity = prefs.getFloat(XposedEdgeRemotePrefs.KEY_INTENSITY, 1f)
+            .coerceIn(0f, 1f)
+        cachedEffect = runCatching {
+            EdgeHapticsBridge.edgeVibrationEffect(
+                pattern, intensity, EdgeHapticsBridge.EdgeVibrationEvent.EDGE_HIT
+            )
+        }.getOrNull()
     }
 
-    private fun hookApplicationForVibrator() {
-        runCatching {
-            hookAfter(Application::class.java, "attach", Context::class.java) { _, args ->
-                if (vibrator != null) return@hookAfter
-                val ctx = args[0] as Context
-                vibrator = ctx.getSystemService(VibratorManager::class.java)?.defaultVibrator
-            }
-        }
-
-        runCatching {
-            hookAfter(Application::class.java, "onCreate") { app, _ ->
-                if (vibrator != null) return@hookAfter
-                vibrator = (app as Application)
-                    .getSystemService(VibratorManager::class.java)
-                    ?.defaultVibrator
-            }
-        }
-    }
-
-    private fun installEdgeEffectHooks() {
+    private fun hookEdgeEffect() {
         val cls = EdgeEffect::class.java
 
-        runCatching {
-            hookAfter(cls, "onPull",
-                Float::class.javaPrimitiveType
-            ) { effect, _ -> processDistanceChange(effect) }
-        }.onFailure { log(Log.ERROR, TAG, "onPull(float) hook failed", it) }
+        val hasPullDistance = runCatching {
+            hookAfter(
+                cls, "onPullDistance",
+                Float::class.javaPrimitiveType, Float::class.javaPrimitiveType,
+            ) { effect, args ->
+                if ((args[0] as Float) > 0f) tryFire(effect)
+            }
+        }.isSuccess
 
-        runCatching {
-            hookAfter(cls, "onPull",
-                Float::class.javaPrimitiveType,
-                Float::class.javaPrimitiveType
-            ) { effect, _ -> processDistanceChange(effect) }
-        }.onFailure { log(Log.ERROR, TAG, "onPull(float, float) hook failed", it) }
-
-        runCatching {
-            hookAfter(cls, "onPullDistance",
-                Float::class.javaPrimitiveType,
-                Float::class.javaPrimitiveType
-            ) { effect, _ -> processDistanceChange(effect) }
-        }.onFailure { log(Log.DEBUG, TAG, "onPullDistance unavailable (< API 31)") }
-
-        runCatching {
-            hookAfter(cls, "onRelease") { effect, _ -> processRelease(effect) }
-        }.onFailure { log(Log.ERROR, TAG, "onRelease hook failed", it) }
+        if (!hasPullDistance) {
+            runCatching {
+                hookAfter(cls, "onPull", Float::class.javaPrimitiveType) { effect, args ->
+                    if ((args[0] as Float) > 0f) tryFire(effect)
+                }
+            }
+            runCatching {
+                hookAfter(
+                    cls, "onPull",
+                    Float::class.javaPrimitiveType, Float::class.javaPrimitiveType,
+                ) { effect, args ->
+                    if ((args[0] as Float) > 0f) tryFire(effect)
+                }
+            }
+        }
 
         runCatching {
             hookAfter(cls, "onAbsorb", Int::class.javaPrimitiveType) { effect, _ ->
-                processAbsorb(effect)
+                tryFire(effect)
             }
-        }.onFailure { log(Log.ERROR, TAG, "onAbsorb hook failed", it) }
+        }
 
         runCatching {
-            hookAfter(cls, "finish") { effect, _ -> removeState(effect) }
-        }.onFailure { log(Log.DEBUG, TAG, "finish() unavailable") }
-    }
-
-    private fun processDistanceChange(effect: Any) {
-        if (!enabled) return
-
-        val distance = readDistance(effect)
-        val state = getState(effect)
-
-        if (distance == state.lastDistance) return
-        state.lastDistance = distance
-
-        val isStretched = distance > EPSILON
-
-        when {
-            isStretched && state.phase != Phase.STRETCHED -> {
-                triggerHaptic(HapticEventType.PULL)
-                state.phase = Phase.STRETCHED
-            }
-            !isStretched && state.phase == Phase.STRETCHED -> {
-                state.phase = Phase.IDLE
-            }
-            !isStretched && state.phase == Phase.RELEASED -> {
-                state.phase = Phase.IDLE
+            hookAfter(cls, "onRelease") { effect, _ ->
+                synchronized(edgeStates) { edgeStates[effect]?.fired = false }
             }
         }
     }
 
-    private fun processRelease(effect: Any) {
-        if (!enabled) return
-        val state = getState(effect)
+    private fun tryFire(effect: Any) {
+        if (!enabled || isProcessGame) return
+        val vfx = cachedEffect ?: return
 
-        if (state.phase == Phase.STRETCHED) {
-            triggerHaptic(HapticEventType.RELEASE)
-            state.phase = Phase.RELEASED
+        val state = synchronized(edgeStates) { edgeStates.getOrPut(effect) { EdgeState() } }
+        if (state.fired) return
+
+        val now = SystemClock.uptimeMillis()
+        if (now - state.lastFireMs < COOLDOWN_MS) return
+
+        state.fired = true
+        state.lastFireMs = now
+
+        val v = ensureVibrator(effect) ?: return
+        try {
+            v.vibrate(vfx, touchAttrs)
+        } catch (_: Throwable) {}
+    }
+
+    private fun ensureVibrator(effect: Any): Vibrator? {
+        vibrator?.let { return it }
+        if (vibratorResolved) return null
+        synchronized(this) {
+            vibrator?.let { return it }
+            val ctx = resolveContext(effect) ?: run { vibratorResolved = true; return null }
+            val v = try {
+                ctx.getSystemService(Vibrator::class.java)
+            } catch (_: Throwable) { null }
+            vibratorResolved = true
+            if (v != null && v.hasVibrator()) { vibrator = v; return v }
+            return null
         }
     }
 
-    private fun processAbsorb(effect: Any) {
-        if (!enabled) return
-        triggerHaptic(HapticEventType.ABSORB)
-        getState(effect).phase = Phase.RELEASED
-    }
-
-    private fun getState(effect: Any): Session = synchronized(sessions) {
-        sessions.getOrPut(effect) { Session() }
-    }
-
-    private fun removeState(effect: Any) {
-        synchronized(sessions) { sessions.remove(effect) }
-    }
-
-    private fun readDistance(effect: Any): Float {
-        return (effect as? EdgeEffect)?.distance ?: 0f
-    }
-
-    private enum class HapticEventType { PULL, RELEASE, ABSORB }
-
-    private fun triggerHaptic(type: HapticEventType) {
-        val pattern   = cachedPattern   ?: return
-        val intensity = cachedIntensity
-        val vib       = vibrator        ?: return
-        if (!vib.hasVibrator()) return
-
-        val effect = runCatching {
-            EdgeHapticsBridge.edgeVibrationEffect(
-                pattern = pattern,
-                intensity = intensity
-            )
-        }.onFailure {
-            log(Log.DEBUG, TAG, "VibrationEffect build failed [$type]: ${it.message}")
-        }.getOrNull() ?: return
-
-        runCatching {
-            vib.vibrate(effect, touchAttrs)
-        }.onFailure {
-            log(Log.DEBUG, TAG, "vibrate() failed [$type]: ${it.message}")
+    @SuppressLint("DiscouragedPrivateApi")
+    private fun resolveContext(instance: Any): Context? {
+        resolveContextField(instance)
+        contextField?.let { f ->
+            return try { f.get(instance) as? Context } catch (_: Throwable) { fallbackContext() }
         }
+        return fallbackContext()
+    }
+
+    private fun resolveContextField(instance: Any) {
+        if (contextFieldResolved) return
+        synchronized(this) {
+            if (contextFieldResolved) return
+            contextField = try {
+                instance.javaClass.getDeclaredField("mContext").also { it.isAccessible = true }
+            } catch (_: Throwable) { null }
+            contextFieldResolved = true
+        }
+    }
+
+    private fun fallbackContext(): Context? = try {
+        val at = Class.forName("android.app.ActivityThread")
+        at.getDeclaredMethod("currentApplication").invoke(null) as? Context
+    } catch (_: Throwable) { null }
+
+    private fun isGame(info: ApplicationInfo?): Boolean {
+        if (info == null) return false
+        @Suppress("DEPRECATION")
+        return info.category == ApplicationInfo.CATEGORY_GAME ||
+                (info.flags and ApplicationInfo.FLAG_IS_GAME) != 0
     }
 
     private inline fun hookAfter(
-        cls: Class<*>,
-        name: String,
-        vararg paramTypes: Class<*>?,
+        cls: Class<*>, name: String, vararg paramTypes: Class<*>?,
         crossinline block: (thisObj: Any, args: List<Any?>) -> Unit,
     ) {
         val method = cls.getDeclaredMethod(name, *paramTypes)
-        hook(method)
-            .setExceptionMode(ExceptionMode.PROTECTIVE)
-            .intercept { chain ->
-                val result = chain.proceed()
-                runCatching { block(chain.thisObject, chain.args) }
-                    .onFailure { log(Log.DEBUG, TAG, "Hook [$name] error: ${it.message}") }
-                result
-            }
+        hook(method).setExceptionMode(ExceptionMode.PROTECTIVE).intercept { chain ->
+            val result = chain.proceed()
+            try { block(chain.thisObject, chain.args) } catch (_: Throwable) {}
+            result
+        }
     }
 
-    companion object {
-        private const val TAG = "HapticksEdge"
-        private const val EPSILON = 0.001f
+    private class EdgeState {
+        @Volatile var fired = false
+        @Volatile var lastFireMs = 0L
+    }
+
+    private companion object {
+        const val COOLDOWN_MS = 150L
     }
 }

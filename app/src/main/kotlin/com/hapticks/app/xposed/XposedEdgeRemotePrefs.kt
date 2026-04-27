@@ -12,7 +12,7 @@ object XposedEdgeRemotePrefs {
     const val KEY_INTENSITY: String = "edge_intensity"
 
     fun push(service: XposedService, settings: HapticsSettings) {
-        val prefs = service.getRemotePreferences(GROUP) ?: return
+        val prefs = service.getRemotePreferences(GROUP)
         prefs.edit().apply {
             putBoolean(KEY_ENABLED, settings.edgeLsposedLibxposedPath)
             putString(KEY_PATTERN, settings.edgePattern.name)

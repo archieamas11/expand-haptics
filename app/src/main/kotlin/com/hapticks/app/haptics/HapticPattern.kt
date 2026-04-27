@@ -12,8 +12,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.hapticks.app.R
 
 enum class HapticPattern(
-    @get:StringRes val labelRes: Int,
-    @StringRes val descriptionRes: Int,
+    @param:StringRes val labelRes: Int,
+    @param:StringRes val descriptionRes: Int,
     val icon: ImageVector,
 ) {
     CLICK(

@@ -129,10 +129,8 @@ fun EdgeHapticsScreen(
                 }
             }
 
-            if (!settings.a11yScrollBoundEdge && settings.edgeLsposedLibxposedPath) {
-                item(key = "lsposed_runtime_status") {
-                    LsposedRuntimeStatusCard(isActive = isLsposedXposedBridgeActive)
-                }
+            item(key = "lsposed_runtime_status") {
+                LsposedRuntimeStatusCard(isActive = isLsposedXposedBridgeActive)
             }
 
             item(key = "edge_toggles_section") {
@@ -142,14 +140,12 @@ fun EdgeHapticsScreen(
                         subtitle = stringResource(id = R.string.edge_a11y_scroll_bound_subtitle),
                         checked = settings.a11yScrollBoundEdge,
                         onCheckedChange = onA11yScrollBoundEdgeChange,
-                        leadingIcon = Icons.Rounded.SwipeVertical,
                     )
                     HapticToggleRow(
                         title = stringResource(id = R.string.edge_lsposed_title),
                         subtitle = stringResource(id = R.string.edge_lsposed_subtitle),
                         checked = settings.edgeLsposedLibxposedPath,
                         onCheckedChange = onEdgeLsposedLibxposedPathChange,
-                        leadingIcon = Icons.Rounded.Extension,
                     )
                     if (settings.edgeLsposedLibxposedPath) {
                         LsposedLibxposedSetupBlock(isLsposedXposedBridgeActive = isLsposedXposedBridgeActive)
@@ -283,11 +279,6 @@ private fun LsposedRuntimeStatusCard(isActive: Boolean) {
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
-                    text = stringResource(id = R.string.edge_lsposed_status_overline),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = onContainerMuted,
-                )
-                Text(
                     text = stringResource(
                         id = if (isActive) R.string.edge_lsposed_status_active else R.string.edge_lsposed_status_inactive,
                     ),
@@ -407,7 +398,10 @@ private fun TestEventSnackbar(
     LaunchedEffect(testEvent) {
         when (testEvent) {
             null -> return@LaunchedEffect
-            EdgeHapticsViewModel.TestEvent.NoVibrator -> snackbarHostState.showSnackbar(noVibratorLabel)
+            EdgeHapticsViewModel.TestEvent.NoVibrator -> snackbarHostState.showSnackbar(
+                noVibratorLabel
+            )
+
             EdgeHapticsViewModel.TestEvent.Fired -> Unit
         }
         onConsumed()

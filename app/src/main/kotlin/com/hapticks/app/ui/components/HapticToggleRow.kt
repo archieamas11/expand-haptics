@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -30,7 +29,6 @@ fun HapticToggleRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
-    leadingIcon: ImageVector? = null,
 ) {
     val context = LocalContext.current
     val switchColors = SwitchDefaults.colors(
@@ -54,29 +52,7 @@ fun HapticToggleRow(
                 .hapticClickable { onCheckedChange(!checked) },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (leadingIcon != null) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            shape = RoundedCornerShape(14.dp),
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = leadingIcon,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
-            }
             Column(
-                modifier = Modifier.padding(
-                    start = if (leadingIcon != null) 14.dp else 0.dp,
-                    end = 16.dp,
-                ),
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(

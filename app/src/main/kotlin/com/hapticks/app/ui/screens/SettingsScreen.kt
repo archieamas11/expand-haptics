@@ -49,6 +49,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
+import com.hapticks.app.BuildConfig
 import com.hapticks.app.R
 import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.data.ThemeMode
@@ -131,10 +132,64 @@ fun SettingsScreen(
                     title = stringResource(R.string.settings_section_about),
                     icon = Icons.Rounded.Settings,
                 ) {
+
+                    SettingsRow(
+                        title = stringResource(R.string.settings_version_title),
+                        subtitle = stringResource(
+                            R.string.settings_version_subtitle,
+                            BuildConfig.VERSION_NAME,
+                            BuildConfig.VERSION_CODE,
+                        ),
+                        position = RowPosition.Bottom,
+                    )
+                    RowDivider()
+
+                    SettingsRow(
+                        title = stringResource(R.string.settings_developer_title),
+                        subtitle = stringResource(R.string.settings_developer_subtitle),
+                        position = RowPosition.Middle,
+                        onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                "https://github.com/archieamas11".toUri(),
+                            )
+                            context.startActivity(intent)
+                        },
+                        trailing = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        },
+                    )
+
+                    SettingsRow(
+                        title = stringResource(R.string.settings_report_bug_title),
+                        subtitle = stringResource(R.string.settings_report_bug_subtitle),
+                        position = RowPosition.Middle,
+                                                onClick = {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                "https://t.me/ricosixnine".toUri(),
+                            )
+                            context.startActivity(intent)
+                        },
+                        trailing = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        },
+                    )
+
                     SettingsRow(
                         title = stringResource(R.string.settings_github_title),
                         subtitle = stringResource(R.string.settings_github_subtitle),
-                        position = RowPosition.Single,
+                        position = RowPosition.Top,
                         onClick = {
                             val intent = Intent(
                                 Intent.ACTION_VIEW,
@@ -322,9 +377,21 @@ private fun ThemeModeRow(
         )
 
         val modes = listOf(
-            ThemeModeOption(ThemeMode.SYSTEM, stringResource(R.string.settings_theme_mode_system), Icons.Rounded.Brightness6),
-            ThemeModeOption(ThemeMode.LIGHT, stringResource(R.string.settings_theme_mode_light), Icons.Rounded.LightMode),
-            ThemeModeOption(ThemeMode.DARK, stringResource(R.string.settings_theme_mode_dark), Icons.Rounded.DarkMode),
+            ThemeModeOption(
+                ThemeMode.SYSTEM,
+                stringResource(R.string.settings_theme_mode_system),
+                Icons.Rounded.Brightness6
+            ),
+            ThemeModeOption(
+                ThemeMode.LIGHT,
+                stringResource(R.string.settings_theme_mode_light),
+                Icons.Rounded.LightMode
+            ),
+            ThemeModeOption(
+                ThemeMode.DARK,
+                stringResource(R.string.settings_theme_mode_dark),
+                Icons.Rounded.DarkMode
+            ),
         )
 
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {

@@ -30,3 +30,4 @@ captures/
 
 app/debug
 app/src/test/
+.vscode/

@@ -26,75 +26,50 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 
-private const val EdgePullSlopPx = 0.5f
+private const val EdgePullSlopPx = 0.1f
+
 private class HapticInstrumentedOverscrollEffect(
     private val delegate: OverscrollEffect,
     private val engine: HapticEngine?,
+    private val pattern: HapticPattern,
     private val intensity: Float,
 ) : OverscrollEffect {
-
-    private enum class Phase { IDLE, STRETCHED, RELEASED }
-    private enum class HapticEventType { EDGE_HIT, RELEASE, ABSORB }
-
-    @Volatile
-    private var phase: Phase = Phase.IDLE
+    @Volatile private var edgeFired = false
 
     override fun applyToScroll(
         delta: Offset,
         source: NestedScrollSource,
         performScroll: (Offset) -> Offset,
-    ): Offset = delegate.applyToScroll(delta, source) { scrollDelta ->
-        val consumedByChild = performScroll(scrollDelta)
+    ): Offset {
+        val result = delegate.applyToScroll(delta, source) { scrollDelta ->
+            val consumedByChild = performScroll(scrollDelta)
 
-        if (source == NestedScrollSource.UserInput) {
-            val overscroll = scrollDelta - consumedByChild
-            val isAtEdge = abs(overscroll.x) > EdgePullSlopPx ||
-                           abs(overscroll.y) > EdgePullSlopPx
+            if (source == NestedScrollSource.UserInput || source == NestedScrollSource.Fling) {
+                val overscroll = scrollDelta - consumedByChild
+                val hitEdge = abs(overscroll.x) > EdgePullSlopPx || abs(overscroll.y) > EdgePullSlopPx
 
-            when {
-                isAtEdge && phase == Phase.IDLE -> {
-                    triggerHaptic(HapticEventType.EDGE_HIT)
-                    phase = Phase.STRETCHED
-                }
-                !isAtEdge && phase == Phase.STRETCHED -> {
-                    phase = Phase.IDLE
-                }
-                isAtEdge && phase == Phase.RELEASED -> {
-                    triggerHaptic(HapticEventType.EDGE_HIT)
-                    phase = Phase.STRETCHED
-                }
-                !isAtEdge && phase == Phase.RELEASED -> {
-                    phase = Phase.IDLE
+                if (hitEdge && !edgeFired) {
+                    edgeFired = true
+                    triggerHaptic()
                 }
             }
+
+            consumedByChild
         }
 
-        consumedByChild
+        if (!delegate.isInProgress) {
+            edgeFired = false
+        }
+
+        return result
     }
 
     override suspend fun applyToFling(
         velocity: Velocity,
         performFling: suspend (Velocity) -> Velocity,
     ) {
-        val wasStretched = phase == Phase.STRETCHED
-        val wasInProgress = delegate.isInProgress
-
         delegate.applyToFling(velocity, performFling)
-
-        when {
-            wasStretched -> {
-                triggerHaptic(HapticEventType.RELEASE)
-                phase = Phase.RELEASED
-            }
-            !wasInProgress && delegate.isInProgress && phase == Phase.IDLE -> {
-                triggerHaptic(HapticEventType.ABSORB)
-                phase = Phase.RELEASED
-            }
-        }
-
-        if (!delegate.isInProgress) {
-            phase = Phase.IDLE
-        }
+        edgeFired = false
     }
 
     override val isInProgress: Boolean
@@ -103,8 +78,7 @@ private class HapticInstrumentedOverscrollEffect(
     override val node: DelegatableNode
         get() = delegate.node
 
-    private fun triggerHaptic(type: HapticEventType) {
-        val pattern = HapticPattern.SOFT_BUMP
+    private fun triggerHaptic() {
         engine?.play(
             pattern = pattern,
             intensity = intensity,
@@ -116,12 +90,14 @@ private class HapticInstrumentedOverscrollEffect(
 private class HapticInstrumentedOverscrollFactory(
     private val delegate: OverscrollFactory,
     private val engine: HapticEngine?,
+    private val pattern: HapticPattern,
     private val intensity: Float,
 ) : OverscrollFactory {
     override fun createOverscrollEffect(): OverscrollEffect =
         HapticInstrumentedOverscrollEffect(
             delegate.createOverscrollEffect(),
             engine,
+            pattern,
             intensity,
         )
 
@@ -129,13 +105,15 @@ private class HapticInstrumentedOverscrollFactory(
         if (this === other) return true
         if (other !is HapticInstrumentedOverscrollFactory) return false
         return delegate == other.delegate &&
-            engine === other.engine &&
-            intensity == other.intensity
+                engine === other.engine &&
+                pattern == other.pattern &&
+                intensity == other.intensity
     }
 
     override fun hashCode(): Int {
         var result = delegate.hashCode()
         result = 31 * result + (engine?.hashCode() ?: 0)
+        result = 31 * result + pattern.hashCode()
         result = 31 * result + intensity.hashCode()
         return result
     }
@@ -151,8 +129,8 @@ fun ProvideHapticksEdgeOverscrollHaptics(content: @Composable () -> Unit) {
     }
     val settings by settingsFlow.collectAsStateWithLifecycle(HapticsSettings.Default)
     val baseFactory = rememberPlatformOverscrollFactory()
-    val factory = remember(baseFactory, engine, settings.edgeIntensity) {
-        HapticInstrumentedOverscrollFactory(baseFactory, engine, settings.edgeIntensity)
+    val factory = remember(baseFactory, engine, settings.edgePattern, settings.edgeIntensity) {
+        HapticInstrumentedOverscrollFactory(baseFactory, engine, settings.edgePattern, settings.edgeIntensity)
     }
     CompositionLocalProvider(LocalOverscrollFactory provides factory) {
         content()
@@ -167,7 +145,7 @@ fun Context.performAppEdgeOverscrollHaptic() {
         HapticsSettings.Default
     }
     app.hapticEngine.play(
-        pattern = HapticPattern.SOFT_BUMP,
+        pattern = snapshot.edgePattern,
         intensity = snapshot.edgeIntensity,
         throttleMs = 0L,
     )

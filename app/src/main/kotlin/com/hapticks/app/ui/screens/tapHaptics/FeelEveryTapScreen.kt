@@ -1,4 +1,4 @@
-package com.hapticks.app.ui.screens.everytap
+package com.hapticks.app.ui.screens.tapHaptics
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues

@@ -1,4 +1,4 @@
-package com.hapticks.app.ui.screens.everytap
+package com.hapticks.app.ui.screens.tapHaptics
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -64,7 +64,6 @@ internal fun FeelEveryTapInteractionSection(
             subtitle = stringResource(id = R.string.toggle_tap_subtitle),
             checked = settings.tapEnabled,
             onCheckedChange = onTapEnabledChange,
-            leadingIcon = Icons.Rounded.TouchApp,
         )
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
