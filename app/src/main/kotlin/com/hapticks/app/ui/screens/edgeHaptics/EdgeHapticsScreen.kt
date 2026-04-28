@@ -118,9 +118,13 @@ fun EdgeHapticsScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
+                .fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = padding.calculateTopPadding() + 4.dp,
+                end = 16.dp,
+                bottom = padding.calculateBottomPadding() + 24.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             if (!isServiceEnabled) {

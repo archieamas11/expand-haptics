@@ -19,8 +19,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,13 +37,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.ui.haptics.hapticClickable
+import com.hapticks.app.ui.liquidglass.LiquidBottomTabs
+import com.kyant.backdrop.Backdrop
 
 enum class BottomTab { HOME, SETTINGS }
 
@@ -116,6 +122,86 @@ fun FloatingBottomBar(
                 icon = Icons.Rounded.Settings,
                 label = "Settings",
                 onClick = { onTabSelected(BottomTab.SETTINGS) },
+            )
+        }
+    }
+}
+
+@Composable
+fun LiquidGlassBottomBar(
+    selectedTab: BottomTab,
+    onTabSelected: (BottomTab) -> Unit,
+    backdrop: Backdrop,
+    modifier: Modifier = Modifier,
+) {
+    val tabs = remember { BottomTab.entries }
+    val selectedIndex = remember(selectedTab) { tabs.indexOf(selectedTab) }
+
+    LiquidBottomTabs(
+        selectedTabIndex = { selectedIndex },
+        onTabSelected = { index -> onTabSelected(tabs[index]) },
+        backdrop = backdrop,
+        tabsCount = tabs.size,
+        modifier = modifier
+            .padding(bottom = 25.dp)
+            .width(150.dp)
+    ) {
+        tabs.forEach { tab ->
+            LiquidTabItem(
+                icon = when (tab) {
+                    BottomTab.HOME -> Icons.Rounded.Home
+                    BottomTab.SETTINGS -> Icons.Rounded.Settings
+                },
+                label = when (tab) {
+                    BottomTab.HOME -> "Home"
+                    BottomTab.SETTINGS -> "Settings"
+                },
+                selected = selectedTab == tab,
+                onClick = { onTabSelected(tab) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun RowScope.LiquidTabItem(
+    icon: ImageVector,
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val contentColor by animateColorAsState(
+        targetValue = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(250, easing = nativeEasing),
+        label = "liquidTabContentColor",
+    )
+    val scale = com.hapticks.app.ui.liquidglass.LocalLiquidBottomTabScale.current
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .fillMaxHeight()
+            .hapticClickable(disableRipple = true, onClick = onClick)
+            .graphicsLayer {
+                val s = scale()
+                scaleX = s
+                scaleY = s
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                modifier = Modifier.size(22.dp),
+                tint = contentColor,
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = contentColor,
             )
         }
     }

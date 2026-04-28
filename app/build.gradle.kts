@@ -112,6 +112,9 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.google.material)
+    implementation(libs.kyant.backdrop)
+    implementation(libs.kyant.shapes)
+    implementation(libs.androidx.compose.foundation)
 
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)

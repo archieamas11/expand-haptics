@@ -1,7 +1,9 @@
 package com.hapticks.app.ui.theme
 
-import android.app.Activity
 import android.os.Build
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -20,53 +22,53 @@ import androidx.core.view.WindowCompat
 import com.hapticks.app.data.ThemeMode
 
 private val HapticksDarkColorScheme = darkColorScheme(
-    primary = HapticksSage,
-    onPrimary = HapticksOnPrimary,
-    primaryContainer = HapticksOlive,
-    onPrimaryContainer = HapticksOliveOnContainer,
-    secondary = HapticksSageDim,
-    onSecondary = HapticksOnPrimary,
-    secondaryContainer = HapticksOliveDim,
-    onSecondaryContainer = HapticksOliveOnContainer,
-    tertiary = HapticksCopper,
-    onTertiary = HapticksOnPrimary,
-    tertiaryContainer = HapticksCopperContainer,
-    onTertiaryContainer = HapticksOnCopperContainer,
-    background = HapticksBlack,
-    onBackground = HapticksOnSurface,
-    surface = HapticksBlack,
-    onSurface = HapticksOnSurface,
-    surfaceVariant = HapticksSurface,
-    onSurfaceVariant = HapticksOnSurfaceMuted,
-    surfaceContainerLowest = HapticksSurfaceLow,
-    surfaceContainerLow = HapticksSurface,
-    surfaceContainer = HapticksSurfaceContainer,
-    surfaceContainerHigh = HapticksSurfaceHigh,
-    surfaceContainerHighest = HapticksSurfaceHighest,
-    outline = HapticksOutline,
-    outlineVariant = HapticksOutlineVariant,
+    primary = Color.White,
+    onPrimary = Color.Black,
+    primaryContainer = Color(0xFF2E2E2E),
+    onPrimaryContainer = Color(0xFFE3E3E3),
+    secondary = Color(0xFFC6C6C6),
+    onSecondary = Color(0xFF303030),
+    secondaryContainer = Color(0xFF474747),
+    onSecondaryContainer = Color(0xFFE3E3E3),
+    tertiary = Color(0xFFE6E6E6),
+    onTertiary = Color(0xFF262626),
+    tertiaryContainer = Color(0xFF3D3D3D),
+    onTertiaryContainer = Color(0xFFD9D9D9),
+    background = Color(0xFF121212),
+    onBackground = Color(0xFFE3E3E3),
+    surface = Color(0xFF121212),
+    onSurface = Color(0xFFE3E3E3),
+    surfaceVariant = Color(0xFF444444),
+    onSurfaceVariant = Color(0xFFC4C4C4),
+    surfaceContainerLowest = Color(0xFF0F0F0F),
+    surfaceContainerLow = Color(0xFF1D1D1D),
+    surfaceContainer = Color(0xFF212121),
+    surfaceContainerHigh = Color(0xFF2B2B2B),
+    surfaceContainerHighest = Color(0xFF363636),
+    outline = Color(0xFF8E8E8E),
+    outlineVariant = Color(0xFF444444),
 )
 
 private val HapticksLightColorScheme = lightColorScheme(
-    primary = HapticksOlive,
+    primary = Color.Black,
     onPrimary = Color.White,
-    primaryContainer = HapticksSage,
-    onPrimaryContainer = HapticksOliveDim,
-    secondary = HapticksOliveDim,
+    primaryContainer = Color(0xFFE6E6E6),
+    onPrimaryContainer = Color(0xFF1A1A1A),
+    secondary = Color(0xFF5E5E5E),
     onSecondary = Color.White,
-    secondaryContainer = HapticksSageDim,
-    onSecondaryContainer = HapticksOlive,
-    tertiary = HapticksCopper,
+    secondaryContainer = Color(0xFFE8E8E8),
+    onSecondaryContainer = Color(0xFF1C1C1C),
+    tertiary = Color(0xFF404040),
     onTertiary = Color.White,
-    tertiaryContainer = HapticksOnCopperContainer,
-    onTertiaryContainer = HapticksCopperContainer,
-    background = Color(0xFFFDFCFF),
-    onBackground = HapticksBlack,
-    surface = Color(0xFFFDFCFF),
-    onSurface = HapticksBlack,
-    surfaceVariant = Color(0xFFE1E2EC),
-    onSurfaceVariant = Color(0xFF44474F),
-    outline = Color(0xFF74777F),
+    tertiaryContainer = Color(0xFFD9D9D9),
+    onTertiaryContainer = Color(0xFF141414),
+    background = Color(0xFFF9F9F9),
+    onBackground = Color(0xFF1C1C1C),
+    surface = Color(0xFFF9F9F9),
+    onSurface = Color(0xFF1C1C1C),
+    surfaceVariant = Color(0xFFE0E0E0),
+    onSurfaceVariant = Color(0xFF494949),
+    outline = Color(0xFF7A7A7A),
 )
 
 private fun ColorScheme.withAmoledSurfaces(): ColorScheme {
@@ -97,18 +99,10 @@ fun HapticksTheme(
                 if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
             }
             darkTheme -> {
-                if (seedColor != null) {
-                    HapticksDarkColorScheme.copy(primary = Color(seedColor))
-                } else {
-                    HapticksDarkColorScheme
-                }
+                HapticksDarkColorScheme
             }
             else -> {
-                if (seedColor != null) {
-                    HapticksLightColorScheme.copy(primary = Color(seedColor))
-                } else {
-                    HapticksLightColorScheme
-                }
+                HapticksLightColorScheme
             }
         }
     }
@@ -119,12 +113,17 @@ fun HapticksTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = Color.Transparent.toArgb()
-            window.navigationBarColor = Color.Transparent.toArgb()
-            val insetsController = WindowCompat.getInsetsController(window, view)
-            insetsController.isAppearanceLightStatusBars = !darkTheme
-            insetsController.isAppearanceLightNavigationBars = !darkTheme
+            val activity = view.context as? ComponentActivity ?: return@SideEffect
+            activity.enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT,
+                ) { darkTheme },
+                navigationBarStyle = SystemBarStyle.auto(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT,
+                ) { darkTheme }
+            )
         }
     }
 

@@ -7,8 +7,6 @@
     <string name="accessibility_service_description">Hapticks triggers vibration on taps and switches via accessibility events. No content is ever read, stored, or shared. Turn off anytime in Settings > Accessibility.</string>
 
     <string name="home_greeting">Hello</string>
-    <string name="home_subtitle">Tune how your phone feels</string>
-
     <string name="screen_title">Feel Every Tap</string>
     <string name="section_pattern">Pattern</string>
     <string name="section_pattern_subtitle">Choose tap feel</string>
@@ -32,6 +30,24 @@
     <string name="pattern_soft_bump_desc">Gentle tap like hitting a soft wall</string>
     <string name="pattern_double_tick">Double Tick</string>
     <string name="pattern_double_tick_desc">Firm bump-bump boundary feel</string>
+    <string name="pattern_low_tick">Low Tick</string>
+    <string name="pattern_low_tick_desc">Lightest possible tap</string>
+    <string name="pattern_thud">Thud</string>
+    <string name="pattern_thud_desc">Heavy bottom-out feel</string>
+    <string name="pattern_spin">Spin</string>
+    <string name="pattern_spin_desc">Rolling sensation, like a scroll wheel</string>
+    <string name="pattern_elastic">Elastic</string>
+    <string name="pattern_elastic_desc">Stretch-and-release feel</string>
+    <string name="pattern_wobble">Wobble</string>
+    <string name="pattern_wobble_desc">Unstable, oscillating decay</string>
+    <string name="pattern_rapid_fire">Rapid Fire</string>
+    <string name="pattern_rapid_fire_desc">Burst of 3 ticks</string>
+    <string name="pattern_heartbeat">Heartbeat</string>
+    <string name="pattern_heartbeat_desc">Rhythmic lub-dub feel</string>
+    <string name="pattern_cascade">Cascade</string>
+    <string name="pattern_cascade_desc">Falling sensation, stepped decay</string>
+    <string name="pattern_rumble">Rumble</string>
+    <string name="pattern_rumble_desc">Deep, sustained sub-bass</string>
     <string name="pattern_selected">Selected</string>
     <string name="pattern_not_selected">Not selected</string>
 
@@ -93,12 +109,15 @@
     <string name="settings_header_title">Settings</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_dynamic_color_title">Dynamic Color</string>
+    <string name="settings_dynamic_color_subtitle">Uses wallpaper colors for theme</string>
     <string name="settings_theme_mode_title">Theme Mode</string>
     <string name="settings_theme_mode_system">System</string>
     <string name="settings_theme_mode_light">Light</string>
     <string name="settings_theme_mode_dark">Dark</string>
     <string name="settings_amoled_title">AMOLED mode</string>
-    <string name="settings_amoled_subtitle">Uses pure black for AMOLED screens to reduce eye strain and battery.</string>
+    <string name="settings_amoled_subtitle">Uses pure black for AMOLED screens to reduce eye strain and battery</string>
+    <string name="settings_liquid_glass_title">Liquid glass</string>
+    <string name="settings_liquid_glass_subtitle">Enable liquid glass effect for floating bottom bar</string>
     <string name="settings_amoled_subtitle_light">Applies when the app is in dark theme</string>
     <string name="settings_section_about">About</string>
     <string name="settings_github_title">GitHub Repository</string>

@@ -63,6 +63,7 @@ class HapticsPreferences(context: Context) {
                     ThemeMode.SYSTEM
                 },
                 amoledBlack = prefs[Keys.AMOLED_BLACK] ?: HapticsSettings.Default.amoledBlack,
+                liquidGlass = prefs[Keys.LIQUID_GLASS] ?: HapticsSettings.Default.liquidGlass,
                 seedColor = prefs[Keys.SEED_COLOR] ?: HapticsSettings.Default.seedColor,
             )
         }
@@ -94,6 +95,7 @@ class HapticsPreferences(context: Context) {
     suspend fun setUseDynamicColors(enabled: Boolean) = edit { it[Keys.USE_DYNAMIC_COLORS] = enabled }
     suspend fun setThemeMode(mode: ThemeMode) = edit { it[Keys.THEME_MODE] = mode.name }
     suspend fun setAmoledBlack(enabled: Boolean) = edit { it[Keys.AMOLED_BLACK] = enabled }
+    suspend fun setLiquidGlass(enabled: Boolean) = edit { it[Keys.LIQUID_GLASS] = enabled }
     suspend fun setSeedColor(color: Int) = edit { it[Keys.SEED_COLOR] = color }
 
     private suspend inline fun edit(crossinline block: (MutablePreferences) -> Unit) {
@@ -119,6 +121,7 @@ class HapticsPreferences(context: Context) {
         val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val AMOLED_BLACK = booleanPreferencesKey("amoled_black")
+        val LIQUID_GLASS = booleanPreferencesKey("liquid_glass")
         val SEED_COLOR = intPreferencesKey("seed_color")
     }
 

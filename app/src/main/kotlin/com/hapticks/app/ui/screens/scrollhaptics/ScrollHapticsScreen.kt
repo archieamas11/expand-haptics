@@ -97,9 +97,13 @@ fun ScrollHapticsScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(start = 16.dp, top = 4.dp, end = 16.dp, bottom = 24.dp),
+                .fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                top = padding.calculateTopPadding() + 4.dp,
+                end = 16.dp,
+                bottom = padding.calculateBottomPadding() + 24.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             if (!isServiceEnabled) {
@@ -207,10 +211,10 @@ private fun ScrollPulseDensityControl(
     val eventsLabel = String.format(Locale.US, "%.2f", draftEvents)
 
     val sliderColors = SliderDefaults.colors(
-        thumbColor = MaterialTheme.colorScheme.secondary,
-        activeTrackColor = MaterialTheme.colorScheme.secondary,
+        thumbColor = MaterialTheme.colorScheme.primary,
+        activeTrackColor = MaterialTheme.colorScheme.primary,
         inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-        activeTickColor = MaterialTheme.colorScheme.secondary,
+        activeTickColor = MaterialTheme.colorScheme.primary,
         inactiveTickColor = MaterialTheme.colorScheme.surfaceContainerHighest,
     )
     Column(

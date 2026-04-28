@@ -55,12 +55,14 @@ import com.hapticks.app.data.HapticsSettings
 import com.hapticks.app.data.ThemeMode
 import com.hapticks.app.ui.haptics.hapticClickable
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     settings: HapticsSettings,
     onUseDynamicColorsChange: (Boolean) -> Unit,
     onThemeModeChange: (ThemeMode) -> Unit,
     onAmoledBlackChange: (Boolean) -> Unit,
+    onLiquidGlassChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
@@ -69,147 +71,166 @@ fun SettingsScreen(
         ThemeMode.DARK -> true
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
     }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
     ) { padding ->
-        LazyColumn(
-            state = listState,
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+                .padding(horizontal = 10.dp)
+                .padding(top = padding.calculateTopPadding() + 20.dp)
         ) {
-            item(key = "header") {
-                SettingsHeader()
-            }
+            SettingsHeader()
+            Spacer(modifier = Modifier.height(5.dp))
 
-            item(key = "appearance") {
-                SettingsSection(
-                    title = stringResource(R.string.settings_section_appearance),
-                    icon = Icons.Rounded.Palette,
-                ) {
-                    SettingsRow(
-                        title = stringResource(R.string.settings_dynamic_color_title),
-                        subtitle = null,
-                        position = RowPosition.Top,
-                        trailing = {
-                            Switch(
-                                checked = settings.useDynamicColors,
-                                onCheckedChange = onUseDynamicColorsChange,
-                            )
-                        },
-                    )
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(
+                    bottom = padding.calculateBottomPadding() + 20.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                item(key = "appearance") {
+                    SettingsSection(
+                        title = stringResource(R.string.settings_section_appearance),
+                        icon = Icons.Rounded.Palette,
+                    ) {
+                        SettingsRow(
+                            title = stringResource(R.string.settings_dynamic_color_title),
+                            subtitle = stringResource(R.string.settings_dynamic_color_subtitle),
+                            position = RowPosition.Top,
+                            trailing = {
+                                Switch(
+                                    checked = settings.useDynamicColors,
+                                    onCheckedChange = onUseDynamicColorsChange,
+                                )
+                            },
+                        )
 
-                    SettingsRow(
-                        title = stringResource(R.string.settings_amoled_title),
-                        subtitle = if (appInDarkTheme) {
-                            stringResource(R.string.settings_amoled_subtitle)
-                        } else {
-                            stringResource(R.string.settings_amoled_subtitle_light)
-                        },
-                        position = RowPosition.Bottom,
-                        trailing = {
-                            Switch(
-                                checked = settings.amoledBlack,
-                                onCheckedChange = onAmoledBlackChange,
-                            )
-                        },
-                    )
+                        SettingsRow(
+                            title = stringResource(R.string.settings_amoled_title),
+                            subtitle = if (appInDarkTheme) {
+                                stringResource(R.string.settings_amoled_subtitle)
+                            } else {
+                                stringResource(R.string.settings_amoled_subtitle_light)
+                            },
+                            position = RowPosition.Bottom,
+                            trailing = {
+                                Switch(
+                                    checked = settings.amoledBlack,
+                                    onCheckedChange = onAmoledBlackChange,
+                                )
+                            },
+                        )
 
-                    RowDivider()
+                        SettingsRow(
+                            title = stringResource(R.string.settings_liquid_glass_title),
+                            subtitle = stringResource(R.string.settings_liquid_glass_subtitle),
+                            position = RowPosition.Bottom,
+                            trailing = {
+                                Switch(
+                                    checked = settings.liquidGlass,
+                                    onCheckedChange = onLiquidGlassChange,
+                                )
+                            },
+                        )
 
-                    ThemeModeRow(
-                        selected = settings.themeMode,
-                        onThemeModeChange = onThemeModeChange,
-                    )
+                        RowDivider()
+
+                        ThemeModeRow(
+                            selected = settings.themeMode,
+                            onThemeModeChange = onThemeModeChange,
+                        )
+                    }
                 }
-            }
 
-            item(key = "about") {
-                SettingsSection(
-                    title = stringResource(R.string.settings_section_about),
-                    icon = Icons.Rounded.Settings,
-                ) {
+                item(key = "about") {
+                    SettingsSection(
+                        title = stringResource(R.string.settings_section_about),
+                        icon = Icons.Rounded.Settings,
+                    ) {
 
-                    SettingsRow(
-                        title = stringResource(R.string.settings_version_title),
-                        subtitle = stringResource(
-                            R.string.settings_version_subtitle,
-                            BuildConfig.VERSION_NAME,
-                            BuildConfig.VERSION_CODE,
-                        ),
-                        position = RowPosition.Bottom,
-                    )
-                    RowDivider()
+                        SettingsRow(
+                            title = stringResource(R.string.settings_version_title),
+                            subtitle = stringResource(
+                                R.string.settings_version_subtitle,
+                                BuildConfig.VERSION_NAME,
+                                BuildConfig.VERSION_CODE,
+                            ),
+                            position = RowPosition.Bottom,
+                        )
+                        RowDivider()
 
-                    SettingsRow(
-                        title = stringResource(R.string.settings_developer_title),
-                        subtitle = stringResource(R.string.settings_developer_subtitle),
-                        position = RowPosition.Middle,
-                        onClick = {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                "https://github.com/archieamas11".toUri(),
-                            )
-                            context.startActivity(intent)
-                        },
-                        trailing = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        },
-                    )
+                        SettingsRow(
+                            title = stringResource(R.string.settings_developer_title),
+                            subtitle = stringResource(R.string.settings_developer_subtitle),
+                            position = RowPosition.Middle,
+                            onClick = {
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    "https://github.com/archieamas11".toUri(),
+                                )
+                                context.startActivity(intent)
+                            },
+                            trailing = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            },
+                        )
 
-                    SettingsRow(
-                        title = stringResource(R.string.settings_report_bug_title),
-                        subtitle = stringResource(R.string.settings_report_bug_subtitle),
-                        position = RowPosition.Middle,
-                                                onClick = {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                "https://t.me/ricosixnine".toUri(),
-                            )
-                            context.startActivity(intent)
-                        },
-                        trailing = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        },
-                    )
+                        SettingsRow(
+                            title = stringResource(R.string.settings_report_bug_title),
+                            subtitle = stringResource(R.string.settings_report_bug_subtitle),
+                            position = RowPosition.Middle,
+                            onClick = {
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    "https://t.me/ricosixnine".toUri(),
+                                )
+                                context.startActivity(intent)
+                            },
+                            trailing = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            },
+                        )
 
-                    SettingsRow(
-                        title = stringResource(R.string.settings_github_title),
-                        subtitle = stringResource(R.string.settings_github_subtitle),
-                        position = RowPosition.Top,
-                        onClick = {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                "https://github.com/archieamas11/expand-haptics".toUri(),
-                            )
-                            context.startActivity(intent)
-                        },
-                        trailing = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        },
-                    )
+                        SettingsRow(
+                            title = stringResource(R.string.settings_github_title),
+                            subtitle = stringResource(R.string.settings_github_subtitle),
+                            position = RowPosition.Top,
+                            onClick = {
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    "https://github.com/archieamas11/expand-haptics".toUri(),
+                                )
+                                context.startActivity(intent)
+                            },
+                            trailing = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            },
+                        )
+                    }
                 }
-            }
-            item(key = "bottom_inset") {
-                Spacer(modifier = Modifier.height(96.dp))
+                item(key = "bottom_inset") {
+                    Spacer(modifier = Modifier.height(96.dp))
+                }
             }
         }
     }
@@ -219,10 +240,7 @@ fun SettingsScreen(
 private fun SettingsHeader() {
     val junicodeFontFamily = remember { FontFamily(Font(R.font.junicode_italic)) }
 
-    Column(
-        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
+    Column {
         Text(
             text = stringResource(R.string.settings_header_caption),
             style = MaterialTheme.typography.labelLarge.copy(
@@ -235,6 +253,7 @@ private fun SettingsHeader() {
             text = stringResource(R.string.settings_header_title),
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = 10.dp)
         )
     }
 }

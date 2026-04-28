@@ -26,10 +26,11 @@ data class HapticsSettings(
     val useDynamicColors: Boolean = true,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val amoledBlack: Boolean = false,
+    val liquidGlass: Boolean = true,
     val seedColor: Int = 0xFF6750A4.toInt(),
 ) {
     companion object {
-        const val MIN_SCROLL_EVENTS_PER_HUNDRED_PX = 0.1f
+        const val MIN_SCROLL_EVENTS_PER_HUNDRED_PX = 0f
         const val MAX_SCROLL_EVENTS_PER_HUNDRED_PX = 20f
         val Default: HapticsSettings = HapticsSettings()
     }

@@ -4,16 +4,24 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.BlurCircular
 import androidx.compose.material.icons.rounded.Bolt
+import androidx.compose.material.icons.rounded.Cached
 import androidx.compose.material.icons.rounded.DensityMedium
+import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.rounded.GraphicEq
+import androidx.compose.material.icons.rounded.HorizontalRule
 import androidx.compose.material.icons.rounded.Repeat
+import androidx.compose.material.icons.rounded.SettingsEthernet
+import androidx.compose.material.icons.rounded.SlowMotionVideo
+import androidx.compose.material.icons.rounded.South
 import androidx.compose.material.icons.rounded.TouchApp
+import androidx.compose.material.icons.rounded.WaterfallChart
+import androidx.compose.material.icons.rounded.Waves
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.hapticks.app.R
 
 enum class HapticPattern(
-    @param:StringRes val labelRes: Int,
-    @param:StringRes val descriptionRes: Int,
+    @StringRes val labelRes: Int,
+    @StringRes val descriptionRes: Int,
     val icon: ImageVector,
 ) {
     CLICK(
@@ -45,6 +53,51 @@ enum class HapticPattern(
         labelRes = R.string.pattern_double_tick,
         descriptionRes = R.string.pattern_double_tick_desc,
         icon = Icons.Rounded.DensityMedium,
+    ),
+    LOW_TICK(
+        labelRes = R.string.pattern_low_tick,
+        descriptionRes = R.string.pattern_low_tick_desc,
+        icon = Icons.Rounded.HorizontalRule,
+    ),
+    THUD(
+        labelRes = R.string.pattern_thud,
+        descriptionRes = R.string.pattern_thud_desc,
+        icon = Icons.Rounded.South,
+    ),
+    SPIN(
+        labelRes = R.string.pattern_spin,
+        descriptionRes = R.string.pattern_spin_desc,
+        icon = Icons.Rounded.Cached,
+    ),
+    ELASTIC(
+        labelRes = R.string.pattern_elastic,
+        descriptionRes = R.string.pattern_elastic_desc,
+        icon = Icons.Rounded.SettingsEthernet,
+    ),
+    WOBBLE(
+        labelRes = R.string.pattern_wobble,
+        descriptionRes = R.string.pattern_wobble_desc,
+        icon = Icons.Rounded.Waves,
+    ),
+    RAPID_FIRE(
+        labelRes = R.string.pattern_rapid_fire,
+        descriptionRes = R.string.pattern_rapid_fire_desc,
+        icon = Icons.Rounded.SlowMotionVideo,
+    ),
+    HEARTBEAT(
+        labelRes = R.string.pattern_heartbeat,
+        descriptionRes = R.string.pattern_heartbeat_desc,
+        icon = Icons.Rounded.Favorite,
+    ),
+    CASCADE(
+        labelRes = R.string.pattern_cascade,
+        descriptionRes = R.string.pattern_cascade_desc,
+        icon = Icons.Rounded.WaterfallChart,
+    ),
+    RUMBLE(
+        labelRes = R.string.pattern_rumble,
+        descriptionRes = R.string.pattern_rumble_desc,
+        icon = Icons.Rounded.Waves,
     );
 
     companion object {
@@ -62,6 +115,15 @@ enum class HapticPattern(
                 "double_click", "double-click", "doubleclick" -> DOUBLE_CLICK.name
                 "soft_bump", "soft-bump", "softbump" -> SOFT_BUMP.name
                 "double_tick", "double-tick", "doubletick" -> DOUBLE_TICK.name
+                "low_tick", "low-tick", "lowtick" -> LOW_TICK.name
+                "thud" -> THUD.name
+                "spin" -> SPIN.name
+                "elastic" -> ELASTIC.name
+                "wobble" -> WOBBLE.name
+                "rapid_fire", "rapid-fire", "rapidfire" -> RAPID_FIRE.name
+                "heartbeat" -> HEARTBEAT.name
+                "cascade" -> CASCADE.name
+                "rumble" -> RUMBLE.name
                 else -> normalized.uppercase()
             }
 

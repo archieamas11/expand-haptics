@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hapticks.app.ui.components.BottomTab
 import com.hapticks.app.ui.components.FloatingBottomBar
+import com.hapticks.app.ui.components.LiquidGlassBottomBar
 import com.hapticks.app.ui.components.SlidingBottomTabHost
 import com.hapticks.app.ui.screens.tapHaptics.FeelEveryTapScreen
 import com.hapticks.app.ui.screens.HomeScreen
@@ -45,6 +46,8 @@ import com.hapticks.app.ui.haptics.ProvideHapticksEdgeOverscrollHaptics
 import com.hapticks.app.ui.theme.HapticksTheme
 import com.hapticks.app.viewmodel.FeelEveryTapViewModel
 import com.hapticks.app.viewmodel.EdgeHapticsViewModel
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
 
 class MainActivity : ComponentActivity() {
 
@@ -72,6 +75,7 @@ class MainActivity : ComponentActivity() {
                 seedColor = settings.seedColor,
             ) {
                 val backgroundColor = MaterialTheme.colorScheme.background
+                val backdrop = rememberLayerBackdrop()
 
                 ProvideHapticksEdgeOverscrollHaptics {
                     var route by rememberSaveable { mutableStateOf(Route.HOME) }
@@ -116,6 +120,7 @@ class MainActivity : ComponentActivity() {
                             label = "screen_transition",
                             modifier = Modifier
                                 .fillMaxSize()
+                                .layerBackdrop(backdrop)
                                 .background(backgroundColor)
                         ) { targetTransitionRoute ->
                             val currentRoute = if (targetTransitionRoute == Route.HOME) lastRootRoute.value else targetTransitionRoute
@@ -161,6 +166,7 @@ class MainActivity : ComponentActivity() {
                                                     onUseDynamicColorsChange = viewModel::setUseDynamicColors,
                                                     onThemeModeChange = viewModel::setThemeMode,
                                                     onAmoledBlackChange = viewModel::setAmoledBlack,
+                                                    onLiquidGlassChange = viewModel::setLiquidGlass,
                                                 )
                                             }
                                         }
@@ -189,12 +195,23 @@ class MainActivity : ComponentActivity() {
                             exit = slideOutVertically(tween(animDuration, easing = nativeEasing)) { it / 2 } + fadeOut(tween(animDuration)),
                             modifier = Modifier.align(Alignment.BottomCenter)
                         ) {
-                            FloatingBottomBar(
-                                selectedTab = if (route == Route.HOME) BottomTab.HOME else BottomTab.SETTINGS,
-                                onTabSelected = { tab ->
-                                    route = if (tab == BottomTab.HOME) Route.HOME else Route.SETTINGS
-                                },
-                            )
+                            val currentTab = if (route == Route.HOME) BottomTab.HOME else BottomTab.SETTINGS
+                            val onTab = { tab: BottomTab ->
+                                route = if (tab == BottomTab.HOME) Route.HOME else Route.SETTINGS
+                            }
+
+                            if (settings.liquidGlass) {
+                                LiquidGlassBottomBar(
+                                    selectedTab = currentTab,
+                                    onTabSelected = onTab,
+                                    backdrop = backdrop,
+                                )
+                            } else {
+                                FloatingBottomBar(
+                                    selectedTab = currentTab,
+                                    onTabSelected = onTab,
+                                )
+                            }
                         }
                     }
                 }

@@ -1,5 +1,7 @@
 [versions]
 agp = "9.2.0"
+backdrop = "1.0.6"
+kyantShapes = "1.2.0"
 kotlin = "2.2.10"
 coreKtx = "1.13.1"
 lifecycle = "2.8.6"
@@ -31,6 +33,9 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 libxposed-api = { group = "io.github.libxposed", name = "api", version.ref = "libxposed" }
 libxposed-service = { group = "io.github.libxposed", name = "service", version.ref = "libxposed" }
 google-material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+kyant-backdrop = { group = "io.github.kyant0", name = "backdrop", version.ref = "backdrop" }
+kyant-shapes = { group = "io.github.kyant0", name = "shapes", version.ref = "kyantShapes" }
+androidx-compose-foundation = { group = "androidx.compose.foundation", name = "foundation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

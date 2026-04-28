@@ -38,27 +38,44 @@ internal object ScrollAbsoluteEdgeVibration {
 }
 
 private enum class AbsoluteEdgeAction { REACHED_TOP, REACHED_BOTTOM }
-private data class AbsoluteEdgeState(val lastScrollY: Int? = null)
+private data class AbsoluteEdgeState(
+    val lastScrollY: Int? = null,
+    val atTopFired: Boolean = false,
+    val atBottomFired: Boolean = false,
+)
 private data class AbsoluteEdgeSnapshot(val scrollY: Int, val maxScrollY: Int)
 private fun advanceAbsoluteEdge(
     state: AbsoluteEdgeState,
     snap: AbsoluteEdgeSnapshot,
 ): Pair<AbsoluteEdgeState, AbsoluteEdgeAction?> {
     val my = snap.maxScrollY
-    if (my <= 0) return AbsoluteEdgeState(lastScrollY = snap.scrollY.coerceAtLeast(0)) to null
+    if (my <= 0) return AbsoluteEdgeState(
+        lastScrollY = snap.scrollY.coerceAtLeast(0)
+    ) to null
 
     val y = snap.scrollY.coerceIn(0, my)
-    val last = state.lastScrollY
 
-    val action = if (last != null) {
-        when {
-            y == 0 && last > 0 -> AbsoluteEdgeAction.REACHED_TOP
-            y == my && last < my -> AbsoluteEdgeAction.REACHED_BOTTOM
-            else -> null
-        }
-    } else {
-        null
+    // Determine if we are currently at an edge
+    val hitTop = y == 0
+    val hitBottom = y == my
+
+    // Single-fire: only trigger if at the edge AND haven't fired yet
+    val topShouldFire = hitTop && !state.atTopFired
+    val bottomShouldFire = hitBottom && !state.atBottomFired
+
+    val action = when {
+        topShouldFire -> AbsoluteEdgeAction.REACHED_TOP
+        bottomShouldFire -> AbsoluteEdgeAction.REACHED_BOTTOM
+        else -> null
     }
 
-    return AbsoluteEdgeState(lastScrollY = y) to action
+    // Latch while at edge; reset when the user scrolls away
+    val newTopFired = if (hitTop) (state.atTopFired || topShouldFire) else false
+    val newBottomFired = if (hitBottom) (state.atBottomFired || bottomShouldFire) else false
+
+    return AbsoluteEdgeState(
+        lastScrollY = y,
+        atTopFired = newTopFired,
+        atBottomFired = newBottomFired,
+    ) to action
 }

@@ -40,7 +40,7 @@ fun Context.performHapticClick() {
     } catch (_: Throwable) {
         HapticsSettings.Default
     }
-    app.hapticEngine.play(snapshot.edgePattern, snapshot.edgeIntensity)
+    app.hapticEngine.play(snapshot.pattern, snapshot.intensity)
 }
 
 fun Context.performHapticSliderTick() {
@@ -52,6 +52,7 @@ fun Context.performHapticSliderTick() {
 
 fun Modifier.hapticClickable(
     enabled: Boolean = true,
+    disableRipple: Boolean = false,
     onClick: () -> Unit,
 ): Modifier = composed {
     val context = LocalContext.current
@@ -66,9 +67,9 @@ fun Modifier.hapticClickable(
     clickable(
         enabled = enabled,
         interactionSource = interactionSource,
-        indication = LocalIndication.current,
+        indication = if (disableRipple) null else LocalIndication.current,
         onClick = {
-            engine?.play(settings.edgePattern, settings.edgeIntensity)
+            engine?.play(settings.pattern, settings.intensity)
             onClick()
         },
     )

@@ -113,6 +113,10 @@ class FeelEveryTapViewModel(
         viewModelScope.launch { preferences.setAmoledBlack(enabled) }
     }
 
+    fun setLiquidGlass(enabled: Boolean) {
+        viewModelScope.launch { preferences.setLiquidGlass(enabled) }
+    }
+
     fun setSeedColor(color: Int) {
         viewModelScope.launch { preferences.setSeedColor(color) }
     }

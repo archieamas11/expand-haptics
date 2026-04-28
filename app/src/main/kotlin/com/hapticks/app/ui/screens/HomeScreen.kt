@@ -55,10 +55,13 @@ fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
                 .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp)
-                .padding(top = 24.dp),
+                .padding(
+                    start = 20.dp,
+                    top = padding.calculateTopPadding() + 24.dp,
+                    end = 20.dp,
+                    bottom = padding.calculateBottomPadding() + 24.dp
+                ),
         ) {
             HomeHeader()
             Spacer(modifier = Modifier.height(28.dp))
@@ -115,7 +118,7 @@ fun HomeScreen(
 private fun HomeHeader() {
     val junicodeFontFamily = remember { FontFamily(Font(R.font.junicode_italic)) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column {
         Text(
             text = stringResource(id = R.string.home_greeting),
             style = MaterialTheme.typography.labelLarge.copy(
@@ -128,11 +131,6 @@ private fun HomeHeader() {
             text = stringResource(id = R.string.app_name),
             style = MaterialTheme.typography.displayLarge,
             color = MaterialTheme.colorScheme.onBackground,
-        )
-        Text(
-            text = stringResource(id = R.string.home_subtitle),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

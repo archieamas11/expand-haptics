@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.view.View
 import android.widget.EdgeEffect
 import com.hapticks.app.edge.EdgeHapticsBridge
 import com.hapticks.app.haptics.HapticPattern
@@ -19,7 +20,8 @@ import java.lang.reflect.Field
 import java.util.WeakHashMap
 
 class EdgeEffectHapticsModule : XposedModule() {
-    private val edgeStates = WeakHashMap<Any, EdgeState>()
+    private val viewStates = WeakHashMap<View, BoundaryState>()
+    private val edgeEffectStates = WeakHashMap<Any, BoundaryState>()
 
     @Volatile private var enabled = false
     @Volatile private var cachedEffect: VibrationEffect? = null
@@ -43,6 +45,8 @@ class EdgeEffectHapticsModule : XposedModule() {
         super.onPackageLoaded(param)
         if (param.isFirstPackage) {
             isProcessGame = isGame(param.applicationInfo)
+            hookOverScrollBy()
+            hookRecyclerView(param.defaultClassLoader)
             hookEdgeEffect()
         }
     }
@@ -68,6 +72,113 @@ class EdgeEffectHapticsModule : XposedModule() {
         }.getOrNull()
     }
 
+    private fun hookOverScrollBy() {
+        runCatching {
+            val method = View::class.java.getDeclaredMethod(
+                "overScrollBy",
+                Int::class.javaPrimitiveType,   // deltaX
+                Int::class.javaPrimitiveType,   // deltaY
+                Int::class.javaPrimitiveType,   // scrollX
+                Int::class.javaPrimitiveType,   // scrollY
+                Int::class.javaPrimitiveType,   // scrollRangeX
+                Int::class.javaPrimitiveType,   // scrollRangeY
+                Int::class.javaPrimitiveType,   // maxOverScrollX
+                Int::class.javaPrimitiveType,   // maxOverScrollY
+                Boolean::class.javaPrimitiveType, // isTouchEvent
+            )
+            hook(method).setExceptionMode(ExceptionMode.PROTECTIVE).intercept { chain ->
+                val result = chain.proceed()
+                try {
+                    val clamped = result as? Boolean == true
+                    if (clamped) {
+                        val view = chain.thisObject as? View
+                        if (view != null) {
+                            val deltaY = chain.args[1] as? Int ?: 0
+                            val scrollY = chain.args[3] as? Int ?: 0
+                            val scrollRangeY = chain.args[5] as? Int ?: 0
+                            onViewBoundaryClamped(view, deltaY, scrollY, scrollRangeY)
+                        }
+                    }
+                } catch (_: Throwable) {}
+                result
+            }
+        }
+    }
+
+    private fun onViewBoundaryClamped(
+        view: View,
+        deltaY: Int,
+        scrollY: Int,
+        scrollRangeY: Int,
+    ) {
+        val edge = when {
+            deltaY < 0 && scrollY <= 0 -> Edge.TOP
+            deltaY > 0 && scrollY >= scrollRangeY -> Edge.BOTTOM
+            else -> return
+        }
+        tryFireForView(view, edge)
+    }
+
+    private fun hookRecyclerView(classLoader: ClassLoader) {
+        val rvClass = runCatching {
+            classLoader.loadClass("androidx.recyclerview.widget.RecyclerView")
+        }.getOrNull() ?: return
+        runCatching {
+            val scrollByInternal = rvClass.getDeclaredMethod(
+                "scrollByInternal",
+                Int::class.javaPrimitiveType,       // x
+                Int::class.javaPrimitiveType,       // y
+                android.view.MotionEvent::class.java, // ev
+                Int::class.javaPrimitiveType,       // type
+            )
+            hook(scrollByInternal).setExceptionMode(ExceptionMode.PROTECTIVE).intercept { chain ->
+                val result = chain.proceed()
+                try {
+                    val view = chain.thisObject as? View ?: return@intercept result
+                    val dy = chain.args[1] as? Int ?: 0
+                    if (dy != 0) {
+                        val edge = when {
+                            dy < 0 && !(view as Any).callCanScrollVertically(-1) -> Edge.TOP
+                            dy > 0 && !(view as Any).callCanScrollVertically(1) -> Edge.BOTTOM
+                            else -> null
+                        }
+                        if (edge != null) tryFireForView(view, edge)
+                    }
+                } catch (_: Throwable) {}
+                result
+            }
+        }
+        runCatching {
+            val onScrolled = rvClass.getDeclaredMethod(
+                "onScrolled",
+                Int::class.javaPrimitiveType, // dx
+                Int::class.javaPrimitiveType, // dy
+            )
+            hook(onScrolled).setExceptionMode(ExceptionMode.PROTECTIVE).intercept { chain ->
+                val result = chain.proceed()
+                try {
+                    val view = chain.thisObject as? View ?: return@intercept result
+                    val dy = chain.args[1] as? Int ?: 0
+                    if (dy != 0) {
+                        val edge = when {
+                            dy < 0 && !(view as Any).callCanScrollVertically(-1) -> Edge.TOP
+                            dy > 0 && !(view as Any).callCanScrollVertically(1) -> Edge.BOTTOM
+                            else -> null
+                        }
+                        if (edge != null) tryFireForView(view, edge)
+                    }
+                } catch (_: Throwable) {}
+                result
+            }
+        }
+    }
+
+    private fun Any.callCanScrollVertically(direction: Int): Boolean {
+        return try {
+            (this as View).canScrollVertically(direction)
+        } catch (_: Throwable) { true }
+    }
+
     private fun hookEdgeEffect() {
         val cls = EdgeEffect::class.java
 
@@ -75,65 +186,98 @@ class EdgeEffectHapticsModule : XposedModule() {
             hookAfter(
                 cls, "onPullDistance",
                 Float::class.javaPrimitiveType, Float::class.javaPrimitiveType,
-            ) { effect, args ->
-                if ((args[0] as Float) > 0f) tryFire(effect)
+            ) { effect, _ ->
+                tryFireForEdgeEffect(effect)
             }
         }.isSuccess
 
         if (!hasPullDistance) {
             runCatching {
-                hookAfter(cls, "onPull", Float::class.javaPrimitiveType) { effect, args ->
-                    if ((args[0] as Float) > 0f) tryFire(effect)
+                hookAfter(cls, "onPull", Float::class.javaPrimitiveType) { effect, _ ->
+                    tryFireForEdgeEffect(effect)
                 }
             }
             runCatching {
                 hookAfter(
                     cls, "onPull",
                     Float::class.javaPrimitiveType, Float::class.javaPrimitiveType,
-                ) { effect, args ->
-                    if ((args[0] as Float) > 0f) tryFire(effect)
+                ) { effect, _ ->
+                    tryFireForEdgeEffect(effect)
                 }
             }
         }
 
         runCatching {
             hookAfter(cls, "onAbsorb", Int::class.javaPrimitiveType) { effect, _ ->
-                tryFire(effect)
+                tryFireForEdgeEffect(effect)
             }
         }
 
         runCatching {
             hookAfter(cls, "onRelease") { effect, _ ->
-                synchronized(edgeStates) { edgeStates[effect]?.fired = false }
+                synchronized(edgeEffectStates) { edgeEffectStates[effect]?.reset() }
             }
         }
     }
 
-    private fun tryFire(effect: Any) {
+    private fun tryFireForView(view: View, edge: Edge) {
         if (!enabled || isProcessGame) return
         val vfx = cachedEffect ?: return
 
-        val state = synchronized(edgeStates) { edgeStates.getOrPut(effect) { EdgeState() } }
-        if (state.fired) return
+        val state = synchronized(viewStates) {
+            viewStates.getOrPut(view) { BoundaryState() }
+        }
+
+        val alreadyFired = when (edge) {
+            Edge.TOP -> state.topFired
+            Edge.BOTTOM -> state.bottomFired
+        }
+        if (alreadyFired) return
 
         val now = SystemClock.uptimeMillis()
         if (now - state.lastFireMs < COOLDOWN_MS) return
 
-        state.fired = true
+        when (edge) {
+            Edge.TOP -> { state.topFired = true; state.bottomFired = false }
+            Edge.BOTTOM -> { state.bottomFired = true; state.topFired = false }
+        }
         state.lastFireMs = now
 
-        val v = ensureVibrator(effect) ?: return
+        vibrate(vfx, view)
+    }
+
+    private fun tryFireForEdgeEffect(effect: Any) {
+        if (!enabled || isProcessGame) return
+        val vfx = cachedEffect ?: return
+
+        val state = synchronized(edgeEffectStates) {
+            edgeEffectStates.getOrPut(effect) { BoundaryState() }
+        }
+        if (state.topFired) return
+
+        val now = SystemClock.uptimeMillis()
+        if (now - state.lastFireMs < COOLDOWN_MS) return
+
+        state.topFired = true
+        state.lastFireMs = now
+
+        vibrate(vfx, effect)
+    }
+
+    private fun vibrate(vfx: VibrationEffect, contextSource: Any) {
+        val v = ensureVibrator(contextSource) ?: return
         try {
             v.vibrate(vfx, touchAttrs)
         } catch (_: Throwable) {}
     }
 
-    private fun ensureVibrator(effect: Any): Vibrator? {
+    private fun ensureVibrator(instance: Any): Vibrator? {
         vibrator?.let { return it }
         if (vibratorResolved) return null
         synchronized(this) {
             vibrator?.let { return it }
-            val ctx = resolveContext(effect) ?: run { vibratorResolved = true; return null }
+            val ctx = resolveContext(instance)
+                ?: run { vibratorResolved = true; return null }
             val v = try {
                 ctx.getSystemService(Vibrator::class.java)
             } catch (_: Throwable) { null }
@@ -145,6 +289,9 @@ class EdgeEffectHapticsModule : XposedModule() {
 
     @SuppressLint("DiscouragedPrivateApi")
     private fun resolveContext(instance: Any): Context? {
+        if (instance is View) {
+            return try { instance.context } catch (_: Throwable) { fallbackContext() }
+        }
         resolveContextField(instance)
         contextField?.let { f ->
             return try { f.get(instance) as? Context } catch (_: Throwable) { fallbackContext() }
@@ -187,12 +334,24 @@ class EdgeEffectHapticsModule : XposedModule() {
         }
     }
 
-    private class EdgeState {
-        @Volatile var fired = false
+    private enum class Edge { TOP, BOTTOM }
+    private class BoundaryState {
+        @Volatile var topFired = false
+        @Volatile var bottomFired = false
         @Volatile var lastFireMs = 0L
+
+        fun reset() {
+            topFired = false
+            bottomFired = false
+        }
     }
 
     private companion object {
-        const val COOLDOWN_MS = 150L
+        /**
+         * Minimum time between successive haptic fires for the same target.
+         * Short enough for rapid flick-release-flick to feel responsive;
+         * long enough to prevent vibrator API flooding.
+         */
+        const val COOLDOWN_MS = 80L
     }
 }
