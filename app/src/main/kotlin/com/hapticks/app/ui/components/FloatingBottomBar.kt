@@ -95,7 +95,7 @@ fun FloatingBottomBar(
 ) {
     Surface(
         modifier = modifier
-            .padding(bottom = 25.dp)
+            .padding(bottom = 35.dp)
             .height(64.dp),
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.8f),
@@ -143,7 +143,7 @@ fun LiquidGlassBottomBar(
         backdrop = backdrop,
         tabsCount = tabs.size,
         modifier = modifier
-            .padding(bottom = 25.dp)
+            .padding(bottom = 35.dp)
             .width(150.dp)
     ) {
         tabs.forEach { tab ->
