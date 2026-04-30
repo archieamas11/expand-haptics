@@ -53,6 +53,7 @@ import com.hapticks.app.ui.haptics.performHapticSliderTick
 import com.hapticks.app.ui.haptics.slider01ToTickIndex
 import java.util.Locale
 import kotlin.math.roundToInt
+import com.hapticks.app.ui.components.BackPill
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,19 +163,6 @@ fun ScrollHapticsScreen(
                 Spacer(modifier = Modifier.height(4.dp))
             }
         }
-    }
-}
-
-@Composable
-private fun BackPill(onBack: () -> Unit) {
-    IconButton(
-        onClick = onBack,
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-            contentDescription = stringResource(id = R.string.back),
-            tint = MaterialTheme.colorScheme.onSurface,
-        )
     }
 }
 

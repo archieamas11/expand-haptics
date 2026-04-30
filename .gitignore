@@ -31,3 +31,7 @@ captures/
 app/debug
 app/src/test/
 .vscode/
+test/
+graphify-out/
+.agents/
+.cursor

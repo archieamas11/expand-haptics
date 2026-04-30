@@ -7,9 +7,12 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 @Immutable
 data class AppSettings(
+    // Global Haptics Settings
+    val hapticsEnabled: Boolean = true,
+
     // Tap Haptics Default Settings
     val tapEnabled: Boolean = true,
-    val intensity: Float = 1.0f,
+    val intensity: Float = 0.2f,
     val pattern: HapticPattern = HapticPattern.Default,
     
     // Onboarding

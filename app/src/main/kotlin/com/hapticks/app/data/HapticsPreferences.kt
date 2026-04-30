@@ -35,6 +35,7 @@ class HapticsPreferences(context: Context) {
         }
         .map { prefs ->
             AppSettings(
+                hapticsEnabled = prefs[Keys.HAPTICS_ENABLED] ?: AppSettings.Default.hapticsEnabled,
                 tapEnabled = prefs[Keys.TAP_ENABLED] ?: AppSettings.Default.tapEnabled,
                 hasCompletedOnboarding = prefs[Keys.HAS_COMPLETED_ONBOARDING] ?: AppSettings.Default.hasCompletedOnboarding,
                 intensity = (prefs[Keys.INTENSITY] ?: AppSettings.Default.intensity)
@@ -70,6 +71,7 @@ class HapticsPreferences(context: Context) {
         }
 
     suspend fun setTapEnabled(enabled: Boolean) = edit { it[Keys.TAP_ENABLED] = enabled }
+    suspend fun setHapticsEnabled(enabled: Boolean) = edit { it[Keys.HAPTICS_ENABLED] = enabled }
     suspend fun setHasCompletedOnboarding(completed: Boolean) = edit { it[Keys.HAS_COMPLETED_ONBOARDING] = completed }
     suspend fun setIntensity(intensity: Float) = edit {
         it[Keys.INTENSITY] = intensity.coerceIn(0f, 1f)
@@ -109,6 +111,7 @@ class HapticsPreferences(context: Context) {
     }
 
     private object Keys {
+        val HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
         val TAP_ENABLED = booleanPreferencesKey("tap_enabled")
         val HAS_COMPLETED_ONBOARDING = booleanPreferencesKey("has_completed_onboarding")
         val INTENSITY = floatPreferencesKey("intensity")

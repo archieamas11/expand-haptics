@@ -63,6 +63,7 @@ import com.hapticks.app.ui.haptics.performHapticSliderTick
 import com.hapticks.app.ui.haptics.slider01ToTickIndex
 import com.hapticks.app.viewmodel.EdgeHapticsViewModel
 import kotlin.math.roundToInt
+import com.hapticks.app.ui.components.BackPill
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -409,18 +410,5 @@ private fun TestEventSnackbar(
             EdgeHapticsViewModel.TestEvent.Fired -> Unit
         }
         onConsumed()
-    }
-}
-
-@Composable
-private fun BackPill(onBack: () -> Unit) {
-    IconButton(
-        onClick = onBack,
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-            contentDescription = stringResource(id = R.string.back),
-            tint = MaterialTheme.colorScheme.onSurface,
-        )
     }
 }

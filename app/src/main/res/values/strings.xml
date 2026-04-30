@@ -116,7 +116,7 @@
     <string name="settings_theme_mode_dark">Dark</string>
     <string name="settings_amoled_title">AMOLED mode</string>
     <string name="settings_amoled_subtitle">Uses pure black for AMOLED screens to reduce eye strain and battery</string>
-    <string name="settings_liquid_glass_title">Liquid glass</string>
+    <string name="settings_liquid_glass_title">Liquid Glass</string>
     <string name="settings_liquid_glass_subtitle">Enable liquid glass effect for floating bottom bar</string>
     <string name="settings_amoled_subtitle_light">Applies when the app is in dark theme</string>
     <string name="settings_section_about">About</string>
@@ -131,10 +131,13 @@
     <string name="settings_changelog_error">Couldn\'t load release notes. Check your connection and try again.</string>
     <string name="settings_changelog_retry">Try again</string>
     <string name="settings_changelog_open_release">Open release on GitHub</string>
+    <string name="settings_changelog_close">Close</string>
     <string name="settings_report_bug_title">Report bug / feature</string>
     <string name="settings_report_bug_subtitle">Contact the developer via Telegram</string>
     <string name="settings_check_updates_title">Check for updates</string>
     <string name="settings_check_updates_subtitle">Check for updates from the GitHub repository</string>
+    <string name="settings_check_updates_action">Check for updates</string>
+    <string name="settings_check_updates_source_code">See source code</string>
     <string name="settings_check_updates_loading">Checking for updates...</string>
     <string name="settings_check_updates_error">Couldn\'t check for updates. Check your connection and try again.</string>
     <string name="settings_check_updates_retry">Try again</string>
@@ -142,8 +145,15 @@
     <string name="settings_check_updates_no_update">You already have the latest version.</string>
     <string name="settings_check_updates_missing_apk">Update found, but no APK asset is attached to this GitHub release.</string>
     <string name="settings_check_updates_downloading">Update %1$s found. Downloading APK...</string>
+    <string name="settings_check_updates_available_title">Update available</string>
+    <string name="settings_check_updates_available_subtitle">Version %1$s is available. Review the changelog below before downloading.</string>
+    <string name="settings_check_updates_cancel">Not now</string>
+    <string name="settings_check_updates_download_now">Download update</string>
     <string name="settings_check_updates_download_description">Downloading update package</string>
     <string name="settings_check_updates_install_failed">Download finished, but installer could not be opened.</string>
+    <string name="settings_toggle_haptics_header">Haptics</string>
+    <string name="settings_toggle_haptics_title">App Haptics</string>
+    <string name="settings_toggle_haptics_subtitle">Provides haptic feedback when navigating within the app</string>
     <!-- Accessibility -->
     <string name="settings_accessibility">Accessibility</string>
     <string name="settings_accessibility_title">Open Accessibility settings</string>

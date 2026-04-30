@@ -58,6 +58,10 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setTapEnabled(enabled) }
     }
 
+    fun setHapticsEnabled(enabled: Boolean) {
+        viewModelScope.launch { preferences.setHapticsEnabled(enabled) }
+    }
+
     fun setHasCompletedOnboarding(completed: Boolean) {
         viewModelScope.launch { preferences.setHasCompletedOnboarding(completed) }
     }

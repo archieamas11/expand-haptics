@@ -39,19 +39,6 @@ import com.hapticks.app.ui.components.SectionCard
 import kotlin.math.roundToInt
 
 @Composable
-internal fun FeelEveryTapBackPill(onBack: () -> Unit) {
-    IconButton(
-        onClick = onBack,
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-            contentDescription = stringResource(id = R.string.back),
-            tint = MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
-@Composable
 internal fun FeelEveryTapInteractionSection(
     settings: AppSettings,
     onTapEnabledChange: (Boolean) -> Unit,

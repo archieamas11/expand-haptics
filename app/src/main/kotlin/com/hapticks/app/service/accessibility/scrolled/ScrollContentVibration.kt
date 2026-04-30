@@ -3,7 +3,7 @@ package com.hapticks.app.service.accessibility.scrolled
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import com.hapticks.app.data.AppSettings
-import java.util.concurrent.ConcurrentHashMap
+import java.util.LinkedHashMap
 import kotlin.math.abs
 
 internal object ScrollContentVibration {
@@ -37,7 +37,13 @@ internal object ScrollContentVibration {
 
     private const val VELOCITY_SMOOTHING = 0.55f
 
-    private val perSurface = ConcurrentHashMap<String, ContentState>()
+    private val perSurface = object : LinkedHashMap<String, ContentState>(
+        MAX_TRACKED_SURFACES, 0.75f, true
+    ) {
+        override fun removeEldestEntry(
+            eldest: MutableMap.MutableEntry<String, ContentState>?
+        ): Boolean = size > MAX_TRACKED_SURFACES
+    }
 
     fun onViewScrolled(event: AccessibilityEvent, settings: AppSettings): Decision {
         val my = event.maxScrollY
@@ -49,17 +55,20 @@ internal object ScrollContentVibration {
         val key = scrolledSurfaceKey(event) ?: return Decision.None
         val eventTime = event.eventTime
 
-        val prev = perSurface[key]
-        if (prev == null) {
-            perSurface[key] = ContentState(
-                lastPos = pos,
-                lastEventTime = eventTime,
-                smoothedVelocityPps = -1f,
-                lastHapticEmitUptimeMs = 0L,
-                emitAnchorPx = pos.toFloat(),
-            )
-            evictIfNeeded()
-            return Decision.None
+        val prev: ContentState
+        synchronized(perSurface) {
+            val existing = perSurface[key]
+            if (existing == null) {
+                perSurface[key] = ContentState(
+                    lastPos = pos,
+                    lastEventTime = eventTime,
+                    smoothedVelocityPps = -1f,
+                    lastHapticEmitUptimeMs = 0L,
+                    emitAnchorPx = pos.toFloat(),
+                )
+                return Decision.None
+            }
+            prev = existing
         }
 
         val signedStep = pos - prev.lastPos
@@ -68,10 +77,12 @@ internal object ScrollContentVibration {
         }
 
         if (abs(signedStep) < NOISE_FLOOR_PX) {
-            perSurface[key] = prev.copy(
-                lastPos = pos,
-                lastEventTime = eventTime,
-            )
+            synchronized(perSurface) {
+                perSurface[key] = prev.copy(
+                    lastPos = pos,
+                    lastEventTime = eventTime,
+                )
+            }
             return Decision.None
         }
 
@@ -105,35 +116,37 @@ internal object ScrollContentVibration {
         val intensityScale = slowDragIntensityScale(smoothedV)
         val pulseIntensity = (baseIntensity * intensityScale).coerceIn(0f, 1f)
 
-        val nowUptime = SystemClock.uptimeMillis()
-        val emitElapsed = if (prev.lastHapticEmitUptimeMs == 0L) {
-            Long.MAX_VALUE
-        } else {
-            nowUptime - prev.lastHapticEmitUptimeMs
-        }
-        val canEmitTick = emitElapsed >= MIN_EMIT_INTERVAL_MS
-
-        var pulses = 0
+        var shouldEmitPulse = false
         var lastEmit = prev.lastHapticEmitUptimeMs
         var emitAnchorPx = prev.emitAnchorPx
-        if (creditsAvailable >= 1f && canEmitTick) {
-            val denom = (rate * flingScale).coerceAtLeast(1e-5f)
-            val pxPerCredit = REFERENCE_PX / denom
-            val towardPos = if (signedFromAnchor >= 0f) 1f else -1f
-            emitAnchorPx += towardPos * pxPerCredit
-            pulses = 1
-            lastEmit = nowUptime
+        if (creditsAvailable >= 1f) {
+            val nowUptime = SystemClock.uptimeMillis()
+            val emitElapsed = if (prev.lastHapticEmitUptimeMs == 0L) {
+                Long.MAX_VALUE
+            } else {
+                nowUptime - prev.lastHapticEmitUptimeMs
+            }
+            if (emitElapsed >= MIN_EMIT_INTERVAL_MS) {
+                val denom = (rate * flingScale).coerceAtLeast(1e-5f)
+                val pxPerCredit = REFERENCE_PX / denom
+                val towardPos = if (signedFromAnchor >= 0f) 1f else -1f
+                emitAnchorPx += towardPos * pxPerCredit
+                shouldEmitPulse = true
+                lastEmit = nowUptime
+            }
         }
 
-        perSurface[key] = ContentState(
-            lastPos = pos,
-            lastEventTime = eventTime,
-            smoothedVelocityPps = smoothedV,
-            lastHapticEmitUptimeMs = lastEmit,
-            emitAnchorPx = emitAnchorPx,
-        )
+        synchronized(perSurface) {
+            perSurface[key] = ContentState(
+                lastPos = pos,
+                lastEventTime = eventTime,
+                smoothedVelocityPps = smoothedV,
+                lastHapticEmitUptimeMs = lastEmit,
+                emitAnchorPx = emitAnchorPx,
+            )
+        }
 
-        return if (pulses > 0) {
+        return if (shouldEmitPulse) {
             Decision.Play(intensity = pulseIntensity)
         } else {
             Decision.None
@@ -150,13 +163,6 @@ internal object ScrollContentVibration {
     private fun slowDragIntensityScale(velocityPps: Float): Float {
         val t = (velocityPps / SLOW_DRAG_BLEND_PPS).coerceIn(0f, 1f)
         return SLOW_INTENSITY_MIN_SCALE + (1f - SLOW_INTENSITY_MIN_SCALE) * t
-    }
-
-    private fun evictIfNeeded() {
-        while (perSurface.size > MAX_TRACKED_SURFACES) {
-            val drop = perSurface.keys.firstOrNull() ?: return
-            perSurface.remove(drop)
-        }
     }
 
     private data class ContentState(

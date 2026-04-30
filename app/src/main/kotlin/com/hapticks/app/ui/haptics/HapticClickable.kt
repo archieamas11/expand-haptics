@@ -40,15 +40,37 @@ fun Context.performHapticClick() {
     } catch (_: Throwable) {
         AppSettings.Default
     }
+    if (!snapshot.hapticsEnabled) return
     app.hapticEngine.play(snapshot.pattern, snapshot.intensity)
 }
 
 fun Context.performHapticSliderTick() {
+    val app = applicationContext as? HapticksApp ?: return
+    val snapshot = try {
+        runBlocking { app.preferences.settings.first() }
+    } catch (_: Throwable) {
+        AppSettings.Default
+    }
+    if (!snapshot.hapticsEnabled) return
     hapticEngine()?.play(
         pattern = HapticPattern.TICK,
         intensity = 0.42f,
     )
 }
+
+@Composable
+fun rememberHapticClickAction(onClick: () -> Unit): () -> Unit {
+    val context = LocalContext.current
+    return remember(context, onClick) {
+        {
+            context.performHapticClick()
+            onClick()
+        }
+    }
+}
+
+@Composable
+fun withDefaultHaptic(onClick: () -> Unit): () -> Unit = rememberHapticClickAction(onClick)
 
 fun Modifier.hapticClickable(
     enabled: Boolean = true,
@@ -69,7 +91,9 @@ fun Modifier.hapticClickable(
         interactionSource = interactionSource,
         indication = if (disableRipple) null else LocalIndication.current,
         onClick = {
-            engine?.play(settings.pattern, settings.intensity)
+            if (settings.hapticsEnabled) {
+                engine?.play(settings.pattern, settings.intensity)
+            }
             onClick()
         },
     )

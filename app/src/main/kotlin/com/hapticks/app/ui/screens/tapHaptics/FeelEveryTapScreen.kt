@@ -23,6 +23,7 @@ import com.hapticks.app.data.AppSettings
 import com.hapticks.app.haptics.HapticPattern
 import com.hapticks.app.ui.components.EnableServiceCard
 import com.hapticks.app.ui.components.HapticTestButton
+import com.hapticks.app.ui.components.BackPill
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +56,7 @@ fun FeelEveryTapScreen(
                     )
                 },
                 navigationIcon = {
-                    FeelEveryTapBackPill(onBack = onBack)
+                    BackPill(onBack = onBack)
                 },
                 scrollBehavior = scrollBehavior,
                 colors = TopAppBarDefaults.largeTopAppBarColors(

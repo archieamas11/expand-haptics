@@ -24,6 +24,10 @@ class HapticsAccessibilityService : AccessibilityService() {
 
     private lateinit var engine: HapticEngine
 
+    private val typeClicked = AccessibilityEvent.TYPE_VIEW_CLICKED
+    private val typeWindowChanged = AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED
+    private val typeScrolled = AccessibilityEvent.TYPE_VIEW_SCROLLED
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         val app = application as HapticksApp
@@ -42,40 +46,41 @@ class HapticsAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val ev = event ?: return
-        val fromOwnApp = isAccessibilityEventFromOwnApplication(ev)
-        if (fromOwnApp && ev.eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-            return
+
+        if (ev.eventType != typeScrolled) {
+            if (isAccessibilityEventFromOwnApplication(ev)) return
         }
 
         val type = ev.eventType
+        val settings = current
 
-        if (type == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
-            if (current.tapEnabled && InteractableViewHaptics.hasToggleLikeContentChange(ev)) {
-                InteractableViewHaptics.handle(engine, current, ev)
+        if (type == typeClicked) {
+            InteractableViewHaptics.handle(engine, settings, ev)
+            return
+        }
+
+        if (type == typeWindowChanged) {
+            if (settings.tapEnabled && InteractableViewHaptics.hasToggleLikeContentChange(ev)) {
+                InteractableViewHaptics.handle(engine, settings, ev)
             }
             return
         }
 
-        if (type == AccessibilityEvent.TYPE_VIEW_CLICKED) {
-            InteractableViewHaptics.handle(engine, current, ev)
-            return
-        }
-
-        if (type == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
+        if (type == typeScrolled) {
             var consumedByEdge = false
-            if (current.a11yScrollBoundEdge) {
+            if (settings.a11yScrollBoundEdge) {
                 if (ScrollAbsoluteEdgeVibration.onViewScrolled(ev) ==
                     ScrollAbsoluteEdgeVibration.Result.PlayEdgeHaptic
                 ) {
-                    engine.play(current.edgePattern, current.edgeIntensity, throttleMs = EDGE_THROTTLE_MS)
+                    engine.play(settings.edgePattern, settings.edgeIntensity, throttleMs = EDGE_THROTTLE_MS)
                     consumedByEdge = true
                 }
             }
-            if (current.scrollEnabled && !consumedByEdge) {
-                when (val scroll = ScrollContentVibration.onViewScrolled(ev, current)) {
+            if (settings.scrollEnabled && !consumedByEdge) {
+                when (val scroll = ScrollContentVibration.onViewScrolled(ev, settings)) {
                     is ScrollContentVibration.Decision.Play -> {
                         engine.play(
-                            current.scrollPattern,
+                            settings.scrollPattern,
                             scroll.intensity,
                             throttleMs = 0L,
                         )
@@ -98,9 +103,9 @@ class HapticsAccessibilityService : AccessibilityService() {
         val info = serviceInfo ?: return
         var mask = InteractableViewHaptics.eventTypeMask(settings)
         if (settings.scrollEnabled || settings.a11yScrollBoundEdge) {
-            mask = mask or AccessibilityEvent.TYPE_VIEW_SCROLLED
+            mask = mask or typeScrolled
         }
-        if (mask == 0) mask = AccessibilityEvent.TYPE_VIEW_CLICKED
+        if (mask == 0) mask = typeClicked
         if (info.eventTypes == mask) return
         info.eventTypes = mask
         serviceInfo = info

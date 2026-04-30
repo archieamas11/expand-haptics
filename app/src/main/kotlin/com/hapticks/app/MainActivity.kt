@@ -29,10 +29,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hapticks.app.ui.components.BottomTab
 import com.hapticks.app.ui.components.FloatingBottomBar
@@ -41,9 +44,13 @@ import com.hapticks.app.ui.components.SlidingBottomTabHost
 import com.hapticks.app.ui.screens.tapHaptics.FeelEveryTapScreen
 import com.hapticks.app.ui.screens.HomeScreen
 import com.hapticks.app.ui.screens.edgehaptics.EdgeHapticsScreen
+import com.hapticks.app.ui.screens.fetchUpdateStatus
 import com.hapticks.app.ui.screens.scrollhaptics.ScrollHapticsScreen
 import com.hapticks.app.ui.screens.SettingsScreen
 import com.hapticks.app.ui.screens.OnboardingScreen
+import com.hapticks.app.ui.screens.UpdateCheckResult
+import com.hapticks.app.ui.screens.UpdateCheckScreen
+import com.hapticks.app.ui.screens.UpdateCheckUiState
 import com.hapticks.app.data.AppSettings
 import com.hapticks.app.ui.haptics.ProvideHapticksEdgeOverscrollHaptics
 import com.hapticks.app.ui.theme.HapticksTheme
@@ -51,6 +58,8 @@ import com.hapticks.app.viewmodel.SettingsViewModel
 import com.hapticks.app.viewmodel.EdgeHapticsViewModel
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
+import androidx.core.net.toUri
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -81,8 +90,28 @@ class MainActivity : ComponentActivity() {
                 val backdrop = rememberLayerBackdrop()
 
                 ProvideHapticksEdgeOverscrollHaptics {
+                    val context = LocalContext.current
+                    val scope = rememberCoroutineScope()
                     var route by rememberSaveable { mutableStateOf(Route.UNINITIALIZED) }
                     val lastRootRoute = rememberSaveable { mutableStateOf(Route.HOME) }
+                    var updateCheckUiState by remember { mutableStateOf<UpdateCheckUiState>(UpdateCheckUiState.Idle) }
+
+                    fun checkForUpdates() {
+                        scope.launch {
+                            updateCheckUiState = UpdateCheckUiState.Loading
+                            when (val result = fetchUpdateStatus()) {
+                                UpdateCheckResult.UpToDate -> {
+                                    updateCheckUiState = UpdateCheckUiState.UpToDate
+                                }
+                                is UpdateCheckResult.UpdateAvailable -> {
+                                    updateCheckUiState = UpdateCheckUiState.UpdateAvailable(result.release)
+                                }
+                                UpdateCheckResult.Error -> {
+                                    updateCheckUiState = UpdateCheckUiState.Error
+                                }
+                            }
+                        }
+                    }
 
                     LaunchedEffect(settings) {
                         if (route == Route.UNINITIALIZED && settings !== AppSettings.Default) {
@@ -188,13 +217,33 @@ class MainActivity : ComponentActivity() {
                                                 )
                                                 BottomTab.SETTINGS -> SettingsScreen(
                                                     settings = settings,
+                                                    onHapticsEnabledChange = viewModel::setHapticsEnabled,
                                                     onUseDynamicColorsChange = viewModel::setUseDynamicColors,
                                                     onThemeModeChange = viewModel::setThemeMode,
                                                     onAmoledBlackChange = viewModel::setAmoledBlack,
                                                     onLiquidGlassChange = viewModel::setLiquidGlass,
+                                                    onOpenUpdateCheck = {
+                                                        updateCheckUiState = UpdateCheckUiState.Idle
+                                                        route = Route.UPDATE_CHECK
+                                                    },
                                                 )
                                             }
                                         }
+                                    }
+                                    Route.UPDATE_CHECK -> {
+                                        BackHandler { route = Route.SETTINGS }
+                                        UpdateCheckScreen(
+                                            uiState = updateCheckUiState,
+                                            onBack = { route = Route.SETTINGS },
+                                            onCheckForUpdates = { checkForUpdates() },
+                                            onOpenSourceCode = {
+                                                val intent = Intent(
+                                                    Intent.ACTION_VIEW,
+                                                    "https://github.com/archieamas11/hapticks".toUri(),
+                                                )
+                                                context.startActivity(intent)
+                                            },
+                                        )
                                     }
                                     Route.TACTILE_SCROLLING -> {
                                         BackHandler { route = Route.HOME }
@@ -249,7 +298,7 @@ class MainActivity : ComponentActivity() {
         viewModel.refreshServiceState()
     }
 
-    private enum class Route { UNINITIALIZED, ONBOARDING, HOME, FEEL_EVERY_TAP, EDGE_HAPTICS, TACTILE_SCROLLING, SETTINGS }
+    private enum class Route { UNINITIALIZED, ONBOARDING, HOME, FEEL_EVERY_TAP, EDGE_HAPTICS, TACTILE_SCROLLING, SETTINGS, UPDATE_CHECK }
 
     private fun openAccessibilitySettings() {
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
