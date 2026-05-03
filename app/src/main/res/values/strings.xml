@@ -7,16 +7,15 @@
     <string name="accessibility_service_description">Hapticks triggers vibration on taps and switches via accessibility events. No content is ever read, stored, or shared. Turn off anytime in Settings > Accessibility.</string>
 
     <string name="home_greeting">Hello</string>
-    <string name="screen_title">Feel Every Tap</string>
+    <string name="screen_title">Tap Haptics</string>
     <string name="section_pattern">Pattern</string>
     <string name="section_pattern_subtitle">Choose tap feel</string>
 
     <string name="toggle_tap_title">Tap Haptics</string>
-    <string name="toggle_tap_subtitle">Adds haptic feedback to taps, switches, and toggles. Works system-wide.</string>
+    <string name="toggle_tap_subtitle">Adds haptic feedback to taps system-wide.</string>
 
     <string name="intensity_label">Haptic strength</string>
     <string name="intensity_value">%1$d%%</string>
-    <string name="test_haptic">Test Haptics</string>
 
     <!--    Haptic Patterns-->
     <string name="pattern_click">Click</string>
@@ -62,11 +61,11 @@
 
     <!-- home screen strings -->
     <string name="feature_beta">Beta</string>
-    <string name="home_feel_every_tap_title">Feel Every Tap</string>
+    <string name="home_feel_every_tap_title">Tap Haptics</string>
     <string name="home_feel_every_tap_subtitle">Adds haptic feedback across apps and system UI for a more satisfying feel.</string>
     <string name="home_edge_haptics_title">Edge Haptics</string>
     <string name="home_edge_haptics_subtitle">Feel a firm pulse when scrolling hits the top or bottom.</string>
-    <string name="home_tactile_scrolling_title">Tactile Scrolling</string>
+    <string name="home_tactile_scrolling_title">Scroll Haptics</string>
     <string name="home_tactile_scrolling_subtitle">Adds subtle rhythmic clicks while scrolling for a more satisfying, tactile feel.</string>
     <string name="home_coming_soon_title">Coming Soon</string>
     <string name="home_coming_soon_subtitle">More haptic experiences are on the way. Stay tuned.</string>
@@ -77,21 +76,22 @@
     <string name="edge_info_body">Turn on Hapticks accessibility service in Settings → Accessibility. Edge pulses use your chosen pattern and intensity.</string>
     <string name="edge_a11y_scroll_bound_title">Edge Haptics</string>
     <string name="edge_a11y_scroll_bound_subtitle">Fires a pulse when scrolling hits the top or bottom via accessibility.</string>
-    <string name="edge_a11y_guide_title">How it works limits</string>
+    <string name="edge_a11y_guide_title">How it works and limitations</string>
     <string name="edge_a11y_guide_body">Hapticks detects when you reach the top or bottom edge using scroll position, then plays your edge pattern once.\n\nLimitations: Not all apps support this method. The accessibility service must remain on.</string>
-    <string name="edge_test_button">Test edge</string>
     <string name="edge_test_no_vibrator">No vibrator</string>
 
     <!-- Scroll haptic screen -->
-    <string name="scroll_toggle_title">Tactile Scrolling</string>
+    <string name="scroll_toggle_title">Scroll Haptics</string>
     <string name="scroll_toggle_subtitle">Adds gentle haptics while you scroll.</string>
-    <string name="scroll_haptic_screen_test_button">Test scroll</string>
-    <string name="scroll_haptics_title">Tactile Scrolling</string>
+    <string name="scroll_haptics_title">Scroll Haptics</string>
     <string name="scroll_events_per_unit_title">Haptics per distance</string>
     <string name="scroll_events_per_unit_subtitle">Number of haptics per ~100 px of movement. Higher = denser; lower = more spaced.</string>
     <string name="scroll_events_per_unit_value">%1$s / 100 px</string>
     <string name="scroll_intensity_title">Haptic strength</string>
     <string name="scroll_intensity_subtitle">Strength of each haptic while scrolling.</string>
+
+    <string name="scroll_warning_title">Battery &amp; Performance Warning</string>
+    <string name="scroll_warning_body">Enabling scroll haptics will significantly increase battery consumption because haptic motors will fire constantly as you move through content. This feature relies on accessibility events and may not function in all applications; the Hapticks service must remain active for this to work.</string>
 
     <!-- Settings screen -->
     <string name="settings_header_caption">Preferences</string>
@@ -103,7 +103,7 @@
     <string name="settings_theme_mode_system">System</string>
     <string name="settings_theme_mode_light">Light</string>
     <string name="settings_theme_mode_dark">Dark</string>
-    <string name="settings_amoled_title">AMOLED mode</string>
+    <string name="settings_amoled_title">AMOLED Mode</string>
     <string name="settings_amoled_subtitle">Uses pure black for AMOLED screens to reduce eye strain and battery</string>
     <string name="settings_liquid_glass_title">Liquid Glass</string>
     <string name="settings_liquid_glass_subtitle">Enable liquid glass effect for floating bottom bar</string>

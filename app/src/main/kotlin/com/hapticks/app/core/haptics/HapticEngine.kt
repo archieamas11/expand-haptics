@@ -7,39 +7,26 @@ import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import androidx.annotation.RequiresApi
-import java.util.concurrent.ConcurrentHashMap
+
 
 class HapticEngine(context: Context) {
-
-    private val vibrator: Vibrator = run {
-        val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-        manager.defaultVibrator
-    }
-
+    private val vibrator: Vibrator =
+        (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager)
+            .defaultVibrator
     private val hasVibrator: Boolean = vibrator.hasVibrator()
     private val hasAmplitudeControl: Boolean = vibrator.hasAmplitudeControl()
+    private val envelopeSupported: Boolean =
+        Build.VERSION.SDK_INT >= 36 && vibrator.areEnvelopeEffectsSupported()
 
-    private val hasEnvelopeSupport: Boolean = Build.VERSION.SDK_INT >= 36 &&
-            vibrator.areEnvelopeEffectsSupported()
-
-    private val primitiveSupport: Map<HapticPattern, Boolean> =
-        HapticPattern.entries.associateWith { pattern ->
-            vibrator.areAllPrimitivesSupported(*primitivesRequired(pattern))
-        }
-    private val compositionCache: ConcurrentHashMap<Int, VibrationEffect> =
-        ConcurrentHashMap(HapticPattern.entries.size * INTENSITY_BUCKETS)
-
-    private val envelopeCache: ConcurrentHashMap<Int, VibrationEffect> =
-        ConcurrentHashMap(HapticPattern.entries.size * INTENSITY_BUCKETS)
-
-    private val fallbackCache: ConcurrentHashMap<Int, VibrationEffect> =
-        ConcurrentHashMap(HapticPattern.entries.size * INTENSITY_BUCKETS)
+    private val primitiveSupport = BooleanArray(HapticPattern.entries.size)
+    private val primitiveQueried = BooleanArray(HapticPattern.entries.size)
+    private val cache = arrayOfNulls<VibrationEffect>(
+        HapticPattern.entries.size * INTENSITY_BUCKETS
+    )
 
     private val touchAttrs: VibrationAttributes =
         VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH)
 
-    @Volatile
     private var lastFiredAt: Long = Long.MIN_VALUE
 
     fun play(
@@ -47,79 +34,75 @@ class HapticEngine(context: Context) {
         intensity: Float,
         throttleMs: Long = 0L,
     ): Boolean {
-        if (!hasVibrator) return false
-        if (intensity <= MIN_AUDIBLE_INTENSITY) return false
+        if (!hasVibrator || intensity <= MIN_AUDIBLE_INTENSITY) return false
 
         val clamped = intensity.coerceIn(0f, 1f)
 
-        // Throttling
         if (throttleMs > 0L) {
             val now = SystemClock.uptimeMillis()
-            val elapsed = if (lastFiredAt == Long.MIN_VALUE) Long.MAX_VALUE else now - lastFiredAt
-            if (elapsed < throttleMs) return false
+            if (lastFiredAt != Long.MIN_VALUE && now - lastFiredAt < throttleMs) {
+                return false
+            }
             lastFiredAt = now
-        } else {
-            lastFiredAt = SystemClock.uptimeMillis()
         }
 
-        val effect = resolveEffect(pattern, clamped)
+        val bucket = intensityToBucket(clamped)
+        val idx = pattern.ordinal * INTENSITY_BUCKETS + bucket
+
+        val effect = cache[idx] ?: createEffect(pattern, bucket).also { cache[idx] = it }
+
         vibrator.vibrate(effect, touchAttrs)
         return true
     }
 
-    private fun resolveEffect(pattern: HapticPattern, intensity: Float): VibrationEffect {
-        val bucket = intensityToBucket(intensity)
-        val key = pattern.ordinal * INTENSITY_BUCKETS + bucket
-        val bucketIntensity = bucketToIntensity(bucket)
+    private fun createEffect(pattern: HapticPattern, bucket: Int): VibrationEffect {
+        val intensity = bucketToIntensity(bucket)
 
-        if (hasEnvelopeSupport && pattern.supportsEnvelope()) {
-            envelopeCache[key]?.let { return it }
-            val built = buildEnvelopeEffect(pattern, bucketIntensity)
-            return envelopeCache.putIfAbsent(key, built) ?: built
+        return when {
+            envelopeSupported && pattern.supportsEnvelope() ->
+                buildEnvelopeEffect(pattern, intensity)
+
+            resolvePrimitiveSupport(pattern) ->
+                buildCompositionEffect(pattern, intensity)
+
+            else ->
+                buildFallbackEffect(pattern, intensity)
         }
-
-        if (primitiveSupport[pattern] == true) {
-            compositionCache[key]?.let { return it }
-            val built = buildCompositionEffect(pattern, bucketIntensity)
-            return compositionCache.putIfAbsent(key, built) ?: built
-        }
-
-        fallbackCache[key]?.let { return it }
-        val built = buildFallbackEffect(pattern, bucketIntensity)
-        return fallbackCache.putIfAbsent(key, built) ?: built
     }
 
-    @RequiresApi(36)
+    private fun resolvePrimitiveSupport(pattern: HapticPattern): Boolean {
+        val idx = pattern.ordinal
+        if (!primitiveQueried[idx]) {
+            primitiveSupport[idx] = vibrator.areAllPrimitivesSupported(*primitivesRequired(pattern))
+            primitiveQueried[idx] = true
+        }
+        return primitiveSupport[idx]
+    }
+
     private fun buildEnvelopeEffect(pattern: HapticPattern, intensity: Float): VibrationEffect {
         return when (pattern) {
-            HapticPattern.CLICK -> {
+            HapticPattern.CLICK ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(1.0f)
                     .addControlPoint(intensity, 1.0f, 8L)
                     .addControlPoint(0f, 0.8f, 12L)
                     .build()
-            }
 
-            // Ultra-short, lighter than click. Delicate.
-            HapticPattern.TICK -> {
+            HapticPattern.TICK ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.9f)
                     .addControlPoint(intensity * 0.85f, 0.9f, 5L)
                     .addControlPoint(0f, 0.7f, 8L)
                     .build()
-            }
 
-            // Deep, soft, low-sharpness. Sub-bass character.
-            HapticPattern.LOW_TICK -> {
+            HapticPattern.LOW_TICK ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.15f)
                     .addControlPoint(intensity * 0.75f, 0.2f, 18L)
                     .addControlPoint(0f, 0.15f, 35L)
                     .build()
-            }
 
-            // Long resonant decay. Like tapping a hollow wooden box.
-            HapticPattern.THUD -> {
+            HapticPattern.THUD ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.1f)
                     .addControlPoint(intensity, 0.15f, 35L)
@@ -127,10 +110,8 @@ class HapticEngine(context: Context) {
                     .addControlPoint(intensity * 0.15f, 0.1f, 60L)
                     .addControlPoint(0f, 0.1f, 40L)
                     .build()
-            }
 
-            // Two-phase "thock": sharp attack + rounded secondary bump
-            HapticPattern.HEAVY_CLICK -> {
+            HapticPattern.HEAVY_CLICK ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(1.0f)
                     .addControlPoint(intensity, 1.0f, 10L)
@@ -138,10 +119,8 @@ class HapticEngine(context: Context) {
                     .addControlPoint(intensity * 0.2f, 0.4f, 40L)
                     .addControlPoint(0f, 0.3f, 30L)
                     .build()
-            }
 
-            // Two distinct peaks with perceptible gap
-            HapticPattern.DOUBLE_CLICK -> {
+            HapticPattern.DOUBLE_CLICK ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(1.0f)
                     .addControlPoint(intensity, 1.0f, 8L)
@@ -149,19 +128,15 @@ class HapticEngine(context: Context) {
                     .addControlPoint(intensity, 1.0f, 8L)
                     .addControlPoint(0f, 0.5f, 12L)
                     .build()
-            }
 
-            // Gentle rounded hill — no sharp edges
-            HapticPattern.SOFT_BUMP -> {
+            HapticPattern.SOFT_BUMP ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.2f)
                     .addControlPoint(intensity * 0.65f, 0.25f, 45L)
                     .addControlPoint(0f, 0.2f, 55L)
                     .build()
-            }
 
-            // Two tiny peaks, faster than double-click
-            HapticPattern.DOUBLE_TICK -> {
+            HapticPattern.DOUBLE_TICK ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.85f)
                     .addControlPoint(intensity * 0.9f, 0.85f, 5L)
@@ -169,20 +144,16 @@ class HapticEngine(context: Context) {
                     .addControlPoint(intensity * 0.9f, 0.85f, 5L)
                     .addControlPoint(0f, 0.5f, 8L)
                     .build()
-            }
 
-            // Tension build → sharp release. The "rubber band" feel.
-            HapticPattern.ELASTIC -> {
+            HapticPattern.ELASTIC ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.2f)
                     .addControlPoint(intensity * 0.25f, 0.25f, 45L)
                     .addControlPoint(intensity, 1.0f, 18L)
                     .addControlPoint(0f, 0.7f, 30L)
                     .build()
-            }
 
-            // Decelerating rotational feel using oscillating sharpness
-            HapticPattern.SPIN -> {
+            HapticPattern.SPIN ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.8f)
                     .addControlPoint(intensity * 0.9f, 0.8f, 20L)
@@ -191,10 +162,8 @@ class HapticEngine(context: Context) {
                     .addControlPoint(intensity * 0.2f, 0.3f, 25L)
                     .addControlPoint(0f, 0.2f, 30L)
                     .build()
-            }
 
-            // Unstable, oscillating decay
-            HapticPattern.WOBBLE -> {
+            HapticPattern.WOBBLE ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.9f)
                     .addControlPoint(intensity * 0.85f, 0.9f, 15L)
@@ -203,10 +172,8 @@ class HapticEngine(context: Context) {
                     .addControlPoint(intensity * 0.15f, 0.2f, 25L)
                     .addControlPoint(0f, 0.2f, 30L)
                     .build()
-            }
 
-            // Burst of 3 micro-impacts
-            HapticPattern.RAPID_FIRE -> {
+            HapticPattern.RAPID_FIRE ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.9f)
                     .addControlPoint(intensity * 0.95f, 0.9f, 5L)
@@ -216,10 +183,8 @@ class HapticEngine(context: Context) {
                     .addControlPoint(intensity * 0.95f, 0.9f, 5L)
                     .addControlPoint(0f, 0.5f, 8L)
                     .build()
-            }
 
-            // Lub-dub rhythm
-            HapticPattern.HEARTBEAT -> {
+            HapticPattern.HEARTBEAT ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.2f)
                     .addControlPoint(intensity, 0.25f, 25L)
@@ -227,10 +192,8 @@ class HapticEngine(context: Context) {
                     .addControlPoint(intensity * 0.45f, 0.2f, 30L)
                     .addControlPoint(0f, 0.15f, 40L)
                     .build()
-            }
 
-            // Falling sensation: stepped decay
-            HapticPattern.CASCADE -> {
+            HapticPattern.CASCADE ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.8f)
                     .addControlPoint(intensity, 0.8f, 20L)
@@ -239,17 +202,14 @@ class HapticEngine(context: Context) {
                     .addControlPoint(intensity * 0.1f, 0.2f, 40L)
                     .addControlPoint(0f, 0.15f, 35L)
                     .build()
-            }
 
-            // Deep, long, sub-bass rumble
-            HapticPattern.RUMBLE -> {
+            HapticPattern.RUMBLE ->
                 VibrationEffect.BasicEnvelopeBuilder()
                     .setInitialSharpness(0.05f)
                     .addControlPoint(intensity * 0.85f, 0.05f, 60L)
                     .addControlPoint(intensity * 0.85f, 0.05f, 120L)
                     .addControlPoint(0f, 0.05f, 60L)
                     .build()
-            }
         }
     }
 
@@ -257,50 +217,40 @@ class HapticEngine(context: Context) {
         val comp = VibrationEffect.startComposition()
 
         when (pattern) {
-            HapticPattern.CLICK -> {
+            HapticPattern.CLICK ->
                 comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
-            }
 
-            HapticPattern.TICK -> {
+            HapticPattern.TICK ->
                 comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_TICK, intensity)
-            }
 
-            HapticPattern.LOW_TICK -> {
+            HapticPattern.LOW_TICK ->
                 comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_LOW_TICK, intensity)
-            }
 
             HapticPattern.THUD -> {
-                // Deep impact + low resonance tail
                 comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, intensity)
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_LOW_TICK,
-                    intensity * 0.35f,
-                    50
+                    intensity * 0.35f, 50
                 )
             }
 
             HapticPattern.SPIN -> {
-                // Decelerating whir: three spins at decreasing intensity
                 comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_SPIN, intensity * 0.9f)
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_SPIN,
-                    intensity * 0.5f,
-                    20
+                    intensity * 0.5f, 20
                 )
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_SPIN,
-                    intensity * 0.2f,
-                    20
+                    intensity * 0.2f, 20
                 )
             }
 
             HapticPattern.HEAVY_CLICK -> {
-                // Strong strike + secondary mass
                 comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_CLICK,
-                    intensity * 0.55f,
-                    35
+                    intensity * 0.55f, 35
                 )
             }
 
@@ -308,51 +258,47 @@ class HapticEngine(context: Context) {
                 comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, intensity)
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_CLICK,
-                    intensity,
-                    80
+                    intensity, 80
                 )
             }
 
-            HapticPattern.SOFT_BUMP -> {
+            HapticPattern.SOFT_BUMP ->
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_LOW_TICK,
                     intensity * 0.6f
                 )
-            }
 
             HapticPattern.DOUBLE_TICK -> {
                 comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_TICK, intensity)
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_TICK,
-                    intensity,
-                    60
+                    intensity, 60
                 )
             }
 
             HapticPattern.ELASTIC -> {
-                // Stretch then snap
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_SLOW_RISE,
                     intensity * 0.7f
                 )
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_QUICK_FALL,
-                    intensity,
-                    40
+                    intensity, 40
                 )
             }
 
             HapticPattern.WOBBLE -> {
-                comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_SPIN, intensity * 0.85f)
+                comp.addPrimitive(
+                    VibrationEffect.Composition.PRIMITIVE_SPIN,
+                    intensity * 0.85f
+                )
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_LOW_TICK,
-                    intensity * 0.3f,
-                    25
+                    intensity * 0.3f, 25
                 )
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_SPIN,
-                    intensity * 0.5f,
-                    20
+                    intensity * 0.5f, 20
                 )
             }
 
@@ -366,39 +312,33 @@ class HapticEngine(context: Context) {
                 comp.addPrimitive(VibrationEffect.Composition.PRIMITIVE_THUD, intensity)
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_THUD,
-                    intensity * 0.4f,
-                    120
+                    intensity * 0.4f, 120
                 )
             }
 
             HapticPattern.CASCADE -> {
-                // Simulated cascade with quick fall + ticks
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_QUICK_FALL,
                     intensity
                 )
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_TICK,
-                    intensity * 0.5f,
-                    60
+                    intensity * 0.5f, 60
                 )
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_LOW_TICK,
-                    intensity * 0.25f,
-                    50
+                    intensity * 0.25f, 50
                 )
             }
 
             HapticPattern.RUMBLE -> {
-                // Best approximation: slow rise + thud
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_SLOW_RISE,
                     intensity * 0.8f
                 )
                 comp.addPrimitive(
                     VibrationEffect.Composition.PRIMITIVE_THUD,
-                    intensity * 0.6f,
-                    80
+                    intensity * 0.6f, 80
                 )
             }
         }
@@ -408,23 +348,34 @@ class HapticEngine(context: Context) {
 
     private fun buildFallbackEffect(pattern: HapticPattern, intensity: Float): VibrationEffect {
         return when (pattern) {
-            HapticPattern.CLICK -> predefinedOrAmplitude(VibrationEffect.EFFECT_CLICK, intensity)
-            HapticPattern.TICK, HapticPattern.DOUBLE_TICK, HapticPattern.RAPID_FIRE ->
+            HapticPattern.CLICK ->
+                predefinedOrAmplitude(VibrationEffect.EFFECT_CLICK, intensity)
+
+            HapticPattern.TICK,
+            HapticPattern.DOUBLE_TICK,
+            HapticPattern.RAPID_FIRE ->
                 predefinedOrAmplitude(VibrationEffect.EFFECT_TICK, intensity)
 
-            HapticPattern.LOW_TICK, HapticPattern.SOFT_BUMP ->
+            HapticPattern.LOW_TICK,
+            HapticPattern.SOFT_BUMP ->
                 oneShot(intensity, 25L)
 
-            HapticPattern.THUD, HapticPattern.HEAVY_CLICK, HapticPattern.HEARTBEAT ->
+            HapticPattern.THUD,
+            HapticPattern.HEAVY_CLICK,
+            HapticPattern.HEARTBEAT ->
                 predefinedOrAmplitude(VibrationEffect.EFFECT_HEAVY_CLICK, intensity)
 
-            HapticPattern.SPIN, HapticPattern.WOBBLE, HapticPattern.CASCADE ->
+            HapticPattern.SPIN,
+            HapticPattern.WOBBLE,
+            HapticPattern.CASCADE ->
                 predefinedOrAmplitude(VibrationEffect.EFFECT_TICK, intensity)
 
-            HapticPattern.DOUBLE_CLICK, HapticPattern.ELASTIC ->
+            HapticPattern.DOUBLE_CLICK,
+            HapticPattern.ELASTIC ->
                 VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK)
 
-            HapticPattern.RUMBLE -> oneShot(intensity, 180L)
+            HapticPattern.RUMBLE ->
+                oneShot(intensity, 180L)
         }
     }
 
@@ -448,13 +399,6 @@ class HapticEngine(context: Context) {
         }
     }
 
-    private fun intensityToBucket(intensity: Float): Int =
-        ((intensity * (INTENSITY_BUCKETS - 1)) + 0.5f).toInt()
-            .coerceIn(0, INTENSITY_BUCKETS - 1)
-
-    private fun bucketToIntensity(bucket: Int): Float =
-        bucket.toFloat() / (INTENSITY_BUCKETS - 1)
-
     private fun HapticPattern.supportsEnvelope(): Boolean = when (this) {
         HapticPattern.CLICK,
         HapticPattern.TICK,
@@ -473,54 +417,66 @@ class HapticEngine(context: Context) {
         HapticPattern.RUMBLE -> true
     }
 
-    private companion object {
-        const val MIN_AUDIBLE_INTENSITY = 0.01f
-        const val ONE_SHOT_DURATION_MS = 20L
-        const val AMPLITUDE_FALLBACK_THRESHOLD = 0.9f
-        const val INTENSITY_BUCKETS = 21
+    private fun intensityToBucket(intensity: Float): Int =
+        ((intensity * (INTENSITY_BUCKETS - 1)) + 0.5f).toInt()
+            .coerceIn(0, INTENSITY_BUCKETS - 1)
 
-        fun primitivesRequired(pattern: HapticPattern): IntArray = when (pattern) {
-            HapticPattern.CLICK,
-            HapticPattern.HEAVY_CLICK,
-            HapticPattern.DOUBLE_CLICK ->
-                intArrayOf(VibrationEffect.Composition.PRIMITIVE_CLICK)
+    private fun bucketToIntensity(bucket: Int): Float =
+        bucket.toFloat() / (INTENSITY_BUCKETS - 1)
 
-            HapticPattern.TICK,
-            HapticPattern.DOUBLE_TICK,
-            HapticPattern.RAPID_FIRE,
-            HapticPattern.CASCADE ->
-                intArrayOf(VibrationEffect.Composition.PRIMITIVE_TICK)
+    private fun primitivesRequired(pattern: HapticPattern): IntArray = when (pattern) {
+        HapticPattern.CLICK,
+        HapticPattern.HEAVY_CLICK,
+        HapticPattern.DOUBLE_CLICK -> PRIMS_CLICK
 
-            HapticPattern.LOW_TICK,
-            HapticPattern.SOFT_BUMP ->
-                intArrayOf(VibrationEffect.Composition.PRIMITIVE_LOW_TICK)
+        HapticPattern.TICK,
+        HapticPattern.DOUBLE_TICK,
+        HapticPattern.RAPID_FIRE -> PRIMS_TICK
 
-            HapticPattern.THUD,
-            HapticPattern.HEARTBEAT ->
-                intArrayOf(
-                    VibrationEffect.Composition.PRIMITIVE_THUD,
-                    VibrationEffect.Composition.PRIMITIVE_LOW_TICK
-                )
+        HapticPattern.LOW_TICK,
+        HapticPattern.SOFT_BUMP -> PRIMS_LOW_TICK
 
-            HapticPattern.SPIN,
-            HapticPattern.WOBBLE ->
-                intArrayOf(
-                    VibrationEffect.Composition.PRIMITIVE_SPIN,
-                    VibrationEffect.Composition.PRIMITIVE_LOW_TICK
-                )
+        HapticPattern.THUD -> PRIMS_THUD_LOWTICK
+        HapticPattern.HEARTBEAT -> PRIMS_THUD
 
-            HapticPattern.ELASTIC ->
-                intArrayOf(
-                    VibrationEffect.Composition.PRIMITIVE_SLOW_RISE,
-                    VibrationEffect.Composition.PRIMITIVE_QUICK_FALL
-                )
+        HapticPattern.SPIN,
+        HapticPattern.WOBBLE -> PRIMS_SPIN_LOWTICK
 
-            HapticPattern.RUMBLE ->
-                intArrayOf(
-                    VibrationEffect.Composition.PRIMITIVE_SLOW_RISE,
-                    VibrationEffect.Composition.PRIMITIVE_THUD
-                )
-        }
+        HapticPattern.ELASTIC -> PRIMS_ELASTIC
+        HapticPattern.RUMBLE -> PRIMS_RUMBLE
+        HapticPattern.CASCADE -> PRIMS_CASCADE
+    }
+
+    companion object {
+        private const val MIN_AUDIBLE_INTENSITY = 0.01f
+        private const val ONE_SHOT_DURATION_MS = 20L
+        private const val AMPLITUDE_FALLBACK_THRESHOLD = 0.9f
+        private const val INTENSITY_BUCKETS = 21
+
+        private val PRIMS_CLICK = intArrayOf(VibrationEffect.Composition.PRIMITIVE_CLICK)
+        private val PRIMS_TICK = intArrayOf(VibrationEffect.Composition.PRIMITIVE_TICK)
+        private val PRIMS_LOW_TICK = intArrayOf(VibrationEffect.Composition.PRIMITIVE_LOW_TICK)
+        private val PRIMS_THUD = intArrayOf(VibrationEffect.Composition.PRIMITIVE_THUD)
+        private val PRIMS_THUD_LOWTICK = intArrayOf(
+            VibrationEffect.Composition.PRIMITIVE_THUD,
+            VibrationEffect.Composition.PRIMITIVE_LOW_TICK
+        )
+        private val PRIMS_SPIN_LOWTICK = intArrayOf(
+            VibrationEffect.Composition.PRIMITIVE_SPIN,
+            VibrationEffect.Composition.PRIMITIVE_LOW_TICK
+        )
+        private val PRIMS_ELASTIC = intArrayOf(
+            VibrationEffect.Composition.PRIMITIVE_SLOW_RISE,
+            VibrationEffect.Composition.PRIMITIVE_QUICK_FALL
+        )
+        private val PRIMS_RUMBLE = intArrayOf(
+            VibrationEffect.Composition.PRIMITIVE_SLOW_RISE,
+            VibrationEffect.Composition.PRIMITIVE_THUD
+        )
+        private val PRIMS_CASCADE = intArrayOf(
+            VibrationEffect.Composition.PRIMITIVE_QUICK_FALL,
+            VibrationEffect.Composition.PRIMITIVE_TICK,
+            VibrationEffect.Composition.PRIMITIVE_LOW_TICK
+        )
     }
 }
-

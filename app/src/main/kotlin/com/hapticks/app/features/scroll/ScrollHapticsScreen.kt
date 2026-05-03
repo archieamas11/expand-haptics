@@ -1,24 +1,23 @@
 package com.hapticks.app.features.scroll
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.SwipeVertical
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -39,10 +38,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.hapticks.app.R
-import com.hapticks.app.data.model.AppSettings
 import com.hapticks.app.core.haptics.HapticPattern
+import com.hapticks.app.core.ui.components.BackPill
 import com.hapticks.app.core.ui.components.EnableServiceCard
 import com.hapticks.app.core.ui.components.HapticTestButton
 import com.hapticks.app.core.ui.components.HapticToggleRow
@@ -51,9 +52,9 @@ import com.hapticks.app.core.ui.components.SectionCard
 import com.hapticks.app.core.ui.extensions.SliderTickStepsDefault
 import com.hapticks.app.core.ui.extensions.performHapticSliderTick
 import com.hapticks.app.core.ui.extensions.slider01ToTickIndex
+import com.hapticks.app.data.model.AppSettings
 import java.util.Locale
 import kotlin.math.roundToInt
-import com.hapticks.app.core.ui.components.BackPill
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,6 +95,11 @@ fun ScrollHapticsScreen(
                 ),
             )
         },
+        floatingActionButton = {
+            HapticTestButton(
+                onClick = onTestHaptic,
+            )
+        },
     ) { padding ->
         LazyColumn(
             state = listState,
@@ -103,13 +109,52 @@ fun ScrollHapticsScreen(
                 start = 16.dp,
                 top = padding.calculateTopPadding() + 4.dp,
                 end = 16.dp,
-                bottom = padding.calculateBottomPadding() + 24.dp
+                bottom = padding.calculateBottomPadding() + 10.dp
             ),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             if (!isServiceEnabled) {
                 item(key = "enable_service") {
                     EnableServiceCard(onOpenSettings = onOpenAccessibilitySettings)
+                }
+            }
+
+            item(key = "scroll_warning") {
+                Surface(
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
+                    shape = RoundedCornerShape(24.dp),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                text = stringResource(id = R.string.scroll_warning_title),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.error,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            Text(
+                                text = stringResource(id = R.string.scroll_warning_body),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                lineHeight = 18.sp
+                            )
+                        }
+                    }
                 }
             }
 
@@ -149,18 +194,6 @@ fun ScrollHapticsScreen(
                         onPatternSelected = onPatternSelected,
                     )
                 }
-            }
-
-            item(key = "scroll_test") {
-                HapticTestButton(
-                    label = stringResource(id = R.string.scroll_haptic_screen_test_button),
-                    enabled = settings.scrollEnabled,
-                    onClick = onTestHaptic,
-                )
-            }
-
-            item(key = "bottom_spacer") {
-                Spacer(modifier = Modifier.height(4.dp))
             }
         }
     }

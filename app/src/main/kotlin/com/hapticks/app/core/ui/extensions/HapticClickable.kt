@@ -11,10 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hapticks.app.features.main.HapticksApp
-import com.hapticks.app.data.model.AppSettings
 import com.hapticks.app.core.haptics.HapticEngine
 import com.hapticks.app.core.haptics.HapticPattern
+import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.features.main.HapticksApp
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -41,7 +41,7 @@ fun Context.performHapticClick() {
         AppSettings.Default
     }
     if (!snapshot.hapticsEnabled) return
-    app.hapticEngine.play(snapshot.pattern, snapshot.intensity)
+    app.hapticEngine.play(HapticPattern.Default, 0.2f)
 }
 
 fun Context.performHapticPattern(
@@ -111,7 +111,7 @@ fun Modifier.hapticClickable(
         indication = if (disableRipple) null else LocalIndication.current,
         onClick = {
             if (settings.hapticsEnabled) {
-                engine?.play(settings.pattern, settings.intensity)
+                engine?.play(HapticPattern.Default, 0.2f)
             }
             onClick()
         },

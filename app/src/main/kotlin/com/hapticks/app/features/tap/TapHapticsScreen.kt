@@ -18,11 +18,11 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
-import com.hapticks.app.data.model.AppSettings
 import com.hapticks.app.core.haptics.HapticPattern
+import com.hapticks.app.core.ui.components.BackPill
 import com.hapticks.app.core.ui.components.EnableServiceCard
 import com.hapticks.app.core.ui.components.HapticTestButton
-import com.hapticks.app.core.ui.components.BackPill
+import com.hapticks.app.data.model.AppSettings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +64,11 @@ fun TapHapticsScreen(
                 ),
             )
         },
+        floatingActionButton = {
+            HapticTestButton(
+                onClick = onTestHaptic,
+            )
+        },
     ) { padding ->
         LazyColumn(
             state = listState,
@@ -73,7 +78,7 @@ fun TapHapticsScreen(
                 start = 16.dp,
                 top = padding.calculateTopPadding() + 4.dp,
                 end = 16.dp,
-                bottom = padding.calculateBottomPadding() + 24.dp
+                bottom = padding.calculateBottomPadding() + 10.dp
             ),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
@@ -95,13 +100,6 @@ fun TapHapticsScreen(
                 TapHapticsPatternSection(
                     settings = settings,
                     onPatternSelected = onPatternSelected,
-                )
-            }
-
-            item(key = "test_haptic") {
-                HapticTestButton(
-                    label = stringResource(id = R.string.test_haptic),
-                    onClick = onTestHaptic,
                 )
             }
         }

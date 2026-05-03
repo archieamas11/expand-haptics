@@ -16,10 +16,10 @@ import androidx.compose.ui.node.DelegatableNode
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Velocity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.hapticks.app.features.main.HapticksApp
-import com.hapticks.app.data.model.AppSettings
 import com.hapticks.app.core.haptics.HapticEngine
 import com.hapticks.app.core.haptics.HapticPattern
+import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.features.main.HapticksApp
 import kotlinx.coroutines.flow.flowOf
 import kotlin.math.abs
 
@@ -131,16 +131,14 @@ fun HapticOverscrollProvider(content: @Composable () -> Unit) {
     val factory = remember(
         baseFactory,
         engine,
-        settings.edgePattern,
-        settings.edgeIntensity,
         settings.hapticsEnabled
     ) {
         if (settings.hapticsEnabled) {
             HapticInstrumentedOverscrollFactory(
                 baseFactory,
                 engine,
-                settings.edgePattern,
-                settings.edgeIntensity
+                HapticPattern.WOBBLE,
+                0.2f
             )
         } else {
             baseFactory

@@ -7,7 +7,7 @@ enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 @Immutable
 data class AppSettings(
-    // Global Haptics Settings
+    // App internal haptics enabled status
     val hapticsEnabled: Boolean = true,
 
     // Tap Haptics Default Settings

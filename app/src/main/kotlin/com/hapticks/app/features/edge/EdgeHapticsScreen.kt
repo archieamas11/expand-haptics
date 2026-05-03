@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -38,7 +36,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
-import com.hapticks.app.data.model.AppSettings
 import com.hapticks.app.core.haptics.HapticPattern
 import com.hapticks.app.core.ui.components.BackPill
 import com.hapticks.app.core.ui.components.EnableServiceCard
@@ -49,7 +46,7 @@ import com.hapticks.app.core.ui.components.SectionCard
 import com.hapticks.app.core.ui.extensions.SliderTickStepsDefault
 import com.hapticks.app.core.ui.extensions.performHapticSliderTick
 import com.hapticks.app.core.ui.extensions.slider01ToTickIndex
-import com.hapticks.app.features.edge.EdgeHapticsViewModel
+import com.hapticks.app.data.model.AppSettings
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,6 +96,11 @@ fun EdgeHapticsScreen(
                 ),
             )
         },
+        floatingActionButton = {
+            HapticTestButton(
+                onClick = onTestEdgeHaptic,
+            )
+        },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
     ) { padding ->
         LazyColumn(
@@ -109,9 +111,9 @@ fun EdgeHapticsScreen(
                 start = 16.dp,
                 top = padding.calculateTopPadding() + 4.dp,
                 end = 16.dp,
-                bottom = padding.calculateBottomPadding() + 24.dp
+                bottom = padding.calculateBottomPadding() + 10.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             if (!isServiceEnabled) {
                 item(key = "enable_service") {
@@ -127,9 +129,7 @@ fun EdgeHapticsScreen(
                         checked = settings.a11yScrollBoundEdge,
                         onCheckedChange = onA11yScrollBoundEdgeChange,
                     )
-                    if (settings.a11yScrollBoundEdge) {
-                        A11yScrollBoundEdgeGuideBlock()
-                    }
+                    A11yScrollBoundEdgeGuideBlock()
                     IntensityControl(
                         intensity = settings.edgeIntensity,
                         onIntensityCommit = onIntensityCommit,
@@ -144,18 +144,6 @@ fun EdgeHapticsScreen(
                         onPatternSelected = onPatternSelected,
                     )
                 }
-            }
-
-            item(key = "edge_test") {
-                HapticTestButton(
-                    label = stringResource(id = R.string.edge_test_button),
-                    enabled = true,
-                    onClick = onTestEdgeHaptic,
-                )
-            }
-
-            item(key = "bottom_spacer") {
-                Spacer(modifier = Modifier.height(4.dp))
             }
         }
     }

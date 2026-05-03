@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.core.ui.extensions.hapticClickable
 import com.hapticks.app.core.ui.extensions.performHapticDoubleClick
@@ -30,6 +31,7 @@ fun HapticToggleRow(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+
     val switchColors = SwitchDefaults.colors(
         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
         checkedTrackColor = MaterialTheme.colorScheme.primary,
@@ -38,34 +40,37 @@ fun HapticToggleRow(
         uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         uncheckedBorderColor = MaterialTheme.colorScheme.outline,
     )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .weight(1f)
+                .padding(end = 16.dp)
                 .hapticClickable { onCheckedChange(!checked) },
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
+
         Switch(
             checked = checked,
             onCheckedChange = { value ->
@@ -75,7 +80,7 @@ fun HapticToggleRow(
             thumbContent = if (checked) {
                 {
                     Icon(
-                        imageVector = Icons.Filled.Check,
+                        imageVector = Icons.Default.Check,
                         contentDescription = null,
                         modifier = Modifier.size(SwitchDefaults.IconSize),
                     )
@@ -87,4 +92,3 @@ fun HapticToggleRow(
         )
     }
 }
-
