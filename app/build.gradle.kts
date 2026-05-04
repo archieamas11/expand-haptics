@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.ApplicationExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -11,7 +13,7 @@ fun getVersionName(): String {
     val githubRef = System.getenv("GITHUB_REF_NAME")
     if (githubRef != null) return githubRef
 
-    return "1.0.0-dev-" + SimpleDateFormat("MMddHHmm").format(Date())
+    return "1.0.6-dev-" + SimpleDateFormat("MMddHHmm").format(Date())
 }
 
 fun getVersionCode(): Int {
@@ -22,14 +24,14 @@ fun getVersionCode(): Int {
     return ((System.currentTimeMillis() - epochOffset) / 60000).toInt()
 }
 
-android {
+configure<ApplicationExtension> {
     namespace = "com.hapticks.app"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.hapticks.app"
         minSdk = 33
-        targetSdk = 36
+        targetSdk = 37
         versionCode = getVersionCode()
         versionName = getVersionName()
 
@@ -73,10 +75,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -90,13 +88,19 @@ android {
 
     sourceSets {
         getByName("main") {
-            java.srcDirs("src/main/java")
-            kotlin.srcDirs("src/main/kotlin")
+            kotlin.directories.add("src/main/kotlin")
         }
     }
 }
 
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
 dependencies {
+    implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -110,6 +114,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.ui)
     implementation(libs.google.material)
     implementation(libs.kyant.backdrop)
     implementation(libs.kyant.shapes)

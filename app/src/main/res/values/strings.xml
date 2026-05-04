@@ -54,8 +54,8 @@
     <string name="pattern_selected">Selected</string>
     <string name="pattern_not_selected">Not selected</string>
 
-    <string name="enable_service_title">Enable accessibility service</string>
-    <string name="enable_service_body">Enable the accessibility service for haptic feedback on taps and switches. No content is read or stored.</string>
+    <string name="enable_service_title">Accessibility Service Required</string>
+    <string name="enable_service_body">This service detects scroll and tap events to provide haptic feedback. No content is read or stored.</string>
     <string name="enable_service_cta">Open Accessibility settings</string>
     <string name="back">Back</string>
 
@@ -69,6 +69,10 @@
     <string name="home_tactile_scrolling_subtitle">Adds subtle rhythmic clicks while scrolling for a more satisfying, tactile feel.</string>
     <string name="home_coming_soon_title">Coming Soon</string>
     <string name="home_coming_soon_subtitle">More haptic experiences are on the way. Stay tuned.</string>
+    <string name="scroll_pattern_title">Haptic Pattern</string>
+    <string name="enable_service_subtitle">Tap to enable Hapticks in system settings</string>
+    <string name="test_haptic">Test</string>
+    <string name="navigate_back">Navigate back</string>
 
     <!-- Edge Haptics screen (accessibility scroll bounds) -->
     <string name="edge_screen_title">Edge Haptics</string>
@@ -77,7 +81,7 @@
     <string name="edge_a11y_scroll_bound_title">Edge Haptics</string>
     <string name="edge_a11y_scroll_bound_subtitle">Fires a pulse when scrolling hits the top or bottom via accessibility.</string>
     <string name="edge_a11y_guide_title">How it works and limitations</string>
-    <string name="edge_a11y_guide_body">Hapticks detects when you reach the top or bottom edge using scroll position, then plays your edge pattern once.\n\nLimitations: Not all apps support this method. The accessibility service must remain on.</string>
+    <string name="edge_a11y_guide_body">Hapticks detects when you reach the top or bottom edge using scroll position, then plays your edge pattern once.\n\nThis feature relies on accessibility events and may or may not function in some applications.</string>
     <string name="edge_test_no_vibrator">No vibrator</string>
 
     <!-- Scroll haptic screen -->
@@ -91,7 +95,7 @@
     <string name="scroll_intensity_subtitle">Strength of each haptic while scrolling.</string>
 
     <string name="scroll_warning_title">Battery &amp; Performance Warning</string>
-    <string name="scroll_warning_body">Enabling scroll haptics will significantly increase battery consumption because haptic motors will fire constantly as you move through content. This feature relies on accessibility events and may not function in all applications; the Hapticks service must remain active for this to work.</string>
+    <string name="scroll_warning_body">Scroll haptics significantly increase battery drain as motors fire during movement. This feature relies on accessibility events and may not work in all apps.</string>
 
     <!-- Settings screen -->
     <string name="settings_header_caption">Preferences</string>

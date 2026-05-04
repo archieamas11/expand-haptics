@@ -1,39 +1,18 @@
 package com.hapticks.app.core.ui.components
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
-@Composable
-fun BottomPinnedActionBar(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.background,
-    ) {
-        Box(
-            modifier = Modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp),
-        ) {
-            content()
-        }
-    }
-}
 
 @Composable
 fun HapticTestButton(
@@ -46,7 +25,7 @@ fun HapticTestButton(
     FloatingActionButton(
         onClick = { if (enabled) currentOnClick() },
         modifier = modifier.size(64.dp),
-        shape = CircleShape,
+        shape = RoundedCornerShape(16.dp),
         containerColor = if (enabled) {
             MaterialTheme.colorScheme.primary
         } else {
@@ -58,8 +37,8 @@ fun HapticTestButton(
             MaterialTheme.colorScheme.onSurfaceVariant
         },
         elevation = FloatingActionButtonDefaults.elevation(
-            defaultElevation = 4.dp,
-            pressedElevation = 8.dp,
+            defaultElevation = 0.dp,
+            pressedElevation = 0.dp,
         ),
     ) {
         Icon(
@@ -69,4 +48,3 @@ fun HapticTestButton(
         )
     }
 }
-

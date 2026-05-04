@@ -1,4 +1,4 @@
-package com.hapticks.app.features.tap
+package com.hapticks.app.core.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -23,46 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.hapticks.app.R
 import com.hapticks.app.core.ui.extensions.SliderTickStepsDefault
 import com.hapticks.app.core.ui.extensions.performHapticSliderTick
 import com.hapticks.app.core.ui.extensions.slider01ToTickIndex
-import com.hapticks.app.R
-import com.hapticks.app.data.model.AppSettings
-import com.hapticks.app.core.haptics.HapticPattern
-import com.hapticks.app.core.ui.components.HapticToggleRow
-import com.hapticks.app.core.ui.components.PatternSelector
-import com.hapticks.app.core.ui.components.SectionCard
 import kotlin.math.roundToInt
 
 @Composable
-internal fun TapHapticsInteractionSection(
-    settings: AppSettings,
-    onTapEnabledChange: (Boolean) -> Unit,
-    onIntensityCommit: (Float) -> Unit,
-) {
-    SectionCard {
-        HapticToggleRow(
-            title = stringResource(id = R.string.toggle_tap_title),
-            subtitle = stringResource(id = R.string.toggle_tap_subtitle),
-            checked = settings.tapEnabled,
-            onCheckedChange = onTapEnabledChange,
-        )
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant,
-            thickness = 0.5.dp,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        TapHapticsIntensityControl(
-            intensity = settings.intensity,
-            onIntensityCommit = onIntensityCommit,
-        )
-    }
-}
-
-@Composable
-private fun TapHapticsIntensityControl(
+fun HapticIntensityControl(
+    title: String,
     intensity: Float,
     onIntensityCommit: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
 ) {
     val context = LocalContext.current
     var draft by remember(intensity) { mutableFloatStateOf(intensity) }
@@ -79,10 +51,10 @@ private fun TapHapticsIntensityControl(
         inactiveTickColor = MaterialTheme.colorScheme.surfaceContainerHighest,
     )
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -90,11 +62,19 @@ private fun TapHapticsIntensityControl(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = stringResource(id = R.string.intensity_label),
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
+                modifier = if (subtitle != null) Modifier.weight(1f) else Modifier,
             )
-            TapHapticsIntensityBadge(percent = percent)
+            HapticIntensityBadge(percent = percent)
+        }
+        if (subtitle != null) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
         Slider(
             value = draft,
@@ -115,7 +95,7 @@ private fun TapHapticsIntensityControl(
 }
 
 @Composable
-private fun TapHapticsIntensityBadge(percent: Int) {
+private fun HapticIntensityBadge(percent: Int) {
     Surface(
         color = MaterialTheme.colorScheme.primaryContainer,
         shape = CircleShape,
@@ -128,19 +108,3 @@ private fun TapHapticsIntensityBadge(percent: Int) {
         )
     }
 }
-
-@Composable
-internal fun TapHapticsPatternSection(
-    settings: AppSettings,
-    onPatternSelected: (HapticPattern) -> Unit,
-) {
-    Column {
-        SectionCard {
-            PatternSelector(
-                selected = settings.pattern,
-                onPatternSelected = onPatternSelected,
-            )
-        }
-    }
-}
-

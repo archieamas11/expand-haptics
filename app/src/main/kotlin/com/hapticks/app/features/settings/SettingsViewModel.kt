@@ -9,12 +9,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.hapticks.app.features.main.HapticksApp
-import com.hapticks.app.data.repository.SettingsRepository
-import com.hapticks.app.data.model.AppSettings
-import com.hapticks.app.data.model.ThemeMode
 import com.hapticks.app.core.haptics.HapticEngine
 import com.hapticks.app.core.haptics.HapticPattern
+import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.data.model.ThemeMode
+import com.hapticks.app.data.repository.SettingsRepository
+import com.hapticks.app.features.main.HapticksApp
 import com.hapticks.app.service.accessibility.HapticsAccessibilityService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,7 +43,7 @@ class SettingsViewModel(
             initialValue = AppSettings.Default,
         )
 
-    private val _isServiceEnabled = MutableStateFlow(false)
+    private val _isServiceEnabled = MutableStateFlow(value = false)
     val isServiceEnabled: StateFlow<Boolean> = _isServiceEnabled.asStateFlow()
 
     init {
@@ -90,6 +90,18 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setScrollPattern(pattern) }
     }
 
+    fun setEdgePattern(pattern: HapticPattern) {
+        viewModelScope.launch { preferences.setEdgePattern(pattern) }
+    }
+
+    fun setEdgeIntensity(intensity: Float) {
+        viewModelScope.launch { preferences.setEdgeIntensity(intensity) }
+    }
+
+    fun setA11yScrollBoundEdge(enabled: Boolean) {
+        viewModelScope.launch { preferences.setA11yScrollBoundEdge(enabled) }
+    }
+
     /** Plays the configured tap pattern (for the dedicated test control only). */
     fun testHaptic() {
         val s = settings.value
@@ -107,6 +119,12 @@ class SettingsViewModel(
             delay(52)
             engine.play(s.scrollPattern, i, 0L)
         }
+    }
+
+    /** Plays the configured edge pattern (for the dedicated test control only). */
+    fun testEdgeHaptic() {
+        val s = settings.value
+        engine.play(s.edgePattern, s.edgeIntensity)
     }
 
     fun setUseDynamicColors(enabled: Boolean) {
@@ -129,10 +147,14 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setSeedColor(color) }
     }
 
+    fun setLastDismissedUpdateVersion(version: String?) {
+        viewModelScope.launch { preferences.setLastDismissedUpdateVersion(version) }
+    }
+
     companion object {
         private fun isAccessibilityServiceEnabled(context: Context): Boolean {
-            val manager = context.getSystemService(Context.ACCESSIBILITY_SERVICE)
-                    as? AccessibilityManager ?: return false
+            val manager = (context.getSystemService(Context.ACCESSIBILITY_SERVICE)
+                    as? AccessibilityManager) ?: return false
             if (!manager.isEnabled) return false
 
             val enabledServices = Settings.Secure.getString(
@@ -152,7 +174,7 @@ class SettingsViewModel(
                     normalized.equals(expectedComponent, ignoreCase = true) ||
                             normalized.endsWith(
                                 HapticsAccessibilityService::class.java.name,
-                                ignoreCase = true
+                                ignoreCase = true,
                             )
                 }
         }

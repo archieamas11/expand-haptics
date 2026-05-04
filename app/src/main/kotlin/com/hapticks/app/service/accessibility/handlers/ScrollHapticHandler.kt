@@ -5,6 +5,7 @@ import android.util.LongSparseArray
 import android.view.accessibility.AccessibilityEvent
 import com.hapticks.app.core.haptics.HapticEngine
 import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.service.accessibility.handlers.surfaceKey
 import kotlin.math.abs
 
 internal class ScrollHapticController(

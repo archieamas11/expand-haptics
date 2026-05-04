@@ -6,6 +6,7 @@ import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import com.hapticks.app.features.main.HapticksApp
 import com.hapticks.app.service.accessibility.events.isFromOwnApp
+import com.hapticks.app.service.accessibility.handlers.TapHapticController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob

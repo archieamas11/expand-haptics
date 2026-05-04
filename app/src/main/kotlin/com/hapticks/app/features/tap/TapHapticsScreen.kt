@@ -1,11 +1,14 @@
 package com.hapticks.app.features.tap
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -21,7 +24,11 @@ import com.hapticks.app.R
 import com.hapticks.app.core.haptics.HapticPattern
 import com.hapticks.app.core.ui.components.BackPill
 import com.hapticks.app.core.ui.components.EnableServiceCard
+import com.hapticks.app.core.ui.components.HapticIntensityControl
 import com.hapticks.app.core.ui.components.HapticTestButton
+import com.hapticks.app.core.ui.components.HapticToggleRow
+import com.hapticks.app.core.ui.components.PatternSelector
+import com.hapticks.app.core.ui.components.SectionCard
 import com.hapticks.app.data.model.AppSettings
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,3 +113,43 @@ fun TapHapticsScreen(
     }
 }
 
+@Composable
+internal fun TapHapticsInteractionSection(
+    settings: AppSettings,
+    onTapEnabledChange: (Boolean) -> Unit,
+    onIntensityCommit: (Float) -> Unit,
+) {
+    SectionCard {
+        HapticToggleRow(
+            title = stringResource(id = R.string.toggle_tap_title),
+            subtitle = stringResource(id = R.string.toggle_tap_subtitle),
+            checked = settings.tapEnabled,
+            onCheckedChange = onTapEnabledChange,
+        )
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant,
+            thickness = 0.5.dp,
+            modifier = Modifier.padding(horizontal = 20.dp),
+        )
+        HapticIntensityControl(
+            title = stringResource(id = R.string.intensity_label),
+            intensity = settings.intensity,
+            onIntensityCommit = onIntensityCommit,
+        )
+    }
+}
+
+@Composable
+internal fun TapHapticsPatternSection(
+    settings: AppSettings,
+    onPatternSelected: (HapticPattern) -> Unit,
+) {
+    Column {
+        SectionCard {
+            PatternSelector(
+                selected = settings.pattern,
+                onPatternSelected = onPatternSelected,
+            )
+        }
+    }
+}

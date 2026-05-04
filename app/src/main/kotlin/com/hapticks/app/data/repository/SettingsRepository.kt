@@ -13,12 +13,12 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.hapticks.app.core.haptics.HapticPattern
+import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.data.model.ThemeMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import java.io.IOException
-import com.hapticks.app.data.model.AppSettings
-import com.hapticks.app.data.model.ThemeMode
 
 private val Context.hapticsDataStore: DataStore<Preferences> by preferencesDataStore(name = "hapticks")
 
@@ -73,6 +73,7 @@ class SettingsRepository(context: Context) {
                 amoledBlack = prefs[Keys.AMOLED_BLACK] ?: AppSettings.Default.amoledBlack,
                 liquidGlass = prefs[Keys.LIQUID_GLASS] ?: AppSettings.Default.liquidGlass,
                 seedColor = prefs[Keys.SEED_COLOR] ?: AppSettings.Default.seedColor,
+                lastDismissedUpdateVersion = prefs[Keys.LAST_DISMISSED_UPDATE_VERSION],
             )
         }
 
@@ -120,6 +121,14 @@ class SettingsRepository(context: Context) {
     suspend fun setLiquidGlass(enabled: Boolean) = edit { it[Keys.LIQUID_GLASS] = enabled }
     suspend fun setSeedColor(color: Int) = edit { it[Keys.SEED_COLOR] = color }
 
+    suspend fun setLastDismissedUpdateVersion(version: String?) = edit {
+        if (version == null) {
+            it.remove(Keys.LAST_DISMISSED_UPDATE_VERSION)
+        } else {
+            it[Keys.LAST_DISMISSED_UPDATE_VERSION] = version
+        }
+    }
+
     private suspend inline fun edit(crossinline block: (MutablePreferences) -> Unit) {
         try {
             dataStore.edit { block(it) }
@@ -147,6 +156,7 @@ class SettingsRepository(context: Context) {
         val AMOLED_BLACK = booleanPreferencesKey("amoled_black")
         val LIQUID_GLASS = booleanPreferencesKey("liquid_glass")
         val SEED_COLOR = intPreferencesKey("seed_color")
+        val LAST_DISMISSED_UPDATE_VERSION = stringPreferencesKey("last_dismissed_update_version")
     }
 
     private companion object {

@@ -1,6 +1,5 @@
 package com.hapticks.app.features.scroll
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,17 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Warning
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -38,13 +32,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.hapticks.app.R
 import com.hapticks.app.core.haptics.HapticPattern
 import com.hapticks.app.core.ui.components.BackPill
 import com.hapticks.app.core.ui.components.EnableServiceCard
+import com.hapticks.app.core.ui.components.HapticIntensityControl
 import com.hapticks.app.core.ui.components.HapticTestButton
 import com.hapticks.app.core.ui.components.HapticToggleRow
 import com.hapticks.app.core.ui.components.PatternSelector
@@ -54,9 +47,8 @@ import com.hapticks.app.core.ui.extensions.performHapticSliderTick
 import com.hapticks.app.core.ui.extensions.slider01ToTickIndex
 import com.hapticks.app.data.model.AppSettings
 import java.util.Locale
-import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ScrollHapticsScreen(
     settings: AppSettings,
@@ -80,7 +72,7 @@ fun ScrollHapticsScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            LargeTopAppBar(
+            LargeFlexibleTopAppBar(
                 title = {
                     Text(
                         text = stringResource(id = R.string.scroll_haptics_title),
@@ -103,58 +95,18 @@ fun ScrollHapticsScreen(
     ) { padding ->
         LazyColumn(
             state = listState,
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 top = padding.calculateTopPadding() + 4.dp,
                 end = 16.dp,
-                bottom = padding.calculateBottomPadding() + 10.dp
+                bottom = padding.calculateBottomPadding() + 10.dp,
             ),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             if (!isServiceEnabled) {
                 item(key = "enable_service") {
                     EnableServiceCard(onOpenSettings = onOpenAccessibilitySettings)
-                }
-            }
-
-            item(key = "scroll_warning") {
-                Surface(
-                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
-                    shape = RoundedCornerShape(24.dp),
-                    border = BorderStroke(
-                        width = 1.dp,
-                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.15f)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(
-                                text = stringResource(id = R.string.scroll_warning_title),
-                                style = MaterialTheme.typography.titleSmall,
-                                color = MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = stringResource(id = R.string.scroll_warning_body),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                lineHeight = 18.sp
-                            )
-                        }
-                    }
                 }
             }
 
@@ -166,6 +118,9 @@ fun ScrollHapticsScreen(
                         checked = settings.scrollEnabled,
                         onCheckedChange = onScrollEnabledChange,
                     )
+
+                    BatteryWarning()
+
                     HorizontalDivider(
                         color = MaterialTheme.colorScheme.outlineVariant,
                         thickness = 0.5.dp,
@@ -180,7 +135,9 @@ fun ScrollHapticsScreen(
                         thickness = 0.5.dp,
                         modifier = Modifier.padding(horizontal = 20.dp),
                     )
-                    IntensityControl(
+                    HapticIntensityControl(
+                        title = stringResource(id = R.string.scroll_intensity_title),
+                        subtitle = stringResource(id = R.string.scroll_intensity_subtitle),
                         intensity = settings.scrollIntensity,
                         onIntensityCommit = onIntensityCommit,
                     )
@@ -216,17 +173,42 @@ private fun eventsToScrollDensitySlider(eventsPerHundredPx: Float): Float {
 }
 
 @Composable
+private fun BatteryWarning() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .padding(top = 8.dp, bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = stringResource(id = R.string.scroll_warning_title),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = stringResource(id = R.string.scroll_warning_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
 private fun ScrollPulseDensityControl(
     eventsPerHundredPx: Float,
     onCommit: (Float) -> Unit,
 ) {
     val context = LocalContext.current
     val initialSlider = eventsToScrollDensitySlider(eventsPerHundredPx)
-    var draftSlider by remember(eventsPerHundredPx) {
-        mutableFloatStateOf(initialSlider)
-    }
+    var draftSlider by remember(eventsPerHundredPx) { mutableFloatStateOf(initialSlider) }
     var lastTickIndex by remember(eventsPerHundredPx) {
-        mutableIntStateOf(slider01ToTickIndex(initialSlider))
+        mutableIntStateOf(
+            slider01ToTickIndex(
+                initialSlider
+            )
+        )
     }
     val draftEvents = scrollDensitySliderToEvents(draftSlider)
     val eventsLabel = String.format(Locale.US, "%.2f", draftEvents)
@@ -288,81 +270,4 @@ private fun ScrollPulseDensityControl(
         )
     }
 }
-
-@Composable
-private fun IntensityControl(
-    intensity: Float,
-    onIntensityCommit: (Float) -> Unit,
-) {
-    val context = LocalContext.current
-    var draft by remember(intensity) { mutableFloatStateOf(intensity) }
-    var lastTickIndex by remember(intensity) {
-        mutableIntStateOf(slider01ToTickIndex(intensity))
-    }
-    val percent = (draft * 100f).roundToInt()
-
-    val sliderColors = SliderDefaults.colors(
-        thumbColor = MaterialTheme.colorScheme.primary,
-        activeTrackColor = MaterialTheme.colorScheme.primary,
-        inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-        activeTickColor = MaterialTheme.colorScheme.primary,
-        inactiveTickColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-    )
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = stringResource(id = R.string.scroll_intensity_title),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
-            )
-            IntensityBadge(percent = percent)
-        }
-        Text(
-            text = stringResource(id = R.string.scroll_intensity_subtitle),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Slider(
-            value = draft,
-            onValueChange = { newValue ->
-                draft = newValue
-                val tickIndex = slider01ToTickIndex(newValue)
-                if (tickIndex != lastTickIndex) {
-                    lastTickIndex = tickIndex
-                    context.performHapticSliderTick()
-                }
-            },
-            onValueChangeFinished = { onIntensityCommit(draft) },
-            valueRange = 0f..1f,
-            steps = SliderTickStepsDefault,
-            colors = sliderColors,
-        )
-    }
-}
-
-@Composable
-private fun IntensityBadge(percent: Int) {
-    Surface(
-        color = MaterialTheme.colorScheme.primaryContainer,
-        shape = CircleShape,
-    ) {
-        Text(
-            text = stringResource(id = R.string.intensity_value, percent),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-        )
-    }
-}
-
 

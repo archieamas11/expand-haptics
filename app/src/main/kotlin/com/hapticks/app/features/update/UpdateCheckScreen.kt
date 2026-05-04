@@ -23,8 +23,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
@@ -92,7 +93,7 @@ internal sealed interface UpdateCheckResult {
     data object Error : UpdateCheckResult
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun UpdateCheckScreen(
     uiState: UpdateCheckUiState,
@@ -172,9 +173,8 @@ fun UpdateCheckScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp),
                         ) {
-                            CircularProgressIndicator(
+                            CircularWavyProgressIndicator(
                                 color = colorScheme.primary,
-                                strokeWidth = 3.dp,
                                 modifier = Modifier.size(48.dp)
                             )
                             Text(
@@ -384,9 +384,8 @@ private fun UpdateCheckBottomActions(
                     ),
                 ) {
                     if (uiState is UpdateCheckUiState.Loading) {
-                        CircularProgressIndicator(
+                        CircularWavyProgressIndicator(
                             modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
                             color = colorScheme.onPrimary,
                         )
                     } else {

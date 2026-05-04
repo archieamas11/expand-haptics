@@ -35,8 +35,9 @@ import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -69,16 +70,18 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
 import com.hapticks.app.BuildConfig
 import com.hapticks.app.R
-import com.hapticks.app.data.model.AppSettings
-import com.hapticks.app.data.model.ThemeMode
-import com.hapticks.app.service.accessibility.HapticsAccessibilityService
-import com.hapticks.app.features.update.LatestRelease
-import com.hapticks.app.features.update.fetchReleaseForVersion
 import com.hapticks.app.core.ui.components.HapticToggleRow
 import com.hapticks.app.core.ui.extensions.hapticClickable
 import com.hapticks.app.core.ui.extensions.performHapticDoubleClick
+import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.data.model.ThemeMode
+import com.hapticks.app.features.update.LatestRelease
+import com.hapticks.app.features.update.fetchReleaseForVersion
+import com.hapticks.app.service.accessibility.HapticsAccessibilityService
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
+
+private var cachedLatestRelease: LatestRelease? = null
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +98,11 @@ fun SettingsScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var isChangelogModalVisible by rememberSaveable { mutableStateOf(false) }
-    var changelogUiState by remember { mutableStateOf<ChangelogUiState>(ChangelogUiState.Idle) }
+    var changelogUiState by remember {
+        mutableStateOf(
+            cachedLatestRelease?.let { ChangelogUiState.Success(it) } ?: ChangelogUiState.Idle
+        )
+    }
     val appInDarkTheme = when (settings.themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
@@ -103,13 +110,16 @@ fun SettingsScreen(
     }
 
     fun loadInstalledReleaseChangelog() {
+        if (changelogUiState is ChangelogUiState.Success || changelogUiState is ChangelogUiState.Loading) return
+
         scope.launch {
             changelogUiState = ChangelogUiState.Loading
             val release = fetchReleaseForVersion(BuildConfig.VERSION_NAME)
-            changelogUiState = if (release != null) {
-                ChangelogUiState.Success(release)
+            if (release != null) {
+                cachedLatestRelease = release
+                changelogUiState = ChangelogUiState.Success(release)
             } else {
-                ChangelogUiState.Error
+                changelogUiState = ChangelogUiState.Error
             }
         }
     }
@@ -371,7 +381,7 @@ private sealed interface ChangelogUiState {
     data object Error : ChangelogUiState
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ChangelogModal(
     uiState: ChangelogUiState,
@@ -412,9 +422,8 @@ private fun ChangelogModal(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            CircularProgressIndicator(
+                            CircularWavyProgressIndicator(
                                 modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
                             )
                             Text(
                                 text = stringResource(R.string.settings_changelog_loading),

@@ -35,8 +35,12 @@ data class AppSettings(
     val amoledBlack: Boolean = false,
     val liquidGlass: Boolean = true,
     val seedColor: Int = 0xFF6750A4.toInt(),
+
+    // Update Management
+    val lastDismissedUpdateVersion: String? = null,
 ) {
     companion object {
+        // For scrolling haptics per distance
         const val MIN_SCROLL_EVENTS_PER_HUNDRED_PX = 0f
         const val MAX_SCROLL_EVENTS_PER_HUNDRED_PX = 20f
         val Default: AppSettings = AppSettings()
