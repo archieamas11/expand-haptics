@@ -42,7 +42,7 @@ private class HapticInstrumentedOverscrollEffect(
         val result = delegate.applyToScroll(delta, source) { scrollDelta ->
             val consumedByChild = performScroll(scrollDelta)
 
-            if (source == NestedScrollSource.UserInput || source == NestedScrollSource.Fling) {
+            if (source == NestedScrollSource.UserInput || source == NestedScrollSource.SideEffect) {
                 val overscroll = scrollDelta - consumedByChild
                 val hitEdge =
                     abs(overscroll.x) > EdgePullSlopPx || abs(overscroll.y) > EdgePullSlopPx

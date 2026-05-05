@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class HapticsAccessibilityService : AccessibilityService() {
-
     @Volatile
     private var currentSettings = com.hapticks.app.data.model.AppSettings.Default
 

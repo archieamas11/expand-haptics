@@ -35,12 +35,12 @@ class SettingsViewModel(
     private val engine: HapticEngine,
 ) : AndroidViewModel(application) {
 
-    val settings: StateFlow<AppSettings> = preferences.settings
+    val settings: StateFlow<AppSettings?> = preferences.settings
         .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5_000L),
-            initialValue = AppSettings.Default,
+            initialValue = null,
         )
 
     private val _isServiceEnabled = MutableStateFlow(value = false)
@@ -104,13 +104,13 @@ class SettingsViewModel(
 
     /** Plays the configured tap pattern (for the dedicated test control only). */
     fun testHaptic() {
-        val s = settings.value
+        val s = settings.value ?: return
         engine.play(s.pattern, s.intensity)
     }
 
     /** Plays a short burst of scroll haptics (for the dedicated test control only). */
     fun testScrollHaptic() {
-        val s = settings.value
+        val s = settings.value ?: return
         viewModelScope.launch {
             val i = s.scrollIntensity
             engine.play(s.scrollPattern, i, 0L)
@@ -123,7 +123,7 @@ class SettingsViewModel(
 
     /** Plays the configured edge pattern (for the dedicated test control only). */
     fun testEdgeHaptic() {
-        val s = settings.value
+        val s = settings.value ?: return
         engine.play(s.edgePattern, s.edgeIntensity)
     }
 

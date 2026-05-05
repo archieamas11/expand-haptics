@@ -26,12 +26,12 @@ fun getVersionCode(): Int {
 
 configure<ApplicationExtension> {
     namespace = "com.hapticks.app"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.hapticks.app"
         minSdk = 33
-        targetSdk = 37
+        targetSdk = 36
         versionCode = getVersionCode()
         versionName = getVersionName()
 

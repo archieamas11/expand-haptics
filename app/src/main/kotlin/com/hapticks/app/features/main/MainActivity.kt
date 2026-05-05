@@ -96,15 +96,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val settings by viewModel.settings.collectAsStateWithLifecycle()
+            val safeSettings = settings ?: AppSettings.Default
             val isServiceEnabled by viewModel.isServiceEnabled.collectAsStateWithLifecycle()
             val nativeEasing = FastOutSlowInEasing
             val animDuration = 400
 
             HapticksTheme(
-                themeMode = settings.themeMode,
-                useDynamicColors = settings.useDynamicColors,
-                amoledBlack = settings.amoledBlack,
-                seedColor = settings.seedColor,
+                themeMode = safeSettings.themeMode,
+                useDynamicColors = safeSettings.useDynamicColors,
+                amoledBlack = safeSettings.amoledBlack,
+                seedColor = safeSettings.seedColor,
             ) {
                 val backgroundColor = MaterialTheme.colorScheme.background
                 val backdrop = rememberLayerBackdrop()
@@ -124,7 +125,7 @@ class MainActivity : ComponentActivity() {
                     LaunchedEffect(Unit) {
                         val result = fetchUpdateStatus()
                         if (result is UpdateCheckResult.UpdateAvailable) {
-                            if (result.release.tagName != settings.lastDismissedUpdateVersion) {
+                            if (result.release.tagName != safeSettings.lastDismissedUpdateVersion) {
                                 availableUpdate = result.release
                             }
                         }
@@ -150,9 +151,10 @@ class MainActivity : ComponentActivity() {
                     }
 
                     LaunchedEffect(settings) {
-                        if (route == Route.UNINITIALIZED && settings !== AppSettings.Default) {
+                        val s = settings ?: return@LaunchedEffect
+                        if (route == Route.UNINITIALIZED) {
                             route =
-                                if (settings.hasCompletedOnboarding) Route.HOME else Route.ONBOARDING
+                                if (s.hasCompletedOnboarding) Route.HOME else Route.ONBOARDING
                         }
                     }
 
@@ -283,7 +285,7 @@ class MainActivity : ComponentActivity() {
                                     Route.FEEL_EVERY_TAP -> {
                                         BackHandler { route = Route.HOME }
                                         TapHapticsScreen(
-                                            settings = settings,
+                                            settings = safeSettings,
                                             isServiceEnabled = isServiceEnabled,
                                             onTapEnabledChange = viewModel::setTapEnabled,
                                             onIntensityCommit = viewModel::commitIntensity,
@@ -297,7 +299,7 @@ class MainActivity : ComponentActivity() {
                                     Route.EDGE_HAPTICS -> {
                                         BackHandler { route = Route.HOME }
                                         EdgeHapticsScreen(
-                                            settings = settings,
+                                            settings = safeSettings,
                                             isServiceEnabled = isServiceEnabled,
                                             onA11yScrollBoundEdgeChange = viewModel::setA11yScrollBoundEdge,
                                             onPatternSelected = viewModel::setEdgePattern,
@@ -329,7 +331,7 @@ class MainActivity : ComponentActivity() {
                                                 )
 
                                                 BottomTab.SETTINGS -> SettingsScreen(
-                                                    settings = settings,
+                                                    settings = safeSettings,
                                                     onHapticsEnabledChange = viewModel::setHapticsEnabled,
                                                     onUseDynamicColorsChange = viewModel::setUseDynamicColors,
                                                     onThemeModeChange = viewModel::setThemeMode,
@@ -362,7 +364,7 @@ class MainActivity : ComponentActivity() {
                                     Route.TACTILE_SCROLLING -> {
                                         BackHandler { route = Route.HOME }
                                         ScrollHapticsScreen(
-                                            settings = settings,
+                                            settings = safeSettings,
                                             isServiceEnabled = isServiceEnabled,
                                             onScrollEnabledChange = viewModel::setScrollEnabled,
                                             onScrollHapticDensityCommit = viewModel::commitScrollHapticDensity,
@@ -399,7 +401,7 @@ class MainActivity : ComponentActivity() {
                                 route = if (tab == BottomTab.HOME) Route.HOME else Route.SETTINGS
                             }
 
-                            if (settings.liquidGlass) {
+                            if (safeSettings.liquidGlass) {
                                 LiquidGlassBottomBar(
                                     selectedTab = currentTab,
                                     onTabSelected = onTab,

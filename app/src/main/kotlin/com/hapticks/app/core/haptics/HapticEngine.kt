@@ -7,12 +7,14 @@ import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import androidx.annotation.RequiresApi
 
 
 class HapticEngine(context: Context) {
-    private val vibrator: Vibrator =
-        (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager)
-            .defaultVibrator
+    private val vibrator: Vibrator = run {
+        val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+        manager?.defaultVibrator ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator)
+    }
     private val hasVibrator: Boolean = vibrator.hasVibrator()
     private val hasAmplitudeControl: Boolean = vibrator.hasAmplitudeControl()
     private val envelopeSupported: Boolean =
@@ -79,6 +81,7 @@ class HapticEngine(context: Context) {
         return primitiveSupport[idx]
     }
 
+    @RequiresApi(36)
     private fun buildEnvelopeEffect(pattern: HapticPattern, intensity: Float): VibrationEffect {
         return when (pattern) {
             HapticPattern.CLICK ->
