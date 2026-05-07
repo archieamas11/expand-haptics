@@ -100,7 +100,6 @@ kotlin {
 }
 
 dependencies {
-    implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
@@ -114,7 +113,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons.extended)
-    implementation(libs.androidx.ui)
     implementation(libs.google.material)
     implementation(libs.kyant.backdrop)
     implementation(libs.kyant.shapes)
@@ -123,6 +121,10 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.compose.markdown)
+
+    implementation(libs.haze)
+    implementation(libs.haze.blur)
+    implementation(libs.haze.blur.materials)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

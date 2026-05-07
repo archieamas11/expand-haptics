@@ -39,6 +39,7 @@ import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -47,6 +48,8 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,11 +60,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -78,6 +85,11 @@ import com.hapticks.app.data.model.ThemeMode
 import com.hapticks.app.features.update.LatestRelease
 import com.hapticks.app.features.update.fetchReleaseForVersion
 import com.hapticks.app.service.accessibility.HapticsAccessibilityService
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.HazeProgressive
+import dev.chrisbanes.haze.blur.blurEffect
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
 
@@ -97,6 +109,10 @@ fun SettingsScreen(
     val context = LocalContext.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val topAppBarState = rememberTopAppBarState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
+    val hazeState = remember { HazeState() }
+
     var isChangelogModalVisible by rememberSaveable { mutableStateOf(false) }
     var changelogUiState by remember {
         mutableStateOf(
@@ -125,26 +141,62 @@ fun SettingsScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            val collapsedFraction = scrollBehavior.state.collapsedFraction
+            val isScrolled = collapsedFraction > 0f
+
+            LargeTopAppBar(
+                modifier = Modifier.hazeEffect(state = hazeState) {
+                    if (isScrolled) {
+                        blurEffect {
+                            blurRadius = 12.dp
+                            progressive = HazeProgressive.verticalGradient(
+                                startIntensity = 1f,
+                                endIntensity = 0f,
+                            )
+                        }
+                    }
+                },
+                title = {
+                    if (collapsedFraction > 0.5f) {
+                        Text(
+                            text = stringResource(R.string.settings_header_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else {
+                        SettingsHeader()
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent,
+                ),
+            )
+        }
     ) { padding ->
-        Column(
+        LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 10.dp)
-                .padding(top = padding.calculateTopPadding() + 20.dp)
+                .hazeSource(state = hazeState),
+            contentPadding = PaddingValues(
+                start = 10.dp,
+                top = padding.calculateTopPadding(),
+                end = 10.dp,
+                bottom = padding.calculateBottomPadding() + 10.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            SettingsHeader()
-            Spacer(modifier = Modifier.height(5.dp))
-
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(
-                    bottom = padding.calculateBottomPadding() + 20.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
                 item(key = "appearance") {
                     SettingsSection(
                         title = stringResource(R.string.settings_section_appearance),
@@ -358,7 +410,6 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(96.dp))
                 }
             }
-        }
     }
 
     if (isChangelogModalVisible) {
@@ -459,7 +510,7 @@ private fun ChangelogModal(
                                 .heightIn(max = 360.dp)
                                 .verticalScroll(rememberScrollState()),
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurface
                             ),
                             linkColor = MaterialTheme.colorScheme.primary,
                         )

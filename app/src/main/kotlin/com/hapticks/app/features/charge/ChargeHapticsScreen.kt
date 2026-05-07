@@ -1,4 +1,4 @@
-package com.hapticks.app.features.tap
+package com.hapticks.app.features.charge
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,10 +46,10 @@ import dev.chrisbanes.haze.hazeSource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TapHapticsScreen(
+fun ChargeHapticsScreen(
     settings: AppSettings,
     isServiceEnabled: Boolean,
-    onTapEnabledChange: (Boolean) -> Unit,
+    onChargeEnabledChange: (Boolean) -> Unit,
     onIntensityCommit: (Float) -> Unit,
     onPatternSelected: (HapticPattern) -> Unit,
     onTestHaptic: () -> Unit,
@@ -85,7 +85,7 @@ fun TapHapticsScreen(
                 },
                 title = {
                     Text(
-                        text = stringResource(id = R.string.screen_title),
+                        text = stringResource(id = R.string.charge_haptics_title),
                         style = if (collapsedFraction > 0.5f) MaterialTheme.typography.titleLarge else MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = if (collapsedFraction > 0.5f) TextAlign.Center else TextAlign.Start,
@@ -133,15 +133,15 @@ fun TapHapticsScreen(
             }
 
             item(key = "interaction_section") {
-                TapHapticsInteractionSection(
+                ChargeHapticsInteractionSection(
                     settings = settings,
-                    onTapEnabledChange = onTapEnabledChange,
+                    onChargeEnabledChange = onChargeEnabledChange,
                     onIntensityCommit = onIntensityCommit,
                 )
             }
 
             item(key = "pattern_section") {
-                TapHapticsPatternSection(
+                ChargeHapticsPatternSection(
                     settings = settings,
                     onPatternSelected = onPatternSelected,
                 )
@@ -151,17 +151,17 @@ fun TapHapticsScreen(
 }
 
 @Composable
-internal fun TapHapticsInteractionSection(
+internal fun ChargeHapticsInteractionSection(
     settings: AppSettings,
-    onTapEnabledChange: (Boolean) -> Unit,
+    onChargeEnabledChange: (Boolean) -> Unit,
     onIntensityCommit: (Float) -> Unit,
 ) {
     SectionCard {
         HapticToggleRow(
-            title = stringResource(id = R.string.toggle_tap_title),
-            subtitle = stringResource(id = R.string.toggle_tap_subtitle),
-            checked = settings.tapEnabled,
-            onCheckedChange = onTapEnabledChange,
+            title = stringResource(id = R.string.charge_haptics_title),
+            subtitle = stringResource(id = R.string.charge_haptics_subtitle),
+            checked = settings.chargeEnabled,
+            onCheckedChange = onChargeEnabledChange,
         )
         HorizontalDivider(
             color = MaterialTheme.colorScheme.outlineVariant,
@@ -170,21 +170,21 @@ internal fun TapHapticsInteractionSection(
         )
         HapticIntensityControl(
             title = stringResource(id = R.string.intensity_label),
-            intensity = settings.intensity,
+            intensity = settings.chargeIntensity,
             onIntensityCommit = onIntensityCommit,
         )
     }
 }
 
 @Composable
-internal fun TapHapticsPatternSection(
+internal fun ChargeHapticsPatternSection(
     settings: AppSettings,
     onPatternSelected: (HapticPattern) -> Unit,
 ) {
     Column {
         SectionCard {
             PatternSelector(
-                selected = settings.pattern,
+                selected = settings.chargePattern,
                 onPatternSelected = onPatternSelected,
             )
         }

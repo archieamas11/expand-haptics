@@ -4,15 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LargeFlexibleTopAppBar
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
@@ -29,9 +31,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
 import com.hapticks.app.core.haptics.HapticPattern
@@ -46,6 +52,11 @@ import com.hapticks.app.core.ui.extensions.SliderTickStepsDefault
 import com.hapticks.app.core.ui.extensions.performHapticSliderTick
 import com.hapticks.app.core.ui.extensions.slider01ToTickIndex
 import com.hapticks.app.data.model.AppSettings
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.HazeProgressive
+import dev.chrisbanes.haze.blur.blurEffect
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -65,6 +76,7 @@ fun ScrollHapticsScreen(
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
     val listState = rememberLazyListState()
+    val hazeState = remember { HazeState() }
 
     Scaffold(
         modifier = modifier
@@ -72,18 +84,42 @@ fun ScrollHapticsScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            LargeFlexibleTopAppBar(
+            val collapsedFraction = scrollBehavior.state.collapsedFraction
+            val isScrolled = collapsedFraction > 0f
+
+            LargeTopAppBar(
+                modifier = Modifier.hazeEffect(state = hazeState) {
+                    if (isScrolled) {
+                        blurEffect {
+                            blurRadius = 12.dp
+                            progressive = HazeProgressive.verticalGradient(
+                                startIntensity = 1f,
+                                endIntensity = 0f,
+                            )
+                        }
+                    }
+                },
                 title = {
                     Text(
                         text = stringResource(id = R.string.scroll_haptics_title),
-                        style = MaterialTheme.typography.displaySmall,
+                        style = if (collapsedFraction > 0.5f) MaterialTheme.typography.titleLarge else MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = if (collapsedFraction > 0.5f) TextAlign.Center else TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
-                navigationIcon = { BackPill(onBack = onBack) },
+                navigationIcon = {
+                    BackPill(onBack = onBack)
+                },
+                actions = {
+                    Spacer(modifier = Modifier.width(68.dp))
+                },
                 scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent,
                 ),
             )
         },
@@ -95,7 +131,9 @@ fun ScrollHapticsScreen(
     ) { padding ->
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .hazeSource(state = hazeState),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 top = padding.calculateTopPadding() + 4.dp,

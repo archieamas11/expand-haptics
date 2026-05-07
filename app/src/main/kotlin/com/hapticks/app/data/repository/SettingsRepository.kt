@@ -63,6 +63,13 @@ class SettingsRepository(context: Context) {
                     .coerceIn(0f, 1f),
                 a11yScrollBoundEdge = prefs[Keys.A11Y_SCROLL_BOUND_EDGE]
                     ?: AppSettings.Default.a11yScrollBoundEdge,
+                chargeEnabled = prefs[Keys.CHARGE_ENABLED] ?: AppSettings.Default.chargeEnabled,
+                chargeIntensity = (prefs[Keys.CHARGE_INTENSITY]
+                    ?: AppSettings.Default.chargeIntensity)
+                    .coerceIn(0f, 1f),
+                chargePattern = HapticPattern.fromStorageKey(prefs[Keys.CHARGE_PATTERN])
+                    .takeIf { prefs.contains(Keys.CHARGE_PATTERN) }
+                    ?: AppSettings.Default.chargePattern,
                 useDynamicColors = prefs[Keys.USE_DYNAMIC_COLORS]
                     ?: AppSettings.Default.useDynamicColors,
                 themeMode = try {
@@ -74,6 +81,8 @@ class SettingsRepository(context: Context) {
                 liquidGlass = prefs[Keys.LIQUID_GLASS] ?: AppSettings.Default.liquidGlass,
                 seedColor = prefs[Keys.SEED_COLOR] ?: AppSettings.Default.seedColor,
                 lastDismissedUpdateVersion = prefs[Keys.LAST_DISMISSED_UPDATE_VERSION],
+                autoCheckUpdates = prefs[Keys.AUTO_CHECK_UPDATES]
+                    ?: AppSettings.Default.autoCheckUpdates,
             )
         }
 
@@ -112,6 +121,14 @@ class SettingsRepository(context: Context) {
     suspend fun setA11yScrollBoundEdge(enabled: Boolean) =
         edit { it[Keys.A11Y_SCROLL_BOUND_EDGE] = enabled }
 
+    suspend fun setChargeEnabled(enabled: Boolean) = edit { it[Keys.CHARGE_ENABLED] = enabled }
+
+    suspend fun setChargeIntensity(intensity: Float) = edit {
+        it[Keys.CHARGE_INTENSITY] = intensity.coerceIn(0f, 1f)
+    }
+
+    suspend fun setChargePattern(pattern: HapticPattern) =
+        edit { it[Keys.CHARGE_PATTERN] = pattern.name }
 
     suspend fun setUseDynamicColors(enabled: Boolean) =
         edit { it[Keys.USE_DYNAMIC_COLORS] = enabled }
@@ -120,6 +137,9 @@ class SettingsRepository(context: Context) {
     suspend fun setAmoledBlack(enabled: Boolean) = edit { it[Keys.AMOLED_BLACK] = enabled }
     suspend fun setLiquidGlass(enabled: Boolean) = edit { it[Keys.LIQUID_GLASS] = enabled }
     suspend fun setSeedColor(color: Int) = edit { it[Keys.SEED_COLOR] = color }
+
+    suspend fun setAutoCheckUpdates(enabled: Boolean) =
+        edit { it[Keys.AUTO_CHECK_UPDATES] = enabled }
 
     suspend fun setLastDismissedUpdateVersion(version: String?) = edit {
         if (version == null) {
@@ -151,12 +171,16 @@ class SettingsRepository(context: Context) {
         val EDGE_PATTERN = stringPreferencesKey("edge_pattern")
         val EDGE_INTENSITY = floatPreferencesKey("edge_intensity")
         val A11Y_SCROLL_BOUND_EDGE = booleanPreferencesKey("a11y_scroll_bound_edge")
+        val CHARGE_ENABLED = booleanPreferencesKey("charge_enabled")
+        val CHARGE_INTENSITY = floatPreferencesKey("charge_intensity")
+        val CHARGE_PATTERN = stringPreferencesKey("charge_pattern")
         val USE_DYNAMIC_COLORS = booleanPreferencesKey("use_dynamic_colors")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val AMOLED_BLACK = booleanPreferencesKey("amoled_black")
         val LIQUID_GLASS = booleanPreferencesKey("liquid_glass")
         val SEED_COLOR = intPreferencesKey("seed_color")
         val LAST_DISMISSED_UPDATE_VERSION = stringPreferencesKey("last_dismissed_update_version")
+        val AUTO_CHECK_UPDATES = booleanPreferencesKey("auto_check_updates")
     }
 
     private companion object {

@@ -21,12 +21,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -35,9 +41,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -56,6 +67,11 @@ import com.hapticks.app.R
 import com.hapticks.app.core.ui.components.BackPill
 import com.hapticks.app.core.ui.components.RoundedPolygonShape
 import com.hapticks.app.core.ui.extensions.withDefaultHaptic
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.HazeProgressive
+import dev.chrisbanes.haze.blur.blurEffect
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -97,6 +113,8 @@ internal sealed interface UpdateCheckResult {
 @Composable
 fun UpdateCheckScreen(
     uiState: UpdateCheckUiState,
+    autoCheckUpdates: Boolean,
+    onAutoCheckUpdatesChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onCheckForUpdates: () -> Unit,
     onOpenSourceCode: () -> Unit,
@@ -104,6 +122,8 @@ fun UpdateCheckScreen(
     val colorScheme = MaterialTheme.colorScheme
     val topAppBarState = rememberTopAppBarState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
+    val hazeState = remember { HazeState() }
+    var menuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier
@@ -111,23 +131,74 @@ fun UpdateCheckScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = colorScheme.background,
         topBar = {
+            val collapsedFraction = scrollBehavior.state.collapsedFraction
+            val isScrolled = collapsedFraction > 0f
+
             LargeTopAppBar(
+                modifier = Modifier.hazeEffect(state = hazeState) {
+                    if (isScrolled) {
+                        blurEffect {
+                            blurRadius = 12.dp
+                            progressive = HazeProgressive.verticalGradient(
+                                startIntensity = 1f,
+                                endIntensity = 0f,
+                            )
+                        }
+                    }
+                },
                 title = {
                     Text(
                         text = stringResource(R.string.settings_check_updates_title),
-                        style = MaterialTheme.typography.displaySmall.copy(
-                            color = colorScheme.onBackground,
-                            fontWeight = FontWeight.Normal,
-                        ),
+                        style = if (collapsedFraction > 0.5f) MaterialTheme.typography.titleLarge else MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = if (collapsedFraction > 0.5f) TextAlign.Center else TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
-                navigationIcon = { BackPill(onBack = onBack) },
+                navigationIcon = {
+                    BackPill(onBack = onBack)
+                },
+                actions = {
+                    Box {
+                        IconButton(
+                            onClick = { menuExpanded = true },
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.MoreVert,
+                                contentDescription = null,
+                                tint = colorScheme.onSurface,
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(text = stringResource(R.string.settings_check_updates_auto_check))
+                                },
+                                onClick = {
+                                    onAutoCheckUpdatesChange(!autoCheckUpdates)
+                                    menuExpanded = false
+                                },
+                                trailingIcon = {
+                                    Checkbox(
+                                        checked = autoCheckUpdates,
+                                        onCheckedChange = null // Handled by MenuItem onClick
+                                    )
+                                }
+                            )
+                        }
+                    }
+                },
                 scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.largeTopAppBarColors(
-                    containerColor = colorScheme.background,
-                    scrolledContainerColor = colorScheme.background,
-                    titleContentColor = colorScheme.onBackground,
-                    navigationIconContentColor = colorScheme.onBackground,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent,
                 ),
             )
         },
@@ -142,6 +213,7 @@ fun UpdateCheckScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .hazeSource(state = hazeState)
                 .padding(
                     start = 24.dp,
                     top = padding.calculateTopPadding() + 4.dp,
@@ -256,7 +328,7 @@ fun UpdateCheckScreen(
                                 markdown = uiState.release.body,
                                 modifier = Modifier.verticalScroll(rememberScrollState()),
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    color = colorScheme.onSurfaceVariant
+                                    color = colorScheme.onSurface
                                 ),
                                 linkColor = colorScheme.primary,
                             )

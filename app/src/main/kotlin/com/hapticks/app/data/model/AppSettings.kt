@@ -10,13 +10,13 @@ data class AppSettings(
     // App internal haptics enabled status
     val hapticsEnabled: Boolean = true,
 
+    // Onboarding
+    val hasCompletedOnboarding: Boolean = false,
+
     // Tap Haptics Default Settings
     val tapEnabled: Boolean = true,
     val intensity: Float = 0.2f,
     val pattern: HapticPattern = HapticPattern.Default,
-
-    // Onboarding
-    val hasCompletedOnboarding: Boolean = false,
 
     // Scroll Haptics Default Settings
     val scrollEnabled: Boolean = false,
@@ -29,6 +29,11 @@ data class AppSettings(
     val edgeIntensity: Float = 1.0f,
     val a11yScrollBoundEdge: Boolean = false,
 
+    // Charge Haptics Default Settings
+    val chargeEnabled: Boolean = false,
+    val chargeIntensity: Float = 0.8f,
+    val chargePattern: HapticPattern = HapticPattern.HEARTBEAT,
+
     // Theme Default Settings
     val useDynamicColors: Boolean = true,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -38,6 +43,7 @@ data class AppSettings(
 
     // Update Management
     val lastDismissedUpdateVersion: String? = null,
+    val autoCheckUpdates: Boolean = true,
 ) {
     companion object {
         // For scrolling haptics per distance

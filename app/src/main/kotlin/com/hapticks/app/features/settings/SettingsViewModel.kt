@@ -102,6 +102,18 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setA11yScrollBoundEdge(enabled) }
     }
 
+    fun setChargeEnabled(enabled: Boolean) {
+        viewModelScope.launch { preferences.setChargeEnabled(enabled) }
+    }
+
+    fun setChargeIntensity(intensity: Float) {
+        viewModelScope.launch { preferences.setChargeIntensity(intensity) }
+    }
+
+    fun setChargePattern(pattern: HapticPattern) {
+        viewModelScope.launch { preferences.setChargePattern(pattern) }
+    }
+
     /** Plays the configured tap pattern (for the dedicated test control only). */
     fun testHaptic() {
         val s = settings.value ?: return
@@ -127,6 +139,12 @@ class SettingsViewModel(
         engine.play(s.edgePattern, s.edgeIntensity)
     }
 
+    /** Plays the configured charge pattern (for the dedicated test control only). */
+    fun testChargeHaptic() {
+        val s = settings.value ?: return
+        engine.play(s.chargePattern, s.chargeIntensity)
+    }
+
     fun setUseDynamicColors(enabled: Boolean) {
         viewModelScope.launch { preferences.setUseDynamicColors(enabled) }
     }
@@ -145,6 +163,10 @@ class SettingsViewModel(
 
     fun setSeedColor(color: Int) {
         viewModelScope.launch { preferences.setSeedColor(color) }
+    }
+
+    fun setAutoCheckUpdates(enabled: Boolean) {
+        viewModelScope.launch { preferences.setAutoCheckUpdates(enabled) }
     }
 
     fun setLastDismissedUpdateVersion(version: String?) {

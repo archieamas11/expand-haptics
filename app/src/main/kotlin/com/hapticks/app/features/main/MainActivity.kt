@@ -68,6 +68,7 @@ import com.hapticks.app.core.ui.components.SlidingBottomTabHost
 import com.hapticks.app.core.ui.extensions.HapticOverscrollProvider
 import com.hapticks.app.core.ui.theme.HapticksTheme
 import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.features.charge.ChargeHapticsScreen
 import com.hapticks.app.features.edge.EdgeHapticsScreen
 import com.hapticks.app.features.onboarding.OnboardingScreen
 import com.hapticks.app.features.scroll.ScrollHapticsScreen
@@ -122,11 +123,13 @@ class MainActivity : ComponentActivity() {
                     }
                     var availableUpdate by remember { mutableStateOf<LatestRelease?>(null) }
 
-                    LaunchedEffect(Unit) {
-                        val result = fetchUpdateStatus()
-                        if (result is UpdateCheckResult.UpdateAvailable) {
-                            if (result.release.tagName != safeSettings.lastDismissedUpdateVersion) {
-                                availableUpdate = result.release
+                    LaunchedEffect(safeSettings.autoCheckUpdates) {
+                        if (safeSettings.autoCheckUpdates) {
+                            val result = fetchUpdateStatus()
+                            if (result is UpdateCheckResult.UpdateAvailable) {
+                                if (result.release.tagName != safeSettings.lastDismissedUpdateVersion) {
+                                    availableUpdate = result.release
+                                }
                             }
                         }
                     }
@@ -310,6 +313,20 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
 
+                                    Route.CHARGE_HAPTICS -> {
+                                        BackHandler { route = Route.HOME }
+                                        ChargeHapticsScreen(
+                                            settings = safeSettings,
+                                            isServiceEnabled = isServiceEnabled,
+                                            onChargeEnabledChange = viewModel::setChargeEnabled,
+                                            onIntensityCommit = viewModel::setChargeIntensity,
+                                            onPatternSelected = viewModel::setChargePattern,
+                                            onTestHaptic = viewModel::testChargeHaptic,
+                                            onOpenAccessibilitySettings = ::openAccessibilitySettings,
+                                            onBack = { route = Route.HOME },
+                                        )
+                                    }
+
                                     Route.HOME, Route.SETTINGS -> {
                                         val bottomTab =
                                             if (currentRoute == Route.HOME) BottomTab.HOME else BottomTab.SETTINGS
@@ -327,6 +344,9 @@ class MainActivity : ComponentActivity() {
                                                     },
                                                     onOpenTactileScrolling = {
                                                         route = Route.TACTILE_SCROLLING
+                                                    },
+                                                    onOpenChargeHaptics = {
+                                                        route = Route.CHARGE_HAPTICS
                                                     },
                                                 )
 
@@ -350,6 +370,8 @@ class MainActivity : ComponentActivity() {
                                         BackHandler { route = Route.SETTINGS }
                                         UpdateCheckScreen(
                                             uiState = updateCheckUiState,
+                                            autoCheckUpdates = safeSettings.autoCheckUpdates,
+                                            onAutoCheckUpdatesChange = viewModel::setAutoCheckUpdates,
                                             onBack = { route = Route.SETTINGS },
                                             onCheckForUpdates = { checkForUpdates() },
                                         ) {
@@ -435,7 +457,7 @@ class MainActivity : ComponentActivity() {
         viewModel.refreshServiceState()
     }
 
-    private enum class Route { UNINITIALIZED, ONBOARDING, HOME, FEEL_EVERY_TAP, EDGE_HAPTICS, TACTILE_SCROLLING, SETTINGS, UPDATE_CHECK }
+    private enum class Route { UNINITIALIZED, ONBOARDING, HOME, FEEL_EVERY_TAP, EDGE_HAPTICS, TACTILE_SCROLLING, CHARGE_HAPTICS, SETTINGS, UPDATE_CHECK }
 
     @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
     @Composable
@@ -493,7 +515,7 @@ class MainActivity : ComponentActivity() {
                             .heightIn(max = 300.dp)
                             .verticalScroll(rememberScrollState()),
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurface
                         ),
                         linkColor = MaterialTheme.colorScheme.primary,
                     )

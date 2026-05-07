@@ -97,6 +97,9 @@
     <string name="scroll_warning_title">Battery &amp; Performance Warning</string>
     <string name="scroll_warning_body">Scroll haptics significantly increase battery drain as motors fire during movement. This feature relies on accessibility events and may not work in all apps.</string>
 
+    <string name="charge_haptics_title">Charge Haptics</string>
+    <string name="charge_haptics_subtitle">Adds haptic feedback when you plugged in your device.</string>
+
     <!-- Settings screen -->
     <string name="settings_header_caption">Preferences</string>
     <string name="settings_header_title">Settings</string>
@@ -144,6 +147,7 @@
     <string name="settings_check_updates_download_now">Download update</string>
     <string name="settings_check_updates_download_description">Downloading update package</string>
     <string name="settings_check_updates_install_failed">Download finished, but installer could not be opened.</string>
+    <string name="settings_check_updates_auto_check">Auto check updates</string>
     <string name="settings_toggle_haptics_header">Haptics</string>
     <string name="settings_toggle_haptics_title">App Haptics</string>
     <string name="settings_toggle_haptics_subtitle">Provides haptic feedback when navigating within the app</string>
@@ -151,4 +155,5 @@
     <string name="settings_accessibility">Accessibility</string>
     <string name="settings_accessibility_title">Open Accessibility settings</string>
     <string name="settings_accessibility_subtitle">Turn on/off the Hapticks accessibility service</string>
+
 </resources>

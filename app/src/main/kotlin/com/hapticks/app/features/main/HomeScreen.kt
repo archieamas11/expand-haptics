@@ -18,55 +18,107 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.ChargingStation
 import androidx.compose.material.icons.rounded.SwipeUp
 import androidx.compose.material.icons.rounded.SwipeVertical
 import androidx.compose.material.icons.rounded.TouchApp
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hapticks.app.R
 import com.hapticks.app.core.ui.extensions.hapticClickable
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.HazeProgressive
+import dev.chrisbanes.haze.blur.blurEffect
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onOpenFeelEveryTap: () -> Unit,
     onOpenEdgeHaptics: () -> Unit,
     onOpenTactileScrolling: () -> Unit,
+    onOpenChargeHaptics: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scrollState = rememberScrollState()
+    val topAppBarState = rememberTopAppBarState()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(topAppBarState)
+    val hazeState = remember { HazeState() }
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            val collapsedFraction = scrollBehavior.state.collapsedFraction
+            val isScrolled = collapsedFraction > 0f
+
+            LargeTopAppBar(
+                modifier = Modifier.hazeEffect(state = hazeState) {
+                    if (isScrolled) {
+                        blurEffect {
+                            blurRadius = 12.dp
+                            progressive = HazeProgressive.verticalGradient(
+                                startIntensity = 1f,
+                                endIntensity = 0f,
+                            )
+                        }
+                    }
+                },
+                title = {
+                    if (collapsedFraction > 0.5f) {
+                        Text(
+                            text = stringResource(id = R.string.app_name),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    } else {
+                        HomeHeader()
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent,
+                ),
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(
-                    start = 20.dp,
-                    top = padding.calculateTopPadding() + 24.dp,
-                    end = 20.dp,
-                    bottom = padding.calculateBottomPadding() + 24.dp
-                ),
+                .hazeSource(state = hazeState)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp)
         ) {
-            HomeHeader()
-            Spacer(modifier = Modifier.height(28.dp))
-
+            Spacer(modifier = Modifier.height(padding.calculateTopPadding() + 24.dp))
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 FeatureCard(
                     title = stringResource(id = R.string.home_feel_every_tap_title),
@@ -100,6 +152,18 @@ fun HomeScreen(
                     onClick = onOpenEdgeHaptics,
                     isBeta = true,
                 )
+
+                FeatureCard(
+                    title = stringResource(id = R.string.charge_haptics_title),
+                    subtitle = stringResource(id = R.string.charge_haptics_subtitle),
+                    icon = Icons.Rounded.ChargingStation,
+                    accent = MaterialTheme.colorScheme.secondaryContainer,
+                    onAccent = MaterialTheme.colorScheme.onSecondaryContainer,
+                    iconBg = MaterialTheme.colorScheme.secondary,
+                    iconTint = MaterialTheme.colorScheme.onSecondary,
+                    onClick = onOpenChargeHaptics,
+                )
+
                 FeatureCard(
                     title = stringResource(id = R.string.home_coming_soon_title),
                     subtitle = stringResource(id = R.string.home_coming_soon_subtitle),
@@ -112,7 +176,7 @@ fun HomeScreen(
                     onClick = {},
                 )
             }
-            Spacer(modifier = Modifier.height(120.dp))
+            Spacer(modifier = Modifier.height(padding.calculateBottomPadding() + 120.dp))
         }
     }
 }
@@ -143,10 +207,10 @@ private fun FeatureCard(
     title: String,
     subtitle: String,
     icon: ImageVector,
-    accent: androidx.compose.ui.graphics.Color,
-    onAccent: androidx.compose.ui.graphics.Color,
-    iconBg: androidx.compose.ui.graphics.Color,
-    iconTint: androidx.compose.ui.graphics.Color,
+    accent: Color,
+    onAccent: Color,
+    iconBg: Color,
+    iconTint: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
@@ -216,8 +280,8 @@ private fun FeatureCard(
 
 @Composable
 private fun BetaTag(
-    containerColor: androidx.compose.ui.graphics.Color,
-    contentColor: androidx.compose.ui.graphics.Color,
+    containerColor: Color,
+    contentColor: Color,
 ) {
     Surface(
         color = containerColor,

@@ -1,9 +1,14 @@
 package com.hapticks.app.service.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
+import com.hapticks.app.core.haptics.HapticEngine
 import com.hapticks.app.features.main.HapticksApp
 import com.hapticks.app.service.accessibility.events.isFromOwnApp
 import com.hapticks.app.service.accessibility.handlers.TapHapticController
@@ -21,10 +26,24 @@ class HapticsAccessibilityService : AccessibilityService() {
 
     private lateinit var tapController: TapHapticController
     private lateinit var scrollController: ScrollHapticController
+    private lateinit var hapticEngine: HapticEngine
 
     private var settingsJob: kotlinx.coroutines.Job? = null
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val serviceHandler = Handler(Looper.myLooper() ?: Looper.getMainLooper())
+
+    private val powerReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Intent.ACTION_POWER_CONNECTED) {
+                if (currentSettings.chargeEnabled) {
+                    hapticEngine.play(
+                        currentSettings.chargePattern,
+                        currentSettings.chargeIntensity
+                    )
+                }
+            }
+        }
+    }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -34,9 +53,12 @@ class HapticsAccessibilityService : AccessibilityService() {
             return
         }
 
-        val engine = app.hapticEngine
-        tapController = TapHapticController(engine) { currentSettings }
-        scrollController = ScrollHapticController(engine) { currentSettings }
+        hapticEngine = app.hapticEngine
+        tapController = TapHapticController(hapticEngine) { currentSettings }
+        scrollController = ScrollHapticController(hapticEngine) { currentSettings }
+
+        val filter = IntentFilter(Intent.ACTION_POWER_CONNECTED)
+        registerReceiver(powerReceiver, filter)
 
         applyEventMask(com.hapticks.app.data.model.AppSettings.Default)
 
@@ -71,6 +93,11 @@ class HapticsAccessibilityService : AccessibilityService() {
     override fun onDestroy() {
         settingsJob?.cancel()
         serviceScope.cancel()
+        try {
+            unregisterReceiver(powerReceiver)
+        } catch (e: Exception) {
+            // Receiver might not be registered
+        }
         if (::scrollController.isInitialized) scrollController.clear()
         super.onDestroy()
     }

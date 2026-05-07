@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
@@ -26,23 +25,22 @@ fun BackPill(onBack: () -> Unit) {
 
     Box(
         modifier = Modifier
-            .padding(start = 8.dp, top = 8.dp, bottom = 8.dp, end = 10.dp)
-            .size(40.dp)
+            .padding(start = 12.dp, top = 8.dp, bottom = 8.dp)
+            .size(44.dp)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         contentAlignment = Alignment.Center
     ) {
         IconButton(
             onClick = onBackWithHaptics,
-            modifier = Modifier.size(40.dp)
+            modifier = Modifier.size(44.dp)
         ) {
             Icon(
                 imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
                 contentDescription = stringResource(id = R.string.back),
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(22.dp)
             )
         }
     }
 }
-
