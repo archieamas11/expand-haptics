@@ -46,6 +46,7 @@ makes the experience feel flat.
 | **Tap Haptics**             | Responsive haptic feedback across buttons, toggles, switches, checkboxes, and more making every interaction feel alive. |
 | **Scroll Haptics**          | Subtle vibrations while scrolling for a smoother, more physical and immersive navigation experience.                    |
 | **Edge Haptics**               | Distinct feedback when you reach the top or bottom of a scrollable view, so you always know when content ends.          |
+| **Charge Haptics**               | Adds satisfying haptic feedback when you plug in your device.          |
 | **15 Premium Haptic Patterns** | Custom haptic patterns that feel natural, refined, and satisfying.                                                      |
 | **Liquid Glass Effect**        | iOS 26–inspired liquid glass bottom navigation for a sleek, modern look.                                                |
 | **Material 3 Design**          | Built with the latest Material 3 expressive system for a clean, dynamic, and polished interface.                        |
