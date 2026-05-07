@@ -513,6 +513,8 @@ private fun ChangelogModal(
                                 color = MaterialTheme.colorScheme.onSurface
                             ),
                             linkColor = MaterialTheme.colorScheme.primary,
+                            syntaxHighlightColor = MaterialTheme.colorScheme.surfaceVariant,
+                            syntaxHighlightTextColor = MaterialTheme.colorScheme.onSurface,
                         )
                         TextButton(onClick = { onOpenRelease(uiState.release.url) }) {
                             Text(text = stringResource(R.string.settings_changelog_open_release))

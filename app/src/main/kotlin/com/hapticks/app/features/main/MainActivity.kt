@@ -518,6 +518,8 @@ class MainActivity : ComponentActivity() {
                             color = MaterialTheme.colorScheme.onSurface
                         ),
                         linkColor = MaterialTheme.colorScheme.primary,
+                        syntaxHighlightColor = MaterialTheme.colorScheme.surfaceVariant,
+                        syntaxHighlightTextColor = MaterialTheme.colorScheme.onSurface,
                     )
 
                     Row(

@@ -331,6 +331,8 @@ fun UpdateCheckScreen(
                                     color = colorScheme.onSurface
                                 ),
                                 linkColor = colorScheme.primary,
+                                syntaxHighlightColor = colorScheme.surfaceVariant,
+                                syntaxHighlightTextColor = colorScheme.onSurface,
                             )
                         }
                     }
