@@ -118,7 +118,6 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
         ) {
-            Spacer(modifier = Modifier.height(padding.calculateTopPadding() + 24.dp))
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 FeatureCard(
                     title = stringResource(id = R.string.home_feel_every_tap_title),
