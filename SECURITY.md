@@ -6,7 +6,7 @@ If you discover a security vulnerability, please report it responsibly.
 
 You may contact the maintainer through:
 
-* **Website:** [albarico.is-a.dev](https://albarico.is-a.dev?utm_source=chatgpt.com)
+* **Website:** [albarico.is-a.dev](https://albarico.is-a.dev/#contact)
 * **GitHub Issues:** Use this repository’s Issues tab if public disclosure is acceptable
 
 Please include as much detail as possible, such as:
