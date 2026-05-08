@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="assets/product-image.png" alt="Hapticks Product Showcase" width="100%" />
+  <img src="assets/hapticks-logo.png" alt="Hapticks Product Showcase" width="20%" />
 </p>
 
 <h1 align="center">Hapticks</h1>
 
 <p align="center">
-  <b>Feel Every Tap.</b><br>
-  Custom haptic feedback for every interaction. Subtle, powerful, yours.
+  <b>Feel Every Tap</b><br>
+  Custom haptic feedback for every interaction. Subtle, Powerful, Satisfying.
 </p>
 
 <p align="center">
@@ -50,6 +50,17 @@ makes the experience feel flat.
 | **15 Premium Haptic Patterns** | Custom haptic patterns that feel natural, refined, and satisfying.                                                      |
 | **Liquid Glass Effect**        | iOS 26–inspired liquid glass bottom navigation for a sleek, modern look.                                                |
 | **Material 3 Design**          | Built with the latest Material 3 expressive system for a clean, dynamic, and polished interface.                        |
+
+---
+
+## 📱 Screenshots
+
+<p align="center">
+  <img src="assets/ss-1.png" alt="Hapticks Screenshot 1" width="22%" style="display: inline-block; margin: 0 6px;" />
+  <img src="assets/ss-2.png" alt="Hapticks Screenshot 2" width="22%" style="display: inline-block; margin: 0 6px;" />
+  <img src="assets/ss-3.png" alt="Hapticks Screenshot 3" width="22%" style="display: inline-block; margin: 0 6px;" />
+  <img src="assets/ss-4.png" alt="Hapticks Screenshot 4" width="22%" style="display: inline-block; margin: 0 6px;" />
+</p>
 
 ---
 
