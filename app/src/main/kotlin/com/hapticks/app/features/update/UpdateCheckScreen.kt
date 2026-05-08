@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Environment
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -67,6 +66,7 @@ import com.hapticks.app.R
 import com.hapticks.app.core.ui.components.BackPill
 import com.hapticks.app.core.ui.components.RoundedPolygonShape
 import com.hapticks.app.core.ui.extensions.withDefaultHaptic
+import com.hapticks.app.data.model.LatestRelease
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.blur.HazeProgressive
 import dev.chrisbanes.haze.blur.blurEffect
@@ -80,14 +80,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-
-data class LatestRelease(
-    val title: String,
-    val body: String,
-    val tagName: String,
-    val url: String,
-    val apkDownloadUrl: String?,
-)
 
 private val cookie12 = RoundedPolygon.star(
     numVerticesPerRadius = 8,
@@ -167,7 +159,7 @@ fun UpdateCheckScreen(
                             modifier = Modifier.padding(end = 8.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.MoreVert,
+                                painter = painterResource(R.drawable.more_vert_24px),
                                 contentDescription = null,
                                 tint = colorScheme.onSurface,
                             )
@@ -188,7 +180,7 @@ fun UpdateCheckScreen(
                                 trailingIcon = {
                                     Checkbox(
                                         checked = autoCheckUpdates,
-                                        onCheckedChange = null // Handled by MenuItem onClick
+                                        onCheckedChange = null
                                     )
                                 }
                             )
@@ -554,7 +546,8 @@ private fun fetchReleaseFromEndpoint(endpoint: String): LatestRelease? {
 
         val response = connection.inputStream.bufferedReader().use { it.readText() }
         parseReleaseResponse(response)
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        Log.e("HapticksUpdate", "Failed to fetch release from $endpoint", e)
         null
     } finally {
         connection.disconnect()

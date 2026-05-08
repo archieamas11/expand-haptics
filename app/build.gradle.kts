@@ -67,7 +67,7 @@ configure<ApplicationExtension> {
     }
 
     dependenciesInfo {
-        includeInApk = false  
+        includeInApk = false
     }
 
     compileOptions {
@@ -80,7 +80,19 @@ configure<ApplicationExtension> {
         buildConfig = true
     }
 
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a")
+            isUniversalApk = false
+        }
+    }
+
     packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
@@ -112,7 +124,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
-    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.google.material)
     implementation(libs.kyant.backdrop)
     implementation(libs.kyant.shapes)

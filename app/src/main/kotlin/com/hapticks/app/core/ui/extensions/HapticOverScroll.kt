@@ -131,14 +131,16 @@ fun HapticOverscrollProvider(content: @Composable () -> Unit) {
     val factory = remember(
         baseFactory,
         engine,
-        settings.hapticsEnabled
+        settings.hapticsEnabled,
+        settings.edgePattern,
+        settings.edgeIntensity,
     ) {
         if (settings.hapticsEnabled) {
             HapticInstrumentedOverscrollFactory(
                 baseFactory,
                 engine,
-                HapticPattern.WOBBLE,
-                0.2f
+                settings.edgePattern,
+                settings.edgeIntensity
             )
         } else {
             baseFactory

@@ -1,103 +1,89 @@
 package com.hapticks.app.core.haptics
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BlurCircular
-import androidx.compose.material.icons.rounded.Bolt
-import androidx.compose.material.icons.rounded.Cached
-import androidx.compose.material.icons.rounded.DensityMedium
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.HorizontalRule
-import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material.icons.rounded.SettingsEthernet
-import androidx.compose.material.icons.rounded.SlowMotionVideo
-import androidx.compose.material.icons.rounded.South
-import androidx.compose.material.icons.rounded.TouchApp
-import androidx.compose.material.icons.rounded.WaterfallChart
-import androidx.compose.material.icons.rounded.Waves
-import androidx.compose.ui.graphics.vector.ImageVector
+
 import com.hapticks.app.R
 
 enum class HapticPattern(
     @StringRes val labelRes: Int,
     @StringRes val descriptionRes: Int,
-    val icon: ImageVector,
+    @DrawableRes val iconRes: Int,
 ) {
     CLICK(
         labelRes = R.string.pattern_click,
         descriptionRes = R.string.pattern_click_desc,
-        icon = Icons.Rounded.TouchApp,
+        iconRes = R.drawable.touch_long_24px,
     ),
     TICK(
         labelRes = R.string.pattern_tick,
         descriptionRes = R.string.pattern_tick_desc,
-        icon = Icons.Rounded.GraphicEq,
+        iconRes = R.drawable.graphic_eq_24px,
     ),
     HEAVY_CLICK(
         labelRes = R.string.pattern_heavy_click,
         descriptionRes = R.string.pattern_heavy_click_desc,
-        icon = Icons.Rounded.Bolt,
+        iconRes = R.drawable.brick_24px,
     ),
     DOUBLE_CLICK(
         labelRes = R.string.pattern_double_click,
         descriptionRes = R.string.pattern_double_click_desc,
-        icon = Icons.Rounded.Repeat,
+        iconRes = R.drawable.repeat_24px,
     ),
     SOFT_BUMP(
         labelRes = R.string.pattern_soft_bump,
         descriptionRes = R.string.pattern_soft_bump_desc,
-        icon = Icons.Rounded.BlurCircular,
+        iconRes = R.drawable.blur_on_24px,
     ),
     DOUBLE_TICK(
         labelRes = R.string.pattern_double_tick,
         descriptionRes = R.string.pattern_double_tick_desc,
-        icon = Icons.Rounded.DensityMedium,
+        iconRes = R.drawable.density_small_24px,
     ),
     LOW_TICK(
         labelRes = R.string.pattern_low_tick,
         descriptionRes = R.string.pattern_low_tick_desc,
-        icon = Icons.Rounded.HorizontalRule,
+        iconRes = R.drawable.horizontal_rule_24px,
     ),
     THUD(
         labelRes = R.string.pattern_thud,
         descriptionRes = R.string.pattern_thud_desc,
-        icon = Icons.Rounded.South,
+        iconRes = R.drawable.step_into_24px,
     ),
     SPIN(
         labelRes = R.string.pattern_spin,
         descriptionRes = R.string.pattern_spin_desc,
-        icon = Icons.Rounded.Cached,
+        iconRes = R.drawable.three60_24px,
     ),
     ELASTIC(
         labelRes = R.string.pattern_elastic,
         descriptionRes = R.string.pattern_elastic_desc,
-        icon = Icons.Rounded.SettingsEthernet,
+        iconRes = R.drawable.settings_ethernet_24px,
     ),
     WOBBLE(
         labelRes = R.string.pattern_wobble,
         descriptionRes = R.string.pattern_wobble_desc,
-        icon = Icons.Rounded.Waves,
+        iconRes = R.drawable.airwave_24px,
     ),
     RAPID_FIRE(
         labelRes = R.string.pattern_rapid_fire,
         descriptionRes = R.string.pattern_rapid_fire_desc,
-        icon = Icons.Rounded.SlowMotionVideo,
+        iconRes = R.drawable.slow_motion_video_24px,
     ),
     HEARTBEAT(
         labelRes = R.string.pattern_heartbeat,
         descriptionRes = R.string.pattern_heartbeat_desc,
-        icon = Icons.Rounded.Favorite,
+        iconRes = R.drawable.favorite_24px,
     ),
     CASCADE(
         labelRes = R.string.pattern_cascade,
         descriptionRes = R.string.pattern_cascade_desc,
-        icon = Icons.Rounded.WaterfallChart,
+        iconRes = R.drawable.waterfall_chart_24px,
     ),
     RUMBLE(
         labelRes = R.string.pattern_rumble,
         descriptionRes = R.string.pattern_rumble_desc,
-        icon = Icons.Rounded.Waves,
+        iconRes = R.drawable.earthquake_24px,
     );
 
     companion object {

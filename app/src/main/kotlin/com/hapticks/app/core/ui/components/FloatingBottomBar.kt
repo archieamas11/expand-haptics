@@ -27,9 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
@@ -43,7 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.core.ui.extensions.hapticClickable
 import com.hapticks.app.core.ui.liquidglass.LiquidBottomTabs
@@ -120,13 +118,13 @@ fun FloatingBottomBar(
         ) {
             BottomTabItem(
                 selected = selectedTab == BottomTab.HOME,
-                icon = Icons.Rounded.Home,
+                painter = painterResource(com.hapticks.app.R.drawable.home_24px),
                 label = "Home",
                 onClick = { onTabSelected(BottomTab.HOME) },
             )
             BottomTabItem(
                 selected = selectedTab == BottomTab.SETTINGS,
-                icon = Icons.Rounded.Settings,
+                painter = painterResource(com.hapticks.app.R.drawable.settings_24px),
                 label = "Settings",
                 onClick = { onTabSelected(BottomTab.SETTINGS) },
             )
@@ -155,9 +153,9 @@ fun LiquidGlassBottomBar(
     ) {
         tabs.forEach { tab ->
             LiquidTabItem(
-                icon = when (tab) {
-                    BottomTab.HOME -> Icons.Rounded.Home
-                    BottomTab.SETTINGS -> Icons.Rounded.Settings
+                painter = when (tab) {
+                    BottomTab.HOME -> painterResource(com.hapticks.app.R.drawable.home_24px)
+                    BottomTab.SETTINGS -> painterResource(com.hapticks.app.R.drawable.settings_24px)
                 },
                 label = when (tab) {
                     BottomTab.HOME -> "Home"
@@ -172,7 +170,7 @@ fun LiquidGlassBottomBar(
 
 @Composable
 private fun RowScope.LiquidTabItem(
-    icon: ImageVector,
+    painter: Painter,
     label: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -200,7 +198,7 @@ private fun RowScope.LiquidTabItem(
             verticalArrangement = Arrangement.Center,
         ) {
             Icon(
-                imageVector = icon,
+                painter = painter,
                 contentDescription = label,
                 modifier = Modifier.size(22.dp),
                 tint = contentColor,
@@ -217,7 +215,7 @@ private fun RowScope.LiquidTabItem(
 @Composable
 private fun BottomTabItem(
     selected: Boolean,
-    icon: ImageVector,
+    painter: Painter,
     label: String,
     onClick: () -> Unit,
 ) {
@@ -256,7 +254,7 @@ private fun BottomTabItem(
             verticalArrangement = Arrangement.Center,
         ) {
             Icon(
-                imageVector = icon,
+                painter = painter,
                 contentDescription = null,
                 modifier = Modifier.size(22.dp),
                 tint = contentColor,

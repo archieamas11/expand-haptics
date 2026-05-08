@@ -3,6 +3,9 @@ package com.hapticks.app.features.settings
 import android.app.Application
 import android.content.ComponentName
 import android.content.Context
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
 import androidx.lifecycle.AndroidViewModel
@@ -12,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import com.hapticks.app.core.haptics.HapticEngine
 import com.hapticks.app.core.haptics.HapticPattern
 import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.data.model.LatestRelease
 import com.hapticks.app.data.model.ThemeMode
 import com.hapticks.app.data.repository.SettingsRepository
 import com.hapticks.app.features.main.HapticksApp
@@ -46,8 +50,27 @@ class SettingsViewModel(
     private val _isServiceEnabled = MutableStateFlow(value = false)
     val isServiceEnabled: StateFlow<Boolean> = _isServiceEnabled.asStateFlow()
 
+    private val _latestRelease = MutableStateFlow<LatestRelease?>(null)
+    val latestRelease = _latestRelease.asStateFlow()
+
+    private val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            refreshServiceState()
+        }
+    }
+
     init {
         refreshServiceState()
+        application.contentResolver.registerContentObserver(
+            Settings.Secure.getUriFor(Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES),
+            false,
+            observer
+        )
+    }
+
+    override fun onCleared() {
+        getApplication<Application>().contentResolver.unregisterContentObserver(observer)
+        super.onCleared()
     }
 
     fun refreshServiceState() {
@@ -167,6 +190,10 @@ class SettingsViewModel(
 
     fun setAutoCheckUpdates(enabled: Boolean) {
         viewModelScope.launch { preferences.setAutoCheckUpdates(enabled) }
+    }
+
+    fun setLatestRelease(release: LatestRelease?) {
+        _latestRelease.value = release
     }
 
     fun setLastDismissedUpdateVersion(version: String?) {

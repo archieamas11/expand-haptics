@@ -18,12 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Shield
-import androidx.compose.material.icons.rounded.TouchApp
-import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -39,10 +33,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.hapticks.app.R
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -102,19 +97,19 @@ fun OnboardingScreen(
             ) {
                 when (page) {
                     0 -> OnboardingPage(
-                        icon = Icons.Rounded.TouchApp,
+                        iconRes = R.drawable.touch_long_24px,
                         title = "Feel the Difference",
                         description = "Make your phone feel tactile and responsive with satisfying haptic feedback."
                     )
 
                     1 -> OnboardingPage(
-                        icon = Icons.Rounded.Shield,
+                        iconRes = R.drawable.shield_24px,
                         title = "Privacy-First",
                         description = "Hapticks uses Accessibility Services strictly to trigger feedback. Your data is private and never leaves your device."
                     )
 
                     2 -> OnboardingPage(
-                        icon = Icons.Rounded.Vibration,
+                        iconRes = R.drawable.mobile_vibrate_24px,
                         title = "Ready to Vibe?",
                         description = "Jump into the dashboard to customize your tactile experience."
                     )
@@ -126,7 +121,7 @@ fun OnboardingScreen(
 
 @Composable
 private fun OnboardingPage(
-    icon: ImageVector,
+    iconRes: Int,
     title: String,
     description: String
 ) {
@@ -143,7 +138,7 @@ private fun OnboardingPage(
             modifier = Modifier.size(120.dp)
         ) {
             Icon(
-                imageVector = icon,
+                painter = painterResource(id = iconRes),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                 modifier = Modifier
@@ -219,7 +214,7 @@ private fun OnboardingBottomBar(
             elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp)
         ) {
             Icon(
-                imageVector = if (currentPage == pageCount - 1) Icons.Rounded.Check else Icons.AutoMirrored.Rounded.ArrowForward,
+                painter = painterResource(if (currentPage == pageCount - 1) R.drawable.check_24px else R.drawable.arrow_forward_24px),
                 contentDescription = if (currentPage == pageCount - 1) "Start" else "Next"
             )
         }

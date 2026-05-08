@@ -1,5 +1,6 @@
 package com.hapticks.app.features.main
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,13 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.AutoAwesome
-import androidx.compose.material.icons.rounded.ChargingStation
-import androidx.compose.material.icons.rounded.SwipeUp
-import androidx.compose.material.icons.rounded.SwipeVertical
-import androidx.compose.material.icons.rounded.TouchApp
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
@@ -36,13 +30,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -94,8 +87,6 @@ fun HomeScreen(
                             text = stringResource(id = R.string.app_name),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.SemiBold,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth(),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -116,13 +107,14 @@ fun HomeScreen(
                 .fillMaxSize()
                 .hazeSource(state = hazeState)
                 .verticalScroll(rememberScrollState())
+                .padding(padding)
                 .padding(horizontal = 20.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 FeatureCard(
                     title = stringResource(id = R.string.home_feel_every_tap_title),
                     subtitle = stringResource(id = R.string.home_feel_every_tap_subtitle),
-                    icon = Icons.Rounded.TouchApp,
+                    icon = R.drawable.touch_long_24px,
                     accent = MaterialTheme.colorScheme.secondaryContainer,
                     onAccent = MaterialTheme.colorScheme.onSecondaryContainer,
                     iconBg = MaterialTheme.colorScheme.secondary,
@@ -132,7 +124,7 @@ fun HomeScreen(
                 FeatureCard(
                     title = stringResource(id = R.string.home_tactile_scrolling_title),
                     subtitle = stringResource(id = R.string.home_tactile_scrolling_subtitle),
-                    icon = Icons.Rounded.SwipeUp,
+                    icon = R.drawable.swipe_up_24px,
                     accent = MaterialTheme.colorScheme.secondaryContainer,
                     onAccent = MaterialTheme.colorScheme.onSecondaryContainer,
                     iconBg = MaterialTheme.colorScheme.secondary,
@@ -143,7 +135,7 @@ fun HomeScreen(
                 FeatureCard(
                     title = stringResource(id = R.string.home_edge_haptics_title),
                     subtitle = stringResource(id = R.string.home_edge_haptics_subtitle),
-                    icon = Icons.Rounded.SwipeVertical,
+                    icon = R.drawable.swipe_vertical_24px,
                     accent = MaterialTheme.colorScheme.secondaryContainer,
                     onAccent = MaterialTheme.colorScheme.onSecondaryContainer,
                     iconBg = MaterialTheme.colorScheme.secondary,
@@ -155,7 +147,7 @@ fun HomeScreen(
                 FeatureCard(
                     title = stringResource(id = R.string.charge_haptics_title),
                     subtitle = stringResource(id = R.string.charge_haptics_subtitle),
-                    icon = Icons.Rounded.ChargingStation,
+                    icon = R.drawable.charger_24px,
                     accent = MaterialTheme.colorScheme.secondaryContainer,
                     onAccent = MaterialTheme.colorScheme.onSecondaryContainer,
                     iconBg = MaterialTheme.colorScheme.secondary,
@@ -166,7 +158,7 @@ fun HomeScreen(
                 FeatureCard(
                     title = stringResource(id = R.string.home_coming_soon_title),
                     subtitle = stringResource(id = R.string.home_coming_soon_subtitle),
-                    icon = Icons.Rounded.AutoAwesome,
+                    icon = R.drawable.star_shine_24px,
                     accent = MaterialTheme.colorScheme.surfaceContainer,
                     onAccent = MaterialTheme.colorScheme.onSurface,
                     iconBg = MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -175,7 +167,7 @@ fun HomeScreen(
                     onClick = {},
                 )
             }
-            Spacer(modifier = Modifier.height(padding.calculateBottomPadding() + 120.dp))
+            Spacer(modifier = Modifier.height(120.dp))
         }
     }
 }
@@ -184,7 +176,7 @@ fun HomeScreen(
 private fun HomeHeader() {
     val junicodeFontFamily = remember { FontFamily(Font(R.font.junicode_italic)) }
 
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
             text = stringResource(id = R.string.home_greeting),
             style = MaterialTheme.typography.labelLarge.copy(
@@ -205,7 +197,7 @@ private fun HomeHeader() {
 private fun FeatureCard(
     title: String,
     subtitle: String,
-    icon: ImageVector,
+    @DrawableRes icon: Int,
     accent: Color,
     onAccent: Color,
     iconBg: Color,
@@ -216,12 +208,16 @@ private fun FeatureCard(
     isBeta: Boolean = false,
 ) {
     val alpha = if (enabled) 1f else 0.65f
+
     Surface(
         color = accent,
         shape = RoundedCornerShape(28.dp),
         modifier = modifier
             .fillMaxWidth()
-            .then(if (enabled) Modifier.hapticClickable(onClick = onClick) else Modifier),
+            .then(
+                if (enabled) Modifier.hapticClickable(onClick = onClick)
+                else Modifier
+            ),
     ) {
         Row(
             modifier = Modifier
@@ -233,16 +229,20 @@ private fun FeatureCard(
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(color = iconBg, shape = RoundedCornerShape(18.dp)),
+                    .background(
+                        color = iconBg,
+                        shape = RoundedCornerShape(18.dp)
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = icon,
+                    painter = painterResource(id = icon),
                     contentDescription = null,
                     tint = iconTint,
                     modifier = Modifier.size(28.dp),
                 )
             }
+
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -264,12 +264,14 @@ private fun FeatureCard(
                         )
                     }
                 }
+
                 Text(
                     text = subtitle,
                     style = MaterialTheme.typography.bodyMedium,
                     color = onAccent.copy(alpha = alpha * 0.78f),
                 )
             }
+
             if (enabled) {
                 ChevronPill()
             }
@@ -310,7 +312,7 @@ private fun ChevronPill() {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+            painter = painterResource(R.drawable.arrow_forward_24px),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.size(20.dp),

@@ -22,36 +22,31 @@ class HapticEngine(context: Context) {
 
     private val primitiveSupport = BooleanArray(HapticPattern.entries.size)
     private val primitiveQueried = BooleanArray(HapticPattern.entries.size)
-    private val cache = arrayOfNulls<VibrationEffect>(
-        HapticPattern.entries.size * INTENSITY_BUCKETS
-    )
+
+    private val cache = object : LinkedHashMap<Int, VibrationEffect>(30, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, VibrationEffect>?): Boolean {
+            return size > 30
+        }
+    }
 
     private val touchAttrs: VibrationAttributes =
         VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH)
 
-    private var lastFiredAt: Long = Long.MIN_VALUE
-
     fun play(
         pattern: HapticPattern,
         intensity: Float,
-        throttleMs: Long = 0L,
+        @Suppress("UNUSED_PARAMETER") throttleMs: Long = 0L,
     ): Boolean {
         if (!hasVibrator || intensity <= MIN_AUDIBLE_INTENSITY) return false
 
         val clamped = intensity.coerceIn(0f, 1f)
 
-        if (throttleMs > 0L) {
-            val now = SystemClock.uptimeMillis()
-            if (lastFiredAt != Long.MIN_VALUE && now - lastFiredAt < throttleMs) {
-                return false
-            }
-            lastFiredAt = now
-        }
-
         val bucket = intensityToBucket(clamped)
         val idx = pattern.ordinal * INTENSITY_BUCKETS + bucket
 
-        val effect = cache[idx] ?: createEffect(pattern, bucket).also { cache[idx] = it }
+        val effect = synchronized(cache) {
+            cache[idx] ?: createEffect(pattern, bucket).also { cache[idx] = it }
+        }
 
         vibrator.vibrate(effect, touchAttrs)
         return true

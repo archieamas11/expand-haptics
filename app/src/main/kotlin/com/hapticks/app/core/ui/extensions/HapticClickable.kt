@@ -15,9 +15,7 @@ import com.hapticks.app.core.haptics.HapticEngine
 import com.hapticks.app.core.haptics.HapticPattern
 import com.hapticks.app.data.model.AppSettings
 import com.hapticks.app.features.main.HapticksApp
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.runBlocking
 import kotlin.math.roundToInt
 
 const val SliderTickStepsDefault = 19
@@ -35,11 +33,7 @@ private fun Context.hapticEngine(): HapticEngine? =
 
 fun Context.performHapticClick() {
     val app = applicationContext as? HapticksApp ?: return
-    val snapshot = try {
-        runBlocking { app.preferences.settings.first() }
-    } catch (_: Throwable) {
-        AppSettings.Default
-    }
+    val snapshot = app.cachedSettings
     if (!snapshot.hapticsEnabled) return
     app.hapticEngine.play(HapticPattern.Default, 0.2f)
 }
@@ -49,11 +43,7 @@ fun Context.performHapticPattern(
     intensityOverride: Float? = null,
 ) {
     val app = applicationContext as? HapticksApp ?: return
-    val snapshot = try {
-        runBlocking { app.preferences.settings.first() }
-    } catch (_: Throwable) {
-        AppSettings.Default
-    }
+    val snapshot = app.cachedSettings
     if (!snapshot.hapticsEnabled) return
     val intensity = intensityOverride ?: snapshot.intensity
     hapticEngine()?.play(pattern, intensity)
@@ -65,11 +55,7 @@ fun Context.performHapticDoubleClick() {
 
 fun Context.performHapticSliderTick() {
     val app = applicationContext as? HapticksApp ?: return
-    val snapshot = try {
-        runBlocking { app.preferences.settings.first() }
-    } catch (_: Throwable) {
-        AppSettings.Default
-    }
+    val snapshot = app.cachedSettings
     if (!snapshot.hapticsEnabled) return
     hapticEngine()?.play(
         pattern = HapticPattern.TICK,

@@ -2,8 +2,6 @@ package com.hapticks.app.core.ui.components
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -12,7 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.hapticks.app.R
 
 @Composable
 fun HapticTestButton(
@@ -42,7 +42,7 @@ fun HapticTestButton(
         ),
     ) {
         Icon(
-            imageVector = Icons.Rounded.PlayArrow,
+            painter = painterResource(R.drawable.play_arrow_24px),
             contentDescription = null,
             modifier = Modifier.size(32.dp),
         )

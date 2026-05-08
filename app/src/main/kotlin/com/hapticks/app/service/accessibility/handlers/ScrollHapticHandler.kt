@@ -93,8 +93,12 @@ internal class ScrollHapticController(
         state.bottomFired = hitBottom
 
         return if (fireTop || fireBottom) {
-            engine.play(settings.edgePattern, settings.edgeIntensity, throttleMs = EDGE_THROTTLE_MS)
-            true
+            val now = SystemClock.uptimeMillis()
+            if (now - state.lastEdgeFiredAt >= EDGE_THROTTLE_MS) {
+                engine.play(settings.edgePattern, settings.edgeIntensity)
+                state.lastEdgeFiredAt = now
+                true
+            } else false
         } else false
     }
 
@@ -176,8 +180,17 @@ internal class ScrollHapticController(
             }
             i--
         }
+
         if (states.size() > MAX_STATES) {
-            states.clear()
+            val sortedKeys = (0 until states.size())
+                .map { states.keyAt(it) to states.valueAt(it).lastAccessTime }
+                .sortedBy { it.second }
+                .map { it.first }
+
+            val toRemove = states.size() - LRU_CAP
+            for (j in 0 until toRemove) {
+                states.remove(sortedKeys[j])
+            }
         }
     }
 
@@ -204,6 +217,7 @@ internal class ScrollHapticController(
         // Edge
         var topFired: Boolean = false
         var bottomFired: Boolean = false
+        var lastEdgeFiredAt: Long = 0L
 
         // Eviction
         var lastAccessTime: Long = 0L
@@ -212,6 +226,7 @@ internal class ScrollHapticController(
     companion object {
         private const val INITIAL_CAPACITY = 64
         private const val MAX_STATES = 128
+        private const val LRU_CAP = 64
         private const val STATE_TTL_MS = 30_000L
         private const val EDGE_THROTTLE_MS = 200L
 

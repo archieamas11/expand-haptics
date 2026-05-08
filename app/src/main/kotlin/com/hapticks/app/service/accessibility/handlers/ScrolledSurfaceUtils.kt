@@ -15,5 +15,6 @@ internal val AccessibilityEvent.sourceKey: Long
         val base = surfaceKey
         val contentHash = contentDescription?.hashCode()?.toLong() ?: 0L
         val textHash = text?.joinToString("") { it.toString() }?.hashCode()?.toLong() ?: 0L
-        return base xor (contentHash shl 16) xor (textHash shl 24)
+        val scrollComp = (scrollX.toLong() shl 16) xor scrollY.toLong()
+        return base xor (contentHash shl 16) xor (textHash shl 24) xor scrollComp
     }

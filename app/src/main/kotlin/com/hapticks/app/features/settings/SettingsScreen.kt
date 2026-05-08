@@ -25,15 +25,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.AccessibilityNew
-import androidx.compose.material.icons.rounded.Brightness6
-import androidx.compose.material.icons.rounded.DarkMode
-import androidx.compose.material.icons.rounded.LightMode
-import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Vibration
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,9 +52,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -75,14 +67,16 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.net.toUri
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hapticks.app.BuildConfig
 import com.hapticks.app.R
 import com.hapticks.app.core.ui.components.HapticToggleRow
 import com.hapticks.app.core.ui.extensions.hapticClickable
 import com.hapticks.app.core.ui.extensions.performHapticDoubleClick
 import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.data.model.LatestRelease
 import com.hapticks.app.data.model.ThemeMode
-import com.hapticks.app.features.update.LatestRelease
 import com.hapticks.app.features.update.fetchReleaseForVersion
 import com.hapticks.app.service.accessibility.HapticsAccessibilityService
 import dev.chrisbanes.haze.HazeState
@@ -92,8 +86,6 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.jeziellago.compose.markdowntext.MarkdownText
 import kotlinx.coroutines.launch
-
-private var cachedLatestRelease: LatestRelease? = null
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,8 +97,11 @@ fun SettingsScreen(
     onAmoledBlackChange: (Boolean) -> Unit,
     onLiquidGlassChange: (Boolean) -> Unit,
     onOpenUpdateCheck: () -> Unit,
+    viewModel: SettingsViewModel = viewModel(),
 ) {
     val context = LocalContext.current
+    val latestRelease by viewModel.latestRelease.collectAsStateWithLifecycle()
+
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val topAppBarState = rememberTopAppBarState()
@@ -116,9 +111,10 @@ fun SettingsScreen(
     var isChangelogModalVisible by rememberSaveable { mutableStateOf(false) }
     var changelogUiState by remember {
         mutableStateOf(
-            cachedLatestRelease?.let { ChangelogUiState.Success(it) } ?: ChangelogUiState.Idle
+            latestRelease?.let { ChangelogUiState.Success(it) } ?: ChangelogUiState.Idle
         )
     }
+
     val appInDarkTheme = when (settings.themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK -> true
@@ -130,9 +126,15 @@ fun SettingsScreen(
 
         scope.launch {
             changelogUiState = ChangelogUiState.Loading
+            val cached = latestRelease
+            if (cached != null) {
+                changelogUiState = ChangelogUiState.Success(cached)
+                return@launch
+            }
+
             val release = fetchReleaseForVersion(BuildConfig.VERSION_NAME)
             if (release != null) {
-                cachedLatestRelease = release
+                viewModel.setLatestRelease(release)
                 changelogUiState = ChangelogUiState.Success(release)
             } else {
                 changelogUiState = ChangelogUiState.Error
@@ -200,7 +202,7 @@ fun SettingsScreen(
                 item(key = "appearance") {
                     SettingsSection(
                         title = stringResource(R.string.settings_section_appearance),
-                        icon = Icons.Rounded.Palette,
+                        painter = painterResource(R.drawable.palette_24px),
                     ) {
                         HapticToggleRow(
                             title = stringResource(R.string.settings_dynamic_color_title),
@@ -243,7 +245,7 @@ fun SettingsScreen(
                 item(key = "haptic") {
                     SettingsSection(
                         title = stringResource(R.string.settings_toggle_haptics_header),
-                        icon = Icons.Rounded.Vibration,
+                        painter = painterResource(R.drawable.mobile_vibrate_24px),
                     ) {
                         HapticToggleRow(
                             title = stringResource(R.string.settings_toggle_haptics_title),
@@ -257,7 +259,7 @@ fun SettingsScreen(
                 item(key = "about") {
                     SettingsSection(
                         title = stringResource(R.string.settings_section_about),
-                        icon = Icons.Rounded.Settings,
+                        painter = painterResource(R.drawable.settings_24px),
                     ) {
 
                         SettingsRow(
@@ -274,7 +276,7 @@ fun SettingsScreen(
                             },
                             trailing = {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                    painter = painterResource(R.drawable.arrow_forward_24px),
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(20.dp),
@@ -296,7 +298,7 @@ fun SettingsScreen(
                             },
                             trailing = {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                    painter = painterResource(R.drawable.arrow_forward_24px),
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(20.dp),
@@ -319,7 +321,7 @@ fun SettingsScreen(
                             },
                             trailing = {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                    painter = painterResource(R.drawable.arrow_forward_24px),
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(20.dp),
@@ -342,7 +344,7 @@ fun SettingsScreen(
                             },
                             trailing = {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                    painter = painterResource(R.drawable.arrow_forward_24px),
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(20.dp),
@@ -361,7 +363,7 @@ fun SettingsScreen(
                             onClick = onOpenUpdateCheck,
                             trailing = {
                                 Icon(
-                                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                                    painter = painterResource(R.drawable.arrow_forward_24px),
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(20.dp),
@@ -374,7 +376,7 @@ fun SettingsScreen(
                 item(key = "accessibility") {
                     SettingsSection(
                         title = stringResource(R.string.settings_accessibility),
-                        icon = Icons.Rounded.AccessibilityNew,
+                        painter = painterResource(R.drawable.accessibility_new_24px),
                     ) {
                         SettingsRow(
                             title = stringResource(R.string.settings_accessibility_title),
@@ -560,7 +562,7 @@ private fun SettingsHeader() {
 @Composable
 private fun SettingsSection(
     title: String,
-    icon: ImageVector,
+    painter: Painter,
     content: @Composable () -> Unit,
 ) {
     Surface(
@@ -587,7 +589,7 @@ private fun SettingsSection(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = icon,
+                        painter = painter,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp),
@@ -699,17 +701,17 @@ private fun ThemeModeRow(
             ThemeModeOption(
                 ThemeMode.SYSTEM,
                 stringResource(R.string.settings_theme_mode_system),
-                Icons.Rounded.Brightness6
+                painterResource(R.drawable.brightness_6_24px)
             ),
             ThemeModeOption(
                 ThemeMode.LIGHT,
                 stringResource(R.string.settings_theme_mode_light),
-                Icons.Rounded.LightMode
+                painterResource(R.drawable.light_mode_24px)
             ),
             ThemeModeOption(
                 ThemeMode.DARK,
                 stringResource(R.string.settings_theme_mode_dark),
-                Icons.Rounded.DarkMode
+                painterResource(R.drawable.dark_mode_24px)
             ),
         )
 
@@ -724,7 +726,7 @@ private fun ThemeModeRow(
                     shape = SegmentedButtonDefaults.itemShape(index = index, count = modes.size),
                     icon = {
                         Icon(
-                            imageVector = option.icon,
+                            painter = option.icon,
                             contentDescription = null,
                             modifier = Modifier.size(18.dp),
                         )
@@ -740,6 +742,6 @@ private fun ThemeModeRow(
 private data class ThemeModeOption(
     val mode: ThemeMode,
     val label: String,
-    val icon: ImageVector,
+    val icon: Painter,
 )
 

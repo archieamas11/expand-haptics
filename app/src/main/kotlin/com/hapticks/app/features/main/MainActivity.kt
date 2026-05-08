@@ -68,6 +68,7 @@ import com.hapticks.app.core.ui.components.SlidingBottomTabHost
 import com.hapticks.app.core.ui.extensions.HapticOverscrollProvider
 import com.hapticks.app.core.ui.theme.HapticksTheme
 import com.hapticks.app.data.model.AppSettings
+import com.hapticks.app.data.model.LatestRelease
 import com.hapticks.app.features.charge.ChargeHapticsScreen
 import com.hapticks.app.features.edge.EdgeHapticsScreen
 import com.hapticks.app.features.onboarding.OnboardingScreen
@@ -75,7 +76,6 @@ import com.hapticks.app.features.scroll.ScrollHapticsScreen
 import com.hapticks.app.features.settings.SettingsScreen
 import com.hapticks.app.features.settings.SettingsViewModel
 import com.hapticks.app.features.tap.TapHapticsScreen
-import com.hapticks.app.features.update.LatestRelease
 import com.hapticks.app.features.update.UpdateCheckResult
 import com.hapticks.app.features.update.UpdateCheckScreen
 import com.hapticks.app.features.update.UpdateCheckUiState

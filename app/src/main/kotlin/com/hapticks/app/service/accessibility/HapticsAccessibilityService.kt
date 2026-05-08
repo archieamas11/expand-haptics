@@ -1,14 +1,17 @@
 package com.hapticks.app.service.accessibility
 
 import android.accessibilityservice.AccessibilityService
+import androidx.annotation.Keep
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.BatteryManager
 import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import com.hapticks.app.core.haptics.HapticEngine
+import com.hapticks.app.data.model.AppSettings
 import com.hapticks.app.features.main.HapticksApp
 import com.hapticks.app.service.accessibility.events.isFromOwnApp
 import com.hapticks.app.service.accessibility.handlers.TapHapticController
@@ -16,13 +19,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.util.concurrent.atomic.AtomicReference
 
+@Keep
 class HapticsAccessibilityService : AccessibilityService() {
-    @Volatile
-    private var currentSettings = com.hapticks.app.data.model.AppSettings.Default
+    private val currentSettings = AtomicReference(AppSettings.Default)
 
     private lateinit var tapController: TapHapticController
     private lateinit var scrollController: ScrollHapticController
@@ -35,10 +38,11 @@ class HapticsAccessibilityService : AccessibilityService() {
     private val powerReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_POWER_CONNECTED) {
-                if (currentSettings.chargeEnabled) {
+                val settings = currentSettings.get()
+                if (settings.chargeEnabled) {
                     hapticEngine.play(
-                        currentSettings.chargePattern,
-                        currentSettings.chargeIntensity
+                        settings.chargePattern,
+                        settings.chargeIntensity
                     )
                 }
             }
@@ -54,20 +58,37 @@ class HapticsAccessibilityService : AccessibilityService() {
         }
 
         hapticEngine = app.hapticEngine
-        tapController = TapHapticController(hapticEngine) { currentSettings }
-        scrollController = ScrollHapticController(hapticEngine) { currentSettings }
+        tapController = TapHapticController(hapticEngine) { currentSettings.get() }
+        scrollController = ScrollHapticController(hapticEngine) { currentSettings.get() }
 
         val filter = IntentFilter(Intent.ACTION_POWER_CONNECTED)
         registerReceiver(powerReceiver, filter)
 
-        applyEventMask(com.hapticks.app.data.model.AppSettings.Default)
+        val batteryStatus = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val isCharging = batteryStatus?.let {
+            val status = it.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+            status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+        } ?: false
+
+        if (isCharging && currentSettings.get().chargeEnabled) {
+            hapticEngine.play(
+                currentSettings.get().chargePattern,
+                currentSettings.get().chargeIntensity
+            )
+        }
+
+        applyEventMask(AppSettings.Default)
 
         settingsJob = app.preferences.settings
-            .distinctUntilChanged()
             .onEach { snapshot ->
-                serviceHandler.post {
-                    currentSettings = snapshot
-                    applyEventMask(snapshot)
+                val old = currentSettings.getAndSet(snapshot)
+                if (old.tapEnabled != snapshot.tapEnabled ||
+                    old.scrollEnabled != snapshot.scrollEnabled ||
+                    old.a11yScrollBoundEdge != snapshot.a11yScrollBoundEdge
+                ) {
+                    serviceHandler.post {
+                        applyEventMask(snapshot)
+                    }
                 }
             }
             .launchIn(serviceScope)
@@ -76,9 +97,7 @@ class HapticsAccessibilityService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val ev = event ?: return
 
-        if (ev.eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED && ev.isFromOwnApp) {
-            return
-        }
+        if (ev.isFromOwnApp) return
 
         when (ev.eventType) {
             AccessibilityEvent.TYPE_VIEW_CLICKED -> tapController.onEvent(ev)
@@ -102,7 +121,7 @@ class HapticsAccessibilityService : AccessibilityService() {
         super.onDestroy()
     }
 
-    private fun applyEventMask(settings: com.hapticks.app.data.model.AppSettings) {
+    private fun applyEventMask(settings: AppSettings) {
         val info = serviceInfo ?: return
 
         var mask = 0

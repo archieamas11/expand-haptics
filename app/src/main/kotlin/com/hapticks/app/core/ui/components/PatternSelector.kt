@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,7 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
@@ -164,7 +162,7 @@ private fun PatternCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                PatternIconBadge(icon = pattern.icon, isSelected = isSelected)
+                PatternIconBadge(iconRes = pattern.iconRes, isSelected = isSelected)
                 SelectionDot(isSelected = isSelected)
             }
             Spacer(modifier = Modifier.height(2.dp))
@@ -183,7 +181,7 @@ private fun PatternCard(
 }
 
 @Composable
-private fun PatternIconBadge(icon: ImageVector, isSelected: Boolean) {
+private fun PatternIconBadge(iconRes: Int, isSelected: Boolean) {
     val background by animateColorAsState(
         targetValue = if (isSelected) {
             MaterialTheme.colorScheme.primary
@@ -209,7 +207,7 @@ private fun PatternIconBadge(icon: ImageVector, isSelected: Boolean) {
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            imageVector = icon,
+            painter = painterResource(id = iconRes),
             contentDescription = null,
             tint = tint,
             modifier = Modifier.size(22.dp),
@@ -236,7 +234,7 @@ private fun SelectionDot(isSelected: Boolean) {
     ) {
         if (isSelected) {
             Icon(
-                imageVector = Icons.Rounded.Check,
+                painter = painterResource(R.drawable.check_24px),
                 contentDescription = stringResource(id = R.string.pattern_selected),
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(14.dp),
