@@ -49,11 +49,21 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Verify built APKs
+        run: |
+          APK_FILES=$(ls app/build/outputs/apk/release/*.apk 2>/dev/null || true)
+          if [[ -z "$APK_FILES" ]]; then
+            echo "No APK files found in app/build/outputs/apk/release/"
+            exit 1
+          fi
+          echo "Built APK(s):"
+          echo "$APK_FILES"
+
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release.apk
-          path: app/build/outputs/apk/release/app-release.apk
+          name: app-release-apks
+          path: app/build/outputs/apk/release/*.apk
 
       - name: Set release variables
         id: release_vars
@@ -80,7 +90,7 @@ jobs:
       - name: Create Release and Upload APK
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "app/build/outputs/apk/release/app-release.apk"
+          artifacts: "app/build/outputs/apk/release/*.apk"
           tag: ${{ steps.release_vars.outputs.tag }}
           name: Hapticks ${{ steps.release_vars.outputs.tag }}
           body: |
