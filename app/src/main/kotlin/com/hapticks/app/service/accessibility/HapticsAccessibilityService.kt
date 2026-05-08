@@ -70,10 +70,11 @@ class HapticsAccessibilityService : AccessibilityService() {
             status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
         } ?: false
 
-        if (isCharging && currentSettings.get().chargeEnabled) {
+        val bootSettings = currentSettings.get()
+        if (isCharging && bootSettings.chargeEnabled) {
             hapticEngine.play(
-                currentSettings.get().chargePattern,
-                currentSettings.get().chargeIntensity
+                bootSettings.chargePattern,
+                bootSettings.chargeIntensity
             )
         }
 
@@ -130,10 +131,6 @@ class HapticsAccessibilityService : AccessibilityService() {
         }
         if (settings.scrollEnabled || settings.a11yScrollBoundEdge) {
             mask = mask or AccessibilityEvent.TYPE_VIEW_SCROLLED
-        }
-
-        if (mask == 0) {
-            mask = AccessibilityEvent.TYPE_VIEW_CLICKED
         }
 
         if (info.eventTypes == mask) return

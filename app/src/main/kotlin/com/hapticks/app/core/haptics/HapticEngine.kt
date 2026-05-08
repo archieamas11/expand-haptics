@@ -2,7 +2,6 @@ package com.hapticks.app.core.haptics
 
 import android.content.Context
 import android.os.Build
-import android.os.SystemClock
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -35,7 +34,6 @@ class HapticEngine(context: Context) {
     fun play(
         pattern: HapticPattern,
         intensity: Float,
-        @Suppress("UNUSED_PARAMETER") throttleMs: Long = 0L,
     ): Boolean {
         if (!hasVibrator || intensity <= MIN_AUDIBLE_INTENSITY) return false
 

@@ -148,11 +148,11 @@ class SettingsViewModel(
         val s = settings.value ?: return
         viewModelScope.launch {
             val i = s.scrollIntensity
-            engine.play(s.scrollPattern, i, 0L)
+            engine.play(s.scrollPattern, i)
             delay(52)
-            engine.play(s.scrollPattern, i, 0L)
+            engine.play(s.scrollPattern, i)
             delay(52)
-            engine.play(s.scrollPattern, i, 0L)
+            engine.play(s.scrollPattern, i)
         }
     }
 

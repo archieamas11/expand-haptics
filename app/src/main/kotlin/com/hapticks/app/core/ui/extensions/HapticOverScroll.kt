@@ -81,7 +81,6 @@ private class HapticInstrumentedOverscrollEffect(
         engine?.play(
             pattern = pattern,
             intensity = intensity,
-            throttleMs = 0L,
         )
     }
 }

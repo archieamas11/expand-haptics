@@ -43,27 +43,32 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/keystore.jks
 
       - name: Build Release APK
-        run: bash ./gradlew assembleRelease --no-daemon --stacktrace
+        run: bash ./gradlew assembleArm64V8aRelease --no-daemon --stacktrace
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
-      - name: Verify built APKs
+      - name: Verify built APK
         run: |
-          APK_FILES=$(ls app/build/outputs/apk/release/*.apk 2>/dev/null || true)
-          if [[ -z "$APK_FILES" ]]; then
-            echo "No APK files found in app/build/outputs/apk/release/"
+          APK_PATH="app/build/outputs/apk/arm64-v8a/release/app-arm64-v8a-release.apk"
+          RENAMED_APK_PATH="app/build/outputs/apk/arm64-v8a/release/apk-release.apk"
+          if [[ ! -f "$APK_PATH" ]]; then
+            echo "Expected APK not found: $APK_PATH"
+            echo "Available APK outputs:"
+            find app/build/outputs/apk -name "*.apk" -type f || true
             exit 1
           fi
-          echo "Built APK(s):"
-          echo "$APK_FILES"
+          cp "$APK_PATH" "$RENAMED_APK_PATH"
+          echo "Built APK: $APK_PATH"
+          echo "Release APK: $RENAMED_APK_PATH"
+          ls -lh "$APK_PATH" "$RENAMED_APK_PATH"
 
       - name: Upload APK as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-apks
-          path: app/build/outputs/apk/release/*.apk
+          name: app-arm64-v8a-release-apk
+          path: app/build/outputs/apk/arm64-v8a/release/apk-release.apk
 
       - name: Set release variables
         id: release_vars
@@ -90,7 +95,7 @@ jobs:
       - name: Create Release and Upload APK
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "app/build/outputs/apk/release/*.apk"
+          artifacts: "app/build/outputs/apk/arm64-v8a/release/apk-release.apk"
           tag: ${{ steps.release_vars.outputs.tag }}
           name: Hapticks ${{ steps.release_vars.outputs.tag }}
           body: |

@@ -16,6 +16,7 @@ internal class ScrollHapticController(
 
     fun onEvent(event: AccessibilityEvent) {
         val settings = settingsProvider()
+        if (!settings.scrollEnabled && !settings.a11yScrollBoundEdge) return
 
         val pos: Int
         val max: Int
@@ -92,14 +93,17 @@ internal class ScrollHapticController(
         state.topFired = hitTop
         state.bottomFired = hitBottom
 
-        return if (fireTop || fireBottom) {
+        if (fireTop || fireBottom) {
             val now = SystemClock.uptimeMillis()
-            if (now - state.lastEdgeFiredAt >= EDGE_THROTTLE_MS) {
+            val shouldPlay = now - state.lastEdgeFiredAt >= EDGE_THROTTLE_MS
+            if (shouldPlay) {
                 engine.play(settings.edgePattern, settings.edgeIntensity)
                 state.lastEdgeFiredAt = now
-                true
-            } else false
-        } else false
+            }
+            // First arrival at this bound: always consume so scroll ticks do not stack on throttled edge.
+            return true
+        }
+        return false
     }
 
     private fun processContent(
@@ -168,7 +172,7 @@ internal class ScrollHapticController(
         state.smoothedVelocity = smoothedV
 
         if (shouldEmit) {
-            engine.play(settings.scrollPattern, pulseIntensity, throttleMs = 0L)
+            engine.play(settings.scrollPattern, pulseIntensity)
         }
     }
 
@@ -182,14 +186,17 @@ internal class ScrollHapticController(
         }
 
         if (states.size() > MAX_STATES) {
-            val sortedKeys = (0 until states.size())
-                .map { states.keyAt(it) to states.valueAt(it).lastAccessTime }
-                .sortedBy { it.second }
-                .map { it.first }
-
-            val toRemove = states.size() - LRU_CAP
-            for (j in 0 until toRemove) {
-                states.remove(sortedKeys[j])
+            while (states.size() > LRU_CAP) {
+                var minIdx = 0
+                var minTime = states.valueAt(0).lastAccessTime
+                for (j in 1 until states.size()) {
+                    val t = states.valueAt(j).lastAccessTime
+                    if (t < minTime) {
+                        minTime = t
+                        minIdx = j
+                    }
+                }
+                states.removeAt(minIdx)
             }
         }
     }

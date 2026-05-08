@@ -1,9 +1,7 @@
--keep class com.hapticks.app.HapticksApp { *; }
--keep class com.hapticks.app.service.HapticsAccessibilityService { *; }
--keep class com.hapticks.app.** { *; }
--keep class androidx.compose.** { *; }
--keep class kotlin.** { *; }
--keep class kotlinx.** { *; }
+# Application entry points referenced from the manifest / reflection-sensitive paths
+-keep class com.hapticks.app.features.main.HapticksApp { *; }
+-keep class com.hapticks.app.service.accessibility.HapticsAccessibilityService { *; }
+
 -keepattributes RuntimeVisibleAnnotations
 -keepattributes RuntimeVisibleParameterAnnotations
 -keepattributes AnnotationDefault
@@ -34,4 +32,3 @@
     native <methods>;
 }
 -dontwarn androidx.**
--keep class androidx.** { *; }

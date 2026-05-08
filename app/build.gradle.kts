@@ -135,7 +135,6 @@ dependencies {
 
     implementation(libs.haze)
     implementation(libs.haze.blur)
-    implementation(libs.haze.blur.materials)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 
