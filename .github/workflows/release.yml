@@ -43,7 +43,7 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > app/keystore.jks
 
       - name: Build Release APK
-        run: bash ./gradlew assembleArm64V8aRelease --no-daemon --stacktrace
+        run: bash ./gradlew assembleRelease --no-daemon --stacktrace
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
@@ -51,14 +51,15 @@ jobs:
 
       - name: Verify built APK
         run: |
-          APK_PATH="app/build/outputs/apk/arm64-v8a/release/app-arm64-v8a-release.apk"
+          APK_PATH=$(ls app/build/outputs/apk/release/*arm64-v8a*release*.apk 2>/dev/null | head -n 1)
           RENAMED_APK_PATH="app/build/outputs/apk/arm64-v8a/release/apk-release.apk"
-          if [[ ! -f "$APK_PATH" ]]; then
-            echo "Expected APK not found: $APK_PATH"
+          if [[ -z "$APK_PATH" || ! -f "$APK_PATH" ]]; then
+            echo "Expected arm64-v8a release APK not found."
             echo "Available APK outputs:"
             find app/build/outputs/apk -name "*.apk" -type f || true
             exit 1
           fi
+          mkdir -p "$(dirname "$RENAMED_APK_PATH")"
           cp "$APK_PATH" "$RENAMED_APK_PATH"
           echo "Built APK: $APK_PATH"
           echo "Release APK: $RENAMED_APK_PATH"
