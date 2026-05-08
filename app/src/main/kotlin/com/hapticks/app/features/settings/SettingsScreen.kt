@@ -262,6 +262,7 @@ fun SettingsScreen(
                         painter = painterResource(R.drawable.settings_24px),
                     ) {
 
+                        // Version
                         SettingsRow(
                             title = stringResource(R.string.settings_version_title),
                             subtitle = stringResource(
@@ -283,8 +284,10 @@ fun SettingsScreen(
                                 )
                             },
                         )
+
                         RowDivider()
 
+                        // Developer
                         SettingsRow(
                             title = stringResource(R.string.settings_developer_title),
                             subtitle = stringResource(R.string.settings_developer_subtitle),
@@ -292,7 +295,7 @@ fun SettingsScreen(
                             onClick = {
                                 val intent = Intent(
                                     Intent.ACTION_VIEW,
-                                    "https://github.com/archieamas11".toUri(),
+                                    "https://albarico.is-a.dev".toUri(),
                                 )
                                 context.startActivity(intent)
                             },
@@ -308,6 +311,7 @@ fun SettingsScreen(
 
                         RowDivider()
 
+                        // Report Bug
                         SettingsRow(
                             title = stringResource(R.string.settings_report_bug_title),
                             subtitle = stringResource(R.string.settings_report_bug_subtitle),
@@ -331,6 +335,7 @@ fun SettingsScreen(
 
                         RowDivider()
 
+                        // GitHub
                         SettingsRow(
                             title = stringResource(R.string.settings_github_title),
                             subtitle = stringResource(R.string.settings_github_subtitle),
@@ -338,7 +343,7 @@ fun SettingsScreen(
                             onClick = {
                                 val intent = Intent(
                                     Intent.ACTION_VIEW,
-                                    "https://github.com/archieamas11/expand-haptics".toUri(),
+                                    "https://github.com/archieamas11/hapticks".toUri(),
                                 )
                                 context.startActivity(intent)
                             },
@@ -354,6 +359,7 @@ fun SettingsScreen(
 
                         RowDivider()
 
+                        // Check Updates
                         SettingsRow(
                             title = stringResource(R.string.settings_check_updates_title),
                             subtitle = stringResource(
