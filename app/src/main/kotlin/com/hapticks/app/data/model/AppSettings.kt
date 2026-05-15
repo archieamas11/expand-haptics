@@ -13,6 +13,9 @@ data class AppSettings(
     // Onboarding
     val hasCompletedOnboarding: Boolean = false,
 
+    // Warning states
+    val hasSeenScrollWarning: Boolean = false,
+
     // Tap Haptics Default Settings
     val tapEnabled: Boolean = true,
     val intensity: Float = 0.2f,

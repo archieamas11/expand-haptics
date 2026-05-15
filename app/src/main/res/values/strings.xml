@@ -12,6 +12,7 @@
     <string name="section_pattern_subtitle">Choose tap feel</string>
 
     <string name="toggle_tap_title">Tap Haptics</string>
+    <string name="enable_tap_haptics_title">Enable Tap Haptics</string>
     <string name="toggle_tap_subtitle">Adds haptic feedback to taps system-wide.</string>
 
     <string name="intensity_label">Haptic strength</string>
@@ -76,6 +77,7 @@
 
     <!-- Edge Haptics screen (accessibility scroll bounds) -->
     <string name="edge_screen_title">Edge Haptics</string>
+    <string name="enable_edge_haptics_title">Enable Edge Haptics</string>
     <string name="edge_info_title">Accessibility</string>
     <string name="edge_info_body">Turn on Hapticks accessibility service in Settings → Accessibility. Edge pulses use your chosen pattern and intensity.</string>
     <string name="edge_a11y_scroll_bound_title">Edge Haptics</string>
@@ -86,6 +88,7 @@
 
     <!-- Scroll haptic screen -->
     <string name="scroll_toggle_title">Scroll Haptics</string>
+    <string name="scroll_haptics_toggle_title">Enable Scroll Haptics</string>
     <string name="scroll_toggle_subtitle">Adds gentle haptics while you scroll.</string>
     <string name="scroll_haptics_title">Scroll Haptics</string>
     <string name="scroll_events_per_unit_title">Haptics per distance</string>
@@ -98,6 +101,7 @@
     <string name="scroll_warning_body">Scroll haptics significantly increase battery drain as motors fire during movement. This feature relies on accessibility events and may not work in all apps.</string>
 
     <string name="charge_haptics_title">Charge Haptics</string>
+    <string name="enable_charge_haptics_title">Enable Charge Haptics</string>
     <string name="charge_haptics_subtitle">Adds haptic feedback when you plugged in your device.</string>
 
     <!-- Settings screen -->

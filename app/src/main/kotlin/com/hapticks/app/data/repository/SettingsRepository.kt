@@ -41,6 +41,8 @@ class SettingsRepository(context: Context) {
                 tapEnabled = prefs[Keys.TAP_ENABLED] ?: AppSettings.Default.tapEnabled,
                 hasCompletedOnboarding = prefs[Keys.HAS_COMPLETED_ONBOARDING]
                     ?: AppSettings.Default.hasCompletedOnboarding,
+                hasSeenScrollWarning = prefs[Keys.HAS_SEEN_SCROLL_WARNING]
+                    ?: AppSettings.Default.hasSeenScrollWarning,
                 intensity = (prefs[Keys.INTENSITY] ?: AppSettings.Default.intensity)
                     .coerceIn(0f, 1f),
                 pattern = HapticPattern.fromStorageKey(prefs[Keys.PATTERN]),
@@ -90,6 +92,9 @@ class SettingsRepository(context: Context) {
     suspend fun setHapticsEnabled(enabled: Boolean) = edit { it[Keys.HAPTICS_ENABLED] = enabled }
     suspend fun setHasCompletedOnboarding(completed: Boolean) =
         edit { it[Keys.HAS_COMPLETED_ONBOARDING] = completed }
+
+    suspend fun setHasSeenScrollWarning(seen: Boolean) =
+        edit { it[Keys.HAS_SEEN_SCROLL_WARNING] = seen }
 
     suspend fun setIntensity(intensity: Float) = edit {
         it[Keys.INTENSITY] = intensity.coerceIn(0f, 1f)
@@ -161,6 +166,7 @@ class SettingsRepository(context: Context) {
         val HAPTICS_ENABLED = booleanPreferencesKey("haptics_enabled")
         val TAP_ENABLED = booleanPreferencesKey("tap_enabled")
         val HAS_COMPLETED_ONBOARDING = booleanPreferencesKey("has_completed_onboarding")
+        val HAS_SEEN_SCROLL_WARNING = booleanPreferencesKey("has_seen_scroll_warning")
         val INTENSITY = floatPreferencesKey("intensity")
         val PATTERN = stringPreferencesKey("pattern")
         val SCROLL_ENABLED = booleanPreferencesKey("scroll_enabled")

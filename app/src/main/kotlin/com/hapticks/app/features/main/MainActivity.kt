@@ -395,6 +395,7 @@ class MainActivity : ComponentActivity() {
                                             onTestHaptic = viewModel::testScrollHaptic,
                                             onOpenAccessibilitySettings = ::openAccessibilitySettings,
                                             onBack = { route = Route.HOME },
+                                            onScrollWarningDismissed = { viewModel.setHasSeenScrollWarning(true) },
                                         )
                                     }
                                 }

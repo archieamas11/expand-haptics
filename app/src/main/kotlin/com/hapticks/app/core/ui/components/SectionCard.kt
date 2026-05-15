@@ -28,7 +28,7 @@ fun SectionCard(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: ImageVector? = null,
-    contentPadding: PaddingValues = PaddingValues(vertical = 4.dp),
+    contentPadding: PaddingValues = PaddingValues(vertical = 2.dp),
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {

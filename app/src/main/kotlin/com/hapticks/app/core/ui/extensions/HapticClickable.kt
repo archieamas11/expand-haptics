@@ -53,6 +53,10 @@ fun Context.performHapticDoubleClick() {
     performHapticPattern(HapticPattern.DOUBLE_CLICK)
 }
 
+fun Context.performHapticLongPress() {
+    performHapticPattern(HapticPattern.HEAVY_CLICK)
+}
+
 fun Context.performHapticSliderTick() {
     val app = applicationContext as? HapticksApp ?: return
     val snapshot = app.cachedSettings

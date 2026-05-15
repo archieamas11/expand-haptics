@@ -110,7 +110,7 @@ fun HomeScreen(
                 .padding(padding)
                 .padding(horizontal = 20.dp)
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 FeatureCard(
                     title = stringResource(id = R.string.home_feel_every_tap_title),
                     subtitle = stringResource(id = R.string.home_feel_every_tap_subtitle),

@@ -3,45 +3,31 @@ package com.hapticks.app.features.tap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.hapticks.app.R
 import com.hapticks.app.core.haptics.HapticPattern
-import com.hapticks.app.core.ui.components.BackPill
 import com.hapticks.app.core.ui.components.EnableServiceCard
 import com.hapticks.app.core.ui.components.HapticIntensityControl
 import com.hapticks.app.core.ui.components.HapticTestButton
-import com.hapticks.app.core.ui.components.HapticToggleRow
+import com.hapticks.app.core.ui.components.HapticsLargeTopAppBar
 import com.hapticks.app.core.ui.components.PatternSelector
 import com.hapticks.app.core.ui.components.SectionCard
+import com.hapticks.app.core.ui.extensions.HapticToggleRow
 import com.hapticks.app.data.model.AppSettings
 import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.blur.HazeProgressive
-import dev.chrisbanes.haze.blur.blurEffect
-import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,45 +54,14 @@ fun TapHapticsScreen(
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
-            val collapsedFraction = scrollBehavior.state.collapsedFraction
-            val isScrolled = collapsedFraction > 0f
-
-            LargeTopAppBar(
-                modifier = Modifier.hazeEffect(state = hazeState) {
-                    if (isScrolled) {
-                        blurEffect {
-                            blurRadius = 12.dp
-                            progressive = HazeProgressive.verticalGradient(
-                                startIntensity = 1f,
-                                endIntensity = 0f
-                            )
-                        }
-                    }
-                },
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.screen_title),
-                        style = if (collapsedFraction > 0.5f) MaterialTheme.typography.titleLarge else MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = if (collapsedFraction > 0.5f) TextAlign.Center else TextAlign.Start,
-                        modifier = Modifier.fillMaxWidth(),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                },
-                navigationIcon = {
-                    BackPill(onBack = onBack)
-                },
-                actions = {
-                    Spacer(modifier = Modifier.width(68.dp))
-                },
+            HapticsLargeTopAppBar(
+                title = stringResource(id = R.string.screen_title),
+                onBack = onBack,
                 scrollBehavior = scrollBehavior,
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Transparent,
-                ),
+                hazeState = hazeState,
             )
         },
+
         floatingActionButton = {
             HapticTestButton(
                 onClick = onTestHaptic,
@@ -124,7 +79,7 @@ fun TapHapticsScreen(
                 end = 16.dp,
                 bottom = padding.calculateBottomPadding() + 10.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (!isServiceEnabled) {
                 item(key = "enable_service") {
@@ -133,60 +88,33 @@ fun TapHapticsScreen(
             }
 
             item(key = "interaction_section") {
-                TapHapticsInteractionSection(
-                    settings = settings,
-                    onTapEnabledChange = onTapEnabledChange,
-                    onIntensityCommit = onIntensityCommit,
+                HapticToggleRow(
+                    title = stringResource(id = R.string.enable_tap_haptics_title),
+                    checked = settings.tapEnabled,
+                    onCheckedChange = onTapEnabledChange
                 )
+            }
+
+            item(key = "intensity_section") {
+                SectionCard {
+                    HapticIntensityControl(
+                        title = stringResource(id = R.string.intensity_label),
+                        intensity = settings.intensity,
+                        onIntensityCommit = onIntensityCommit,
+                    )
+                }
             }
 
             item(key = "pattern_section") {
-                TapHapticsPatternSection(
-                    settings = settings,
-                    onPatternSelected = onPatternSelected,
-                )
+                SectionCard {
+                    Column {
+                        PatternSelector(
+                            selected = settings.pattern,
+                            onPatternSelected = onPatternSelected,
+                        )
+                    }
+                }
             }
-        }
-    }
-}
-
-@Composable
-internal fun TapHapticsInteractionSection(
-    settings: AppSettings,
-    onTapEnabledChange: (Boolean) -> Unit,
-    onIntensityCommit: (Float) -> Unit,
-) {
-    SectionCard {
-        HapticToggleRow(
-            title = stringResource(id = R.string.toggle_tap_title),
-            subtitle = stringResource(id = R.string.toggle_tap_subtitle),
-            checked = settings.tapEnabled,
-            onCheckedChange = onTapEnabledChange,
-        )
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant,
-            thickness = 0.5.dp,
-            modifier = Modifier.padding(horizontal = 20.dp),
-        )
-        HapticIntensityControl(
-            title = stringResource(id = R.string.intensity_label),
-            intensity = settings.intensity,
-            onIntensityCommit = onIntensityCommit,
-        )
-    }
-}
-
-@Composable
-internal fun TapHapticsPatternSection(
-    settings: AppSettings,
-    onPatternSelected: (HapticPattern) -> Unit,
-) {
-    Column {
-        SectionCard {
-            PatternSelector(
-                selected = settings.pattern,
-                onPatternSelected = onPatternSelected,
-            )
         }
     }
 }

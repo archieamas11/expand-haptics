@@ -89,6 +89,10 @@ class SettingsViewModel(
         viewModelScope.launch { preferences.setHasCompletedOnboarding(completed) }
     }
 
+    fun setHasSeenScrollWarning(seen: Boolean) {
+        viewModelScope.launch { preferences.setHasSeenScrollWarning(seen) }
+    }
+
     fun commitIntensity(intensity: Float) {
         viewModelScope.launch { preferences.setIntensity(intensity) }
     }

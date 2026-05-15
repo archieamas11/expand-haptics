@@ -71,7 +71,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hapticks.app.BuildConfig
 import com.hapticks.app.R
-import com.hapticks.app.core.ui.components.HapticToggleRow
+import com.hapticks.app.core.ui.extensions.HapticToggleRow
 import com.hapticks.app.core.ui.extensions.hapticClickable
 import com.hapticks.app.core.ui.extensions.performHapticDoubleClick
 import com.hapticks.app.data.model.AppSettings
