@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/hapticks-logo.png" alt="Hapticks Product Showcase" width="20%" />
+  <img src="assets/hapticks-logo.png" alt="Hapticks Product Showcase" width="30%" />
 </p>
 
 <h1 align="center">Hapticks</h1>
